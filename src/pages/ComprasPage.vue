@@ -16,10 +16,6 @@
       {{ errorGeneral }}
     </q-banner>
 
-    <q-banner v-if="formulario.tipoCompra === 'a_credito'" rounded class="bg-orange-1 text-orange-10 q-mt-lg">
-      Las compras a credito no usan abonos directos. El siguiente submodulo sera cuotas y pagos por cuota.
-    </q-banner>
-
     <div class="columna-compras q-mt-lg">
       <q-card flat bordered class="tarjeta-compra-principal">
         <q-card-section class="q-pa-lg">
@@ -34,6 +30,7 @@
             </div>
 
             <div class="row q-gutter-sm">
+              <q-btn flat color="grey-8" label="Ir a lista" to="/compras" />
               <q-btn flat color="grey-8" label="Nueva compra" @click="reiniciarFormularioCompleto" />
               <q-btn
                 unelevated
@@ -215,8 +212,13 @@
               >
                 {{ etiquetaDiferenciaCambiaria }}
               </q-chip>
+              <q-btn flat color="primary" icon="add" label="Agregar abono" @click="agregarFilaAbono" />
             </div>
           </div>
+
+          <q-banner v-if="abonosExcedidos" rounded class="bg-red-1 text-red-10 q-mt-lg">
+            La suma de abonos supera el costo total del pedido en dolares. Ajusta los montos antes de guardar.
+          </q-banner>
 
           <div class="contenedor-tabla-simple q-mt-lg">
             <q-markup-table flat bordered class="tabla-simple-compras">
@@ -227,6 +229,7 @@
                   <th class="text-left">Tipo cambio</th>
                   <th class="text-left">Abono USD</th>
                   <th class="text-left">Abono Bs</th>
+                  <th class="text-left">Comprobante</th>
                   <th class="text-left">Observaciones</th>
                   <th class="text-center">Accion</th>
                 </tr>
@@ -249,6 +252,16 @@
                     <q-input :model-value="abono.abonoBs" dense outlined type="number" min="0" step="0.0001" @update:model-value="actualizarMontoAbono(abono, 'bs', $event)" />
                   </td>
                   <td class="columna-tabla-simple columna-tabla-simple--detalle">
+                    <q-file
+                      v-model="abono.comprobanteFoto"
+                      dense
+                      outlined
+                      clearable
+                      accept=".jpg,.jpeg,.png,.webp"
+                      label="Foto opcional"
+                    />
+                  </td>
+                  <td class="columna-tabla-simple columna-tabla-simple--detalle">
                     <q-input v-model="abono.observaciones" dense outlined />
                   </td>
                   <td class="text-center columna-tabla-simple">
@@ -259,50 +272,7 @@
             </q-markup-table>
           </div>
         </q-card-section>
-      </q-card>
 
-      <q-card flat bordered class="tarjeta-compra-secundaria">
-        <q-card-section class="q-pa-lg">
-          <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
-            <div>
-              <div class="text-h6 text-weight-bold">Listado de compras</div>
-              <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                Abre una compra para editarla o revisa lo ya registrado.
-              </p>
-            </div>
-
-            <q-btn flat color="grey-8" icon="refresh" label="Recargar" @click="cargarCompras" />
-          </div>
-        </q-card-section>
-
-        <q-separator />
-
-        <q-card-section class="q-pa-none">
-          <q-table
-            flat
-            :rows="compras"
-            :columns="columnasCompras"
-            row-key="id"
-            :loading="cargandoCompras"
-            no-data-label="Aun no hay compras registradas."
-            :rows-per-page-options="[10, 20, 50]"
-          >
-            <template #body-cell-acciones="propiedades">
-              <q-td :props="propiedades">
-                <q-btn flat round dense icon="edit" color="grey-8" @click="cargarCompraEnFormulario(propiedades.row.id)">
-                  <q-tooltip>Editar compra</q-tooltip>
-                </q-btn>
-              </q-td>
-            </template>
-
-            <template #body-cell-total_productos="propiedades">
-              <q-td :props="propiedades">
-                $ {{ formatearMonto(propiedades.row.total_productos_usd) }}
-                <span class="text-grey-7">(Bs. {{ formatearMonto(propiedades.row.total_productos_bs) }})</span>
-              </q-td>
-            </template>
-          </q-table>
-        </q-card-section>
       </q-card>
     </div>
 
@@ -346,11 +316,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
+import { useRoute } from 'vue-router'
 import {
   actualizarCompra,
-  listarCompras,
   obtenerDetalleCompra,
   obtenerFormularioCompra,
   registrarCompra,
@@ -362,10 +332,9 @@ defineOptions({
 })
 
 const $q = useQuasar()
-const cargandoCompras = ref(false)
+const route = useRoute()
 const guardando = ref(false)
 const guardandoProveedor = ref(false)
-const compras = ref([])
 const proveedores = ref([])
 const sucursales = ref([])
 const productos = ref([])
@@ -380,15 +349,6 @@ const opcionesProductosFiltradas = reactive({})
 
 const formulario = reactive(crearFormulario())
 const formularioProveedor = reactive({ nombre: '' })
-const columnasCompras = [
-  { name: 'acciones', label: 'Acciones', align: 'left', field: 'id' },
-  { name: 'nro_pedido', label: 'Nro compra', align: 'left', field: 'nro_pedido' },
-  { name: 'proveedor', label: 'Proveedor', align: 'left', field: 'proveedor' },
-  { name: 'fecha_pedido', label: 'Fecha', align: 'left', field: 'fecha_pedido' },
-  { name: 'tipo_compra', label: 'Tipo', align: 'left', field: 'tipo_compra_label' },
-  { name: 'estado', label: 'Estado', align: 'left', field: 'estado_label' },
-  { name: 'total_productos', label: 'Total', align: 'left', field: 'total_productos_usd' }
-]
 
 const proveedoresFiltrados = computed(() => {
   const termino = textoProveedorBusqueda.value.trim().toLowerCase()
@@ -422,6 +382,9 @@ const saldoPendienteUsd = computed(() => Math.max(0, redondearMonto(totalGeneral
 const saldoPendienteBs = computed(() => {
   return Math.max(0, redondearMonto(saldoPendienteUsd.value * tipoCambioPromedioPedido.value))
 })
+const abonosExcedidos = computed(() =>
+  totalAbonosUsd.value > totalGeneralUsd.value + 0.0001
+)
 const mostrarAbonosDirectos = computed(() => ['contado', 'pedido'].includes(formulario.tipoCompra))
 const diferenciaCambiariaBs = computed(() => {
   const costoReferencialBs = redondearMonto(totalAbonosUsd.value * tipoCambioPromedioPedido.value)
@@ -479,6 +442,7 @@ function crearFilaAbono () {
     monedaReferencia: 'usd',
     abonoUsd: 0,
     abonoBs: 0,
+    comprobanteFoto: null,
     observaciones: ''
   }
 }
@@ -560,6 +524,10 @@ function actualizarMontoAbono (abono, monedaOrigen, valor) {
 
 function agregarFilaDetalle () {
   formulario.detalles.push(crearFilaDetalle())
+}
+
+function agregarFilaAbono () {
+  formulario.abonos.push(crearFilaAbono())
 }
 
 function eliminarFilaDetalle (indice) {
@@ -653,9 +621,11 @@ function construirPayloadCompra () {
         moneda_referencia: abono.monedaReferencia,
         abono_usd: Number(abono.abonoUsd || 0),
         abono_bs: Number(abono.abonoBs || 0),
+        comprobante_foto: abono.comprobanteFoto || null,
         observaciones: abono.observaciones.trim() || null
       }))
-      : []
+      : [],
+    cuotas: []
   }
 }
 
@@ -701,16 +671,6 @@ async function cargarFormularioCompras () {
   formulario.detalles.forEach((detalle, indice) => {
     opcionesProductosFiltradas[indice] = productos.value
   })
-}
-
-async function cargarCompras () {
-  cargandoCompras.value = true
-  try {
-    const datos = await listarCompras()
-    compras.value = datos.compras || []
-  } finally {
-    cargandoCompras.value = false
-  }
 }
 
 function reiniciarFormularioCompleto () {
@@ -760,11 +720,11 @@ function cargarCompraEnFormularioLocal (compra) {
       subtotalUsd: Number(detalle.subtotal_usd || 0),
       subtotalBs: Number(detalle.subtotal_bs || 0),
       observaciones: detalle.observaciones || ''
-    })),
-    abonos: compra.tipo_compra === 'a_credito'
-      ? []
-      : ((compra.abonos || []).length
-          ? compra.abonos.map((abono) => ({
+      })),
+      abonos: compra.tipo_compra === 'a_credito'
+        ? []
+        : ((compra.abonos || []).length
+            ? compra.abonos.map((abono) => ({
             uid: `${abono.id}-${Math.random().toString(16).slice(2)}`,
             sucursalId: abono.sucursal_id,
             fechaAbono: abono.fecha_abono || new Date().toISOString().slice(0, 10),
@@ -772,10 +732,11 @@ function cargarCompraEnFormularioLocal (compra) {
             monedaReferencia: abono.moneda_referencia || 'usd',
             abonoUsd: Number(abono.abono_usd || 0),
             abonoBs: Number(abono.abono_bs || 0),
+            comprobanteFoto: null,
             observaciones: abono.observaciones || ''
-          }))
-          : [crearFilaAbono()])
-  })
+            }))
+            : [crearFilaAbono()]),
+    })
 
   textoProveedorBusqueda.value = compra.proveedor || ''
 }
@@ -814,7 +775,7 @@ async function guardarCompra () {
       : await registrarCompra(payload)
 
     mensajeExito.value = respuesta.message || 'Compra guardada correctamente.'
-    await Promise.all([cargarFormularioCompras(), cargarCompras()])
+    await cargarFormularioCompras()
 
     if (respuesta.compra) {
       compraEditandoId.value = respuesta.compra.id
@@ -826,6 +787,18 @@ async function guardarCompra () {
     errorGeneral.value = error.message || 'No se pudo guardar la compra.'
   } finally {
     guardando.value = false
+  }
+}
+
+async function revisarEdicionDesdeRuta () {
+  const idCompra = Number(route.query.editar || 0)
+  if (idCompra > 0) {
+    await cargarCompraEnFormulario(idCompra)
+    return
+  }
+
+  if (compraEditandoId.value) {
+    reiniciarFormularioCompleto()
   }
 }
 
@@ -862,9 +835,14 @@ async function guardarProveedor () {
   }
 }
 
+watch(() => route.query.editar, () => {
+  revisarEdicionDesdeRuta()
+})
+
 onMounted(async () => {
-  await Promise.all([cargarFormularioCompras(), cargarCompras()])
+  await cargarFormularioCompras()
   formulario.detalles.forEach((detalle) => recalcularFila(detalle))
   formulario.abonos.forEach((abono) => recalcularAbono(abono))
+  await revisarEdicionDesdeRuta()
 })
 </script>

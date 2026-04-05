@@ -455,6 +455,12 @@ body {
   border-radius: 24px;
 }
 
+.tarjeta-dialogo-compra-amplio {
+  width: min(96vw, 1180px);
+  max-width: 1180px;
+  border-radius: 24px;
+}
+
 .tarjeta-dialogo-confirmacion {
   width: min(100%, 520px);
   border-radius: 24px;
@@ -604,6 +610,68 @@ body {
   min-width: 200px;
 }
 
+.bloque-estado-pago {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  min-height: 56px;
+}
+
+.rejilla-resumen-pagos-credito {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.tarjeta-resumen-pago {
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.tarjeta-resumen-pago--neutral {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.tarjeta-resumen-pago--success {
+  background: #dcfce7;
+}
+
+.tarjeta-resumen-pago--warning {
+  background: #fef3c7;
+}
+
+.badge-estado {
+  padding: 8px 12px;
+  font-weight: 700;
+}
+
+.badge-estado--pagado {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge-estado--parcial {
+  background: #fef3c7;
+  color: #a16207;
+}
+
+.badge-estado--pendiente {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.badge-estado--inventario {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge-estado--neutro {
+  background: #e5e7eb;
+  color: #374151;
+}
+
 .estado-detalle-producto {
   min-height: 220px;
   display: flex;
@@ -721,6 +789,7 @@ body {
   .rejilla-resumen-detalle-producto,
   .rejilla-sucursales-detalle-producto,
   .rejilla-compras-superior,
+  .rejilla-resumen-pagos-credito,
   .rejilla-compras-simple,
   .rejilla-fila-detalle,
   .rejilla-resumen-compra,
@@ -747,6 +816,7 @@ body {
   .rejilla-resumen-detalle-producto,
   .rejilla-sucursales-detalle-producto,
   .rejilla-compras-superior,
+  .rejilla-resumen-pagos-credito,
   .rejilla-compras-simple,
   .rejilla-fila-detalle,
   .rejilla-resumen-compra,
