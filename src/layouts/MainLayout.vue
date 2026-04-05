@@ -46,17 +46,17 @@
       <q-separator />
 
       <q-list padding>
-        <q-item clickable to="/" exact>
+        <q-item
+          v-for="enlace in enlacesMenuVisibles"
+          :key="enlace.to"
+          clickable
+          :to="enlace.to"
+          :exact="enlace.exact === true"
+        >
           <q-item-section avatar>
-            <q-icon name="dashboard" />
+            <q-icon :name="enlace.icono" />
           </q-item-section>
-          <q-item-section>Inicio</q-item-section>
-        </q-item>
-        <q-item clickable to="/usuarios">
-          <q-item-section avatar>
-            <q-icon name="group" />
-          </q-item-section>
-          <q-item-section>Usuarios</q-item-section>
+          <q-item-section>{{ enlace.etiqueta }}</q-item-section>
         </q-item>
       </q-list>
     </q-drawer>
@@ -85,8 +85,37 @@ const etiquetasRol = {
   supervisor_sucursal: 'Supervisor',
   vendedor: 'Vendedor'
 }
+const enlacesMenu = [
+  {
+    to: '/inventario',
+    etiqueta: 'Inventario',
+    icono: 'table_view',
+    roles: ['gerente', 'auxiliar_administrativo', 'supervisor_sucursal', 'vendedor']
+  },
+  {
+    to: '/inicio',
+    etiqueta: 'Inicio',
+    icono: 'dashboard',
+    roles: ['gerente', 'auxiliar_administrativo']
+  },
+  {
+    to: '/usuarios',
+    etiqueta: 'Usuarios',
+    icono: 'group',
+    roles: ['gerente']
+  },
+  {
+    to: '/productos',
+    etiqueta: 'Productos',
+    icono: 'inventory_2',
+    roles: ['gerente', 'auxiliar_administrativo']
+  }
+]
 
 const etiquetaRol = computed(() => etiquetasRol[estadoAutenticacion.usuario?.rol] || 'Sin rol')
+const enlacesMenuVisibles = computed(() =>
+  enlacesMenu.filter((enlace) => enlace.roles.includes(estadoAutenticacion.usuario?.rol))
+)
 
 function toggleLeftDrawer () {
   leftDrawerOpen.value = !leftDrawerOpen.value

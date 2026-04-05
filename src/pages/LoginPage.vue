@@ -102,7 +102,7 @@ async function enviarFormulario () {
 
   try {
     await iniciarSesion(formulario)
-    await router.replace(route.query.redirect || '/')
+    await router.replace(route.query.redirect || '/inventario')
   } catch (err) {
     error.value = err.message || 'No se pudo iniciar sesion.'
   } finally {

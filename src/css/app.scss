@@ -72,6 +72,18 @@ body {
   min-height: 100vh;
 }
 
+.pagina-productos {
+  min-height: 100vh;
+}
+
+.pagina-inventario {
+  min-height: 100vh;
+}
+
+.pagina-detalle-producto {
+  min-height: 100vh;
+}
+
 .encabezado-panel {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.7fr);
@@ -99,6 +111,20 @@ body {
   align-items: stretch;
 }
 
+.encabezado-productos {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
+  gap: 24px;
+  align-items: stretch;
+}
+
+.encabezado-detalle-producto {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
+  gap: 24px;
+  align-items: stretch;
+}
+
 .bloques-usuarios {
   display: grid;
   grid-template-columns: 1fr;
@@ -107,10 +133,420 @@ body {
 
 .tarjeta-resumen-usuarios,
 .tarjeta-formulario-usuarios,
-.tarjeta-listado-usuarios {
+.tarjeta-listado-usuarios,
+.tarjeta-resumen-productos,
+.tarjeta-datos-producto,
+.tarjeta-costos-producto,
+.tarjeta-unidades-producto,
+.tarjeta-listado-productos,
+.tarjeta-dialogo-catalogo,
+.tarjeta-busqueda-inventario,
+.tarjeta-inventario,
+.tarjeta-resumen-detalle-producto,
+.tarjeta-detalle-producto {
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.9);
   border-color: var(--pt-border);
+}
+
+.columna-productos {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.rejilla-superior-productos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.columna-detalle-producto {
+  display: grid;
+  gap: 24px;
+}
+
+.cabecera-tarjeta-detalle {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.cabecera-tarjeta-detalle--envolvente {
+  flex-wrap: wrap;
+}
+
+.rejilla-resumen-detalle-producto {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.item-resumen-detalle-producto {
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.rejilla-sucursales-detalle-producto {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.tarjeta-sucursal-detalle-producto {
+  padding: 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.tarjeta-sucursal-detalle-producto--verde {
+  background: #cfe9d0;
+}
+
+.tarjeta-sucursal-detalle-producto--amarilla {
+  background: #eef0b8;
+}
+
+.tarjeta-sucursal-detalle-producto--rosada {
+  background: #f8c3b2;
+}
+
+.tarjeta-sucursal-detalle-producto--mostaza {
+  background: #ffe8a3;
+}
+
+.tarjeta-sucursal-detalle-producto--azul {
+  background: #b9d8f5;
+}
+
+.tarjeta-sucursal-detalle-producto--naranja {
+  background: #ffdcb5;
+}
+
+.tarjeta-sucursal-detalle-producto--gris {
+  background: #e2e2e2;
+}
+
+.tarjeta-sucursal-detalle-producto--neutra {
+  background: #f2f2f2;
+}
+
+.filtros-operaciones-detalle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.rejilla-totales-operacion {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.item-total-operacion {
+  padding: 16px 18px;
+  border-radius: 18px;
+}
+
+.item-total-operacion--adquisicion {
+  background: #ffe0b2;
+}
+
+.item-total-operacion--venta {
+  background: #cfe9d0;
+}
+
+.item-total-operacion--transferencia {
+  background: #b9d8f5;
+}
+
+.lista-operaciones-detalle {
+  display: grid;
+  gap: 10px;
+}
+
+.item-operacion-detalle {
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.item-operacion-detalle--adquisicion {
+  background: #ffe0b2;
+}
+
+.item-operacion-detalle--venta {
+  background: #cfe9d0;
+}
+
+.item-operacion-detalle--transferencia {
+  background: #b9d8f5;
+}
+
+.formulario-producto {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.campo-formulario-producto {
+  min-width: 0;
+}
+
+.campo-formulario-producto--medio {
+  grid-column: span 1;
+}
+
+.resumen-unidades-producto {
+  width: min(100%, 360px);
+  padding: 16px 18px;
+  border: 1px dashed var(--pt-border);
+  border-radius: 18px;
+  background: rgba(255, 250, 245, 0.8);
+}
+
+.contenedor-tabla-productos {
+  overflow-x: auto;
+}
+
+.lista-sucursales-producto {
+  display: grid;
+  gap: 8px;
+}
+
+.item-sucursal-producto {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.cabecera-inventario {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.cabecera-superior-inventario {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.buscador-inventario {
+  flex: 1 1 320px;
+}
+
+.acciones-superiores-inventario {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.contenedor-tabla-inventario {
+  overflow-x: auto;
+}
+
+.tabla-inventario th {
+  font-weight: 700;
+  white-space: normal;
+}
+
+.tabla-inventario td,
+.tabla-inventario th {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.celda-acciones-inventario {
+  background: #fff6bf;
+  min-width: 126px;
+}
+
+.celda-destacada-inventario {
+  background: #fff08b;
+  font-weight: 600;
+  min-width: 170px;
+}
+
+.celda-secundaria-inventario {
+  min-width: 110px;
+  background: #fff8c9;
+}
+
+.celda-sucursal-inventario {
+  min-width: 125px;
+  text-align: center;
+}
+
+.encabezado-sucursal-inventario {
+  min-width: 125px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.contenido-celda-sucursal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.tabla-inventario .celda-sucursal-verde,
+.tabla-inventario .encabezado-sucursal-inventario.celda-sucursal-verde {
+  background: #cfe9d0 !important;
+}
+
+.tabla-inventario .celda-sucursal-amarilla,
+.tabla-inventario .encabezado-sucursal-inventario.celda-sucursal-amarilla {
+  background: #eef0b8 !important;
+}
+
+.tabla-inventario .celda-sucursal-rosada,
+.tabla-inventario .encabezado-sucursal-inventario.celda-sucursal-rosada {
+  background: #f8c3b2 !important;
+}
+
+.tabla-inventario .celda-sucursal-mostaza,
+.tabla-inventario .encabezado-sucursal-inventario.celda-sucursal-mostaza {
+  background: #ffe8a3 !important;
+}
+
+.tabla-inventario .celda-sucursal-azul,
+.tabla-inventario .encabezado-sucursal-inventario.celda-sucursal-azul {
+  background: #b9d8f5 !important;
+}
+
+.tabla-inventario .celda-sucursal-naranja,
+.tabla-inventario .encabezado-sucursal-inventario.celda-sucursal-naranja {
+  background: #ffdcb5 !important;
+}
+
+.tabla-inventario .celda-sucursal-gris,
+.tabla-inventario .encabezado-sucursal-inventario.celda-sucursal-gris {
+  background: #e2e2e2 !important;
+}
+
+.tabla-inventario .celda-sucursal-neutra,
+.tabla-inventario .encabezado-sucursal-inventario.celda-sucursal-neutra {
+  background: #f2f2f2 !important;
+}
+
+.acciones-formulario-producto {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tarjeta-dialogo-transferencia {
+  width: min(100%, 780px);
+  border-radius: 24px;
+}
+
+.tarjeta-dialogo-confirmacion {
+  width: min(100%, 520px);
+  border-radius: 24px;
+}
+
+.dialogo-solicitudes-transferencia,
+.dialogo-detalle-producto {
+  background: linear-gradient(180deg, rgba(255, 250, 245, 0.92), rgba(255, 255, 255, 0.96));
+}
+
+.formulario-transferencia,
+.formulario-respuesta-transferencia {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.campo-transferencia-ancho-completo {
+  grid-column: 1 / -1;
+}
+
+.tabs-solicitudes-transferencia,
+.paneles-solicitudes-transferencia {
+  background: transparent;
+}
+
+.lista-solicitudes-transferencia {
+  display: grid;
+  gap: 18px;
+}
+
+.tarjeta-solicitud-transferencia {
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.92);
+  border-color: var(--pt-border);
+}
+
+.cabecera-solicitud-transferencia {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.rejilla-datos-solicitud {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.bloque-detalle-solicitud {
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.bloque-detalle-solicitud--respuesta {
+  background: rgba(194, 65, 12, 0.08);
+}
+
+.estado-detalle-producto {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.lista-unidades-detalle {
+  display: grid;
+  gap: 16px;
+}
+
+.item-unidad-detalle {
+  padding: 18px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--pt-border);
+}
+
+.item-unidad-detalle__cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.rejilla-unidad-detalle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .tarjeta-formulario-usuarios {
@@ -175,17 +611,35 @@ body {
 @media (max-width: 900px) {
   .encabezado-panel,
   .rejilla-panel,
-  .encabezado-usuarios {
+  .encabezado-usuarios,
+  .encabezado-productos,
+  .encabezado-detalle-producto,
+  .rejilla-superior-productos {
     grid-template-columns: 1fr;
   }
 
-  .cabecera-listado-usuarios {
+  .cabecera-inventario,
+  .cabecera-superior-inventario,
+  .cabecera-listado-usuarios,
+  .cabecera-tarjeta-detalle,
+  .cabecera-solicitud-transferencia {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .formulario-usuarios {
+  .rejilla-datos-solicitud,
+  .rejilla-resumen-detalle-producto,
+  .rejilla-sucursales-detalle-producto,
+  .rejilla-unidad-detalle,
+  .rejilla-totales-operacion,
+  .formulario-usuarios,
+  .formulario-transferencia,
+  .formulario-respuesta-transferencia {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .formulario-producto {
+    grid-template-columns: 1fr;
   }
 
   .campo-formulario-usuarios--ancho-dos-columnas,
@@ -195,7 +649,14 @@ body {
 }
 
 @media (max-width: 640px) {
-  .formulario-usuarios {
+  .rejilla-datos-solicitud,
+  .rejilla-resumen-detalle-producto,
+  .rejilla-sucursales-detalle-producto,
+  .rejilla-unidad-detalle,
+  .rejilla-totales-operacion,
+  .formulario-usuarios,
+  .formulario-transferencia,
+  .formulario-respuesta-transferencia {
     grid-template-columns: 1fr;
   }
 }

@@ -9,8 +9,32 @@ const routes = [
     component: () => import('layouts/MainLayout.vue'),
     meta: { requiresAuth: true },
     children: [
-      { path: '', component: () => import('pages/DashboardPage.vue') },
-      { path: 'usuarios', component: () => import('pages/UsuariosPage.vue') }
+      { path: '', redirect: '/inventario' },
+      {
+        path: 'inicio',
+        component: () => import('pages/DashboardPage.vue'),
+        meta: {
+          allowedRoles: ['gerente', 'auxiliar_administrativo']
+        }
+      },
+      {
+        path: 'usuarios',
+        component: () => import('pages/UsuariosPage.vue'),
+        meta: {
+          allowedRoles: ['gerente']
+        }
+      },
+      {
+        path: 'productos',
+        component: () => import('pages/ProductosPage.vue'),
+        meta: {
+          allowedRoles: ['gerente', 'auxiliar_administrativo']
+        }
+      },
+      {
+        path: 'inventario',
+        component: () => import('pages/InventarioPage.vue')
+      }
     ]
   },
 

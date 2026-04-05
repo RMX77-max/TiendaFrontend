@@ -1,7 +1,7 @@
 import { route } from 'quasar/wrappers'
 import { createRouter, createMemoryHistory, createWebHistory, createWebHashHistory } from 'vue-router'
 import routes from './routes'
-import { cargarPerfil, estaAutenticado } from 'src/services/auth'
+import { cargarPerfil, estaAutenticado, estadoAutenticacion } from 'src/services/auth'
 
 /*
  * If not building with SSR mode, you can
@@ -50,7 +50,17 @@ export default route(function (/* { store, ssrContext } */) {
     }
 
     if (to.meta.guestOnly && estaAutenticado()) {
-      return '/'
+      return '/inventario'
+    }
+
+    const rolesPermitidos = to.meta.allowedRoles
+
+    if (rolesPermitidos?.length && estaAutenticado()) {
+      const rolUsuario = estadoAutenticacion.usuario?.rol
+
+      if (!rolesPermitidos.includes(rolUsuario)) {
+        return '/inventario'
+      }
     }
   })
 
