@@ -109,6 +109,12 @@ const enlacesMenu = [
     etiqueta: 'Productos',
     icono: 'inventory_2',
     roles: ['gerente', 'auxiliar_administrativo']
+  },
+  {
+    to: '/compras',
+    etiqueta: 'Compras',
+    icono: 'shopping_cart',
+    roles: ['gerente', 'auxiliar_administrativo', 'supervisor_sucursal']
   }
 ]
 

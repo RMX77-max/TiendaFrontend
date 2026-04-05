@@ -32,6 +32,13 @@ const routes = [
         }
       },
       {
+        path: 'compras',
+        component: () => import('pages/ComprasPage.vue'),
+        meta: {
+          allowedRoles: ['gerente', 'auxiliar_administrativo', 'supervisor_sucursal']
+        }
+      },
+      {
         path: 'inventario',
         component: () => import('pages/InventarioPage.vue')
       }

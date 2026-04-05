@@ -515,6 +515,95 @@ body {
   background: rgba(194, 65, 12, 0.08);
 }
 
+.encabezado-compras {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.columna-compras {
+  display: grid;
+  gap: 24px;
+}
+
+.tarjeta-compra-principal,
+.tarjeta-compra-secundaria,
+.tarjeta-resumen-compras {
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.92);
+  border-color: var(--pt-border);
+}
+
+.rejilla-compras-superior {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.campo-compra-ancho-completo {
+  grid-column: 1 / -1;
+}
+
+.tabla-detalles-compra {
+  display: grid;
+  gap: 18px;
+}
+
+.fila-detalle-compra {
+  padding: 18px;
+  border-radius: 22px;
+  background: rgba(15, 23, 42, 0.03);
+  border: 1px solid var(--pt-border);
+}
+
+.fila-detalle-compra__encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.rejilla-fila-detalle {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.rejilla-resumen-compra {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.rejilla-compras-simple {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.contenedor-tabla-simple {
+  overflow-x: auto;
+}
+
+.tabla-simple-compras th,
+.tabla-simple-compras td {
+  vertical-align: top;
+}
+
+.columna-tabla-simple {
+  min-width: 120px;
+}
+
+.columna-tabla-simple--producto {
+  min-width: 220px;
+}
+
+.columna-tabla-simple--detalle {
+  min-width: 200px;
+}
+
 .estado-detalle-producto {
   min-height: 220px;
   display: flex;
@@ -609,6 +698,7 @@ body {
 }
 
 @media (max-width: 900px) {
+  .encabezado-compras,
   .encabezado-panel,
   .rejilla-panel,
   .encabezado-usuarios,
@@ -630,6 +720,10 @@ body {
   .rejilla-datos-solicitud,
   .rejilla-resumen-detalle-producto,
   .rejilla-sucursales-detalle-producto,
+  .rejilla-compras-superior,
+  .rejilla-compras-simple,
+  .rejilla-fila-detalle,
+  .rejilla-resumen-compra,
   .rejilla-unidad-detalle,
   .rejilla-totales-operacion,
   .formulario-usuarios,
@@ -652,6 +746,10 @@ body {
   .rejilla-datos-solicitud,
   .rejilla-resumen-detalle-producto,
   .rejilla-sucursales-detalle-producto,
+  .rejilla-compras-superior,
+  .rejilla-compras-simple,
+  .rejilla-fila-detalle,
+  .rejilla-resumen-compra,
   .rejilla-unidad-detalle,
   .rejilla-totales-operacion,
   .formulario-usuarios,
