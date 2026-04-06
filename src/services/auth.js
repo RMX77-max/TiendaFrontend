@@ -2,9 +2,7 @@ import { reactive } from "vue";
 
 const CLAVE_TOKEN = "punto_tecnologico_token";
 const CLAVE_USUARIO = "punto_tecnologico_usuario";
-const URL_BASE_API =
-  process.env.API_BASE_URL ||
-  "https://api.microcenter-bolivia.com/index.php/api";
+const URL_BASE_API = process.env.API_BASE_URL;
 
 function leerUsuarioGuardado() {
   const usuarioGuardado = sessionStorage.getItem(CLAVE_USUARIO);
