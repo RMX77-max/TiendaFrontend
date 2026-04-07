@@ -1,11 +1,12 @@
 <template>
   <q-page class="pagina-compras q-pa-lg">
     <div>
-      <div class="text-caption text-weight-bold texto-resalte-panel">Compras</div>
-      <h1 class="text-h4 text-weight-bold q-mt-sm q-mb-sm">Lista de compras y pedidos</h1>
-      <p class="text-body1 text-grey-8 q-ma-none">
-        Bandeja simple para revisar compras registradas y ejecutar acciones.
-      </p>
+      <div class="text-caption text-weight-bold texto-resalte-panel">
+        Compras
+      </div>
+      <h1 class="text-h4 text-weight-bold q-mt-sm q-mb-sm">
+        Lista de compras y pedidos
+      </h1>
     </div>
 
     <q-banner v-if="errorGeneral" rounded class="bg-red-1 text-red-10 q-mt-lg">
@@ -15,17 +16,32 @@
     <div class="columna-compras q-mt-lg">
       <q-card flat bordered class="tarjeta-compra-principal">
         <q-card-section class="q-pa-lg">
-          <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
+          <div
+            class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
+          >
             <div>
               <div class="text-h6 text-weight-bold">Listado de compras</div>
               <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                Busca una compra y usa las acciones sin tener que volver al formulario.
+                Busca una compra y usa las acciones sin tener que volver al
+                formulario.
               </p>
             </div>
 
             <div class="row q-gutter-sm">
-              <q-btn flat color="grey-8" icon="refresh" label="Recargar" @click="cargarCompras" />
-              <q-btn unelevated color="dark" text-color="white" label="Nueva compra" to="/compras/nueva" />
+              <q-btn
+                flat
+                color="grey-8"
+                icon="refresh"
+                label="Recargar"
+                @click="cargarCompras"
+              />
+              <q-btn
+                unelevated
+                color="dark"
+                text-color="white"
+                label="Nueva compra"
+                to="/compras/nueva"
+              />
             </div>
           </div>
         </q-card-section>
@@ -88,7 +104,12 @@
             <template #body-cell-total_productos="propiedades">
               <q-td :props="propiedades">
                 $ {{ formatearMonto(propiedades.row.total_productos_usd) }}
-                <span class="text-grey-7">(Bs. {{ formatearMonto(propiedades.row.total_productos_bs) }})</span>
+                <span class="text-grey-7"
+                  >(Bs.
+                  {{
+                    formatearMonto(propiedades.row.total_productos_bs)
+                  }})</span
+                >
               </q-td>
             </template>
 
@@ -117,16 +138,31 @@
             <template #body-cell-acciones="propiedades">
               <q-td :props="propiedades">
                 <div class="row items-center q-gutter-xs">
-                  <q-btn flat round dense color="grey-8" icon="visibility" @click="abrirDetalle(propiedades.row.id)">
-                    <q-tooltip>Ver detalle</q-tooltip>
-                  </q-btn>
-                  <q-btn flat round dense color="primary" icon="edit" :to="`/compras/nueva?editar=${propiedades.row.id}`">
-                    <q-tooltip>Editar</q-tooltip>
-                  </q-btn>
                   <q-btn
-                    v-if="Number(propiedades.row.tiempo_entrega_dias || 0) > 0"
                     flat
                     round
+                    dense
+                    color="grey-8"
+                    icon="visibility"
+                    @click="abrirDetalle(propiedades.row.id)"
+                  >
+                    <q-tooltip>Ver detalle</q-tooltip>
+                  </q-btn>
+                    <q-btn
+                      v-if="puedeEditarCompra(propiedades.row)"
+                      flat
+                      round
+                      dense
+                      color="primary"
+                      icon="edit"
+                    :to="`/compras/nueva?editar=${propiedades.row.id}`"
+                  >
+                    <q-tooltip>Editar</q-tooltip>
+                    </q-btn>
+                    <q-btn
+                      v-if="Number(propiedades.row.tiempo_entrega_dias || 0) > 0"
+                      flat
+                      round
                     dense
                     color="secondary"
                     icon="local_shipping"
@@ -134,21 +170,21 @@
                   >
                     <q-tooltip>Guias</q-tooltip>
                   </q-btn>
-                  <q-btn
-                    v-if="propiedades.row.tipo_compra === 'a_credito'"
-                    flat
-                    round
-                    dense
+                    <q-btn
+                      v-if="propiedades.row.tipo_compra === 'a_credito'"
+                      flat
+                      round
+                      dense
                     color="dark"
                     icon="payments"
                     @click="abrirPagosCredito(propiedades.row.id)"
                   >
                     <q-tooltip>Pagos de credito</q-tooltip>
                   </q-btn>
-                  <q-btn
-                    flat
-                    round
-                    dense
+                    <q-btn
+                      flat
+                      round
+                      dense
                     color="positive"
                     icon="inventory_2"
                     @click="abrirRecepcion(propiedades.row.id)"
@@ -156,7 +192,13 @@
                     <q-tooltip>Recepcion</q-tooltip>
                   </q-btn>
                   <q-btn
-                    v-if="['pendiente_ingreso_inventario', 'parcial', 'incompleto'].includes(propiedades.row.estado)"
+                    v-if="
+                      [
+                        'pendiente_ingreso_inventario',
+                        'parcial',
+                        'incompleto',
+                      ].includes(propiedades.row.estado)
+                    "
                     flat
                     round
                     dense
@@ -177,14 +219,22 @@
     <q-dialog v-model="dialogoDetalleAbierto" maximized>
       <q-card class="dialogo-detalle-producto">
         <q-card-section class="q-pa-lg">
-          <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
+          <div
+            class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
+          >
             <div>
               <div class="text-h6 text-weight-bold">Detalle de compra</div>
               <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
                 Resumen rapido para revisar la compra sin salir de la lista.
               </p>
             </div>
-            <q-btn flat round dense icon="close" @click="dialogoDetalleAbierto = false" />
+            <q-btn
+              flat
+              round
+              dense
+              icon="close"
+              @click="dialogoDetalleAbierto = false"
+            />
           </div>
         </q-card-section>
 
@@ -195,46 +245,259 @@
             <q-spinner color="primary" size="42px" />
           </div>
 
-          <div v-else-if="detalleCompraSeleccionada" class="columna-compras">
-            <div class="rejilla-compras-simple">
-              <q-input :model-value="detalleCompraSeleccionada.nro_pedido" outlined label="Nro compra" disable />
-              <q-input :model-value="detalleCompraSeleccionada.proveedor" outlined label="Proveedor" disable />
-              <q-input :model-value="detalleCompraSeleccionada.fecha_pedido" outlined label="Fecha" disable />
-              <q-input :model-value="detalleCompraSeleccionada.tipo_compra_label" outlined label="Tipo" disable />
-              <q-input :model-value="detalleCompraSeleccionada.estado_label" outlined label="Estado" disable />
-              <q-input
-                :model-value="`$ ${formatearMonto(detalleCompraSeleccionada.total_productos_usd)} / Bs. ${formatearMonto(detalleCompraSeleccionada.total_productos_bs)}`"
-                outlined
-                label="Total"
+            <div v-else-if="detalleCompraSeleccionada" class="columna-compras">
+              <div class="rejilla-compras-simple">
+                <q-input
+                  :model-value="detalleCompraSeleccionada.nro_pedido"
+                  outlined
+                label="Nro compra"
                 disable
               />
-            </div>
+              <q-input
+                :model-value="detalleCompraSeleccionada.proveedor"
+                outlined
+                label="Proveedor"
+                disable
+              />
+              <q-input
+                :model-value="detalleCompraSeleccionada.fecha_pedido"
+                outlined
+                label="Fecha"
+                disable
+              />
+              <q-input
+                :model-value="detalleCompraSeleccionada.tipo_compra_label"
+                outlined
+                label="Tipo"
+                disable
+              />
+              <q-input
+                :model-value="detalleCompraSeleccionada.estado_label"
+                outlined
+                label="Estado"
+                disable
+              />
+                <q-input
+                  :model-value="`$ ${formatearMonto(
+                    detalleCompraSeleccionada.total_productos_usd
+                  )} / Bs. ${formatearMonto(
+                    detalleCompraSeleccionada.total_productos_bs
+                  )}`"
+                  outlined
+                  label="Total"
+                  disable
+                />
+              </div>
 
-            <div class="contenedor-tabla-simple">
-              <q-markup-table flat bordered class="tabla-simple-compras">
-                <thead>
-                  <tr>
-                    <th class="text-left">Detalle</th>
-                    <th class="text-left">Cantidad</th>
-                    <th class="text-left">Precio USD</th>
-                    <th class="text-left">Precio Bs</th>
-                    <th class="text-left">Subtotal USD</th>
-                    <th class="text-left">Subtotal Bs</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="detalle in detalleCompraSeleccionada.detalles" :key="detalle.id">
-                    <td>{{ detalle.detalle_texto }}</td>
-                    <td>{{ detalle.cantidad_pedida }}</td>
-                    <td>{{ formatearMonto(detalle.precio_unitario_usd) }}</td>
-                    <td>{{ formatearMonto(detalle.precio_unitario_bs) }}</td>
-                    <td>{{ formatearMonto(detalle.subtotal_usd) }}</td>
-                    <td>{{ formatearMonto(detalle.subtotal_bs) }}</td>
-                  </tr>
-                </tbody>
-              </q-markup-table>
+              <div class="rejilla-resumen-pagos-credito">
+                <div class="tarjeta-resumen-pago tarjeta-resumen-pago--neutral">
+                  <div class="text-caption text-grey-7">Estado de pago</div>
+                  <div class="text-h6 text-weight-bold">
+                    {{ detalleCompraSeleccionada.estado_pago_label }}
+                  </div>
+                  <div class="text-body2 text-grey-8">
+                    Saldo: $ {{ formatearMonto(detalleCompraSeleccionada.saldo_pendiente_usd) }}
+                  </div>
+                </div>
+                <div class="tarjeta-resumen-pago tarjeta-resumen-pago--success">
+                  <div class="text-caption text-grey-7">Total pagado</div>
+                  <div class="text-h6 text-weight-bold">
+                    $ {{ formatearMonto(detalleCompraSeleccionada.total_pagado_usd) }}
+                  </div>
+                  <div class="text-body2 text-grey-8">
+                    Bs. {{ formatearMonto(detalleCompraSeleccionada.total_pagado_bs) }}
+                  </div>
+                </div>
+                <div
+                  class="tarjeta-resumen-pago"
+                  :class="claseTarjetaDiferenciaCambiaria(detalleCompraSeleccionada.diferencia_cambiaria_total_tipo)"
+                >
+                  <div class="text-caption text-grey-7">
+                    {{ etiquetaDiferenciaCambiaria(detalleCompraSeleccionada.diferencia_cambiaria_total_tipo) }}
+                  </div>
+                  <div class="text-h6 text-weight-bold">
+                    Bs. {{ formatearMontoAbsoluto(detalleCompraSeleccionada.diferencia_cambiaria_total_bs) }}
+                  </div>
+                  <div class="text-body2 text-grey-8">
+                    Referencia: Bs. {{ formatearMonto(detalleCompraSeleccionada.referencia_pagado_bs) }}
+                  </div>
+                </div>
+                <div class="tarjeta-resumen-pago tarjeta-resumen-pago--warning">
+                  <div class="text-caption text-grey-7">Devolucion pendiente</div>
+                  <div class="text-h6 text-weight-bold">
+                    $ {{ formatearMonto(detalleCompraSeleccionada.devolucion_pendiente_usd) }}
+                  </div>
+                  <div class="text-body2 text-grey-8">
+                    Bs. {{ formatearMonto(detalleCompraSeleccionada.devolucion_pendiente_bs) }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="contenedor-tabla-simple">
+                <div class="text-subtitle1 text-weight-bold q-mb-sm">
+                  Productos del pedido
+                </div>
+                <q-markup-table flat bordered class="tabla-simple-compras">
+                  <thead>
+                    <tr>
+                      <th class="text-left">Detalle</th>
+                      <th class="text-left">Pedida</th>
+                      <th class="text-left">Recibida</th>
+                      <th class="text-left">Pendiente</th>
+                      <th class="text-left">Precio USD</th>
+                      <th class="text-left">Precio Bs</th>
+                      <th class="text-left">Subtotal USD</th>
+                      <th class="text-left">Subtotal Bs</th>
+                      <th class="text-left">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      v-for="detalle in detalleCompraSeleccionada.detalles"
+                      :key="detalle.id"
+                    >
+                      <td>{{ detalle.detalle_texto }}</td>
+                      <td>{{ detalle.cantidad_pedida }}</td>
+                      <td>{{ detalle.cantidad_recibida_acumulada }}</td>
+                      <td>{{ detalle.cantidad_pendiente }}</td>
+                      <td>{{ formatearMonto(detalle.precio_unitario_usd) }}</td>
+                      <td>{{ formatearMonto(detalle.precio_unitario_bs) }}</td>
+                      <td>{{ formatearMonto(detalle.subtotal_usd) }}</td>
+                      <td>{{ formatearMonto(detalle.subtotal_bs) }}</td>
+                      <td>{{ detalle.estado_linea }}</td>
+                    </tr>
+                  </tbody>
+                </q-markup-table>
+              </div>
+
+              <div class="contenedor-tabla-simple">
+                <div class="text-subtitle1 text-weight-bold q-mb-sm">
+                  Pagos y abonos
+                </div>
+                <q-markup-table flat bordered class="tabla-simple-compras">
+                  <thead>
+                    <tr>
+                      <th class="text-left">Sucursal</th>
+                      <th class="text-left">Fecha</th>
+                      <th class="text-left">Tipo cambio</th>
+                      <th class="text-left">Pago USD</th>
+                      <th class="text-left">Pago Bs</th>
+                      <th class="text-left">Referencia Bs</th>
+                      <th class="text-left">Diferencia Bs</th>
+                      <th class="text-left">Observaciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-if="!detalleCompraSeleccionada.abonos?.length">
+                      <td colspan="8" class="text-center text-grey-7">
+                        Aun no hay pagos o abonos registrados.
+                      </td>
+                    </tr>
+                    <tr
+                      v-for="abono in detalleCompraSeleccionada.abonos"
+                      :key="abono.id"
+                    >
+                      <td>{{ abono.sucursal || "-" }}</td>
+                      <td>{{ abono.fecha_abono || "-" }}</td>
+                      <td>{{ formatearMonto(abono.tipo_cambio_abono) }}</td>
+                      <td>{{ formatearMonto(abono.abono_usd) }}</td>
+                      <td>{{ formatearMonto(abono.abono_bs) }}</td>
+                      <td>{{ formatearMonto(abono.referencia_bs) }}</td>
+                      <td :class="claseTextoDiferenciaCambiaria(abono.diferencia_cambiaria_tipo)">
+                        {{ etiquetaDiferenciaCambiaria(abono.diferencia_cambiaria_tipo) }}:
+                        Bs. {{ formatearMontoAbsoluto(abono.diferencia_cambiaria_bs) }}
+                      </td>
+                      <td>{{ abono.observaciones || "-" }}</td>
+                    </tr>
+                  </tbody>
+                </q-markup-table>
+              </div>
+
+              <div class="contenedor-tabla-simple">
+                <div class="text-subtitle1 text-weight-bold q-mb-sm">
+                  Guias registradas
+                </div>
+                <q-markup-table flat bordered class="tabla-simple-compras">
+                  <thead>
+                    <tr>
+                      <th class="text-left">Fecha</th>
+                      <th class="text-left">Monto Bs</th>
+                      <th class="text-left">Estado</th>
+                      <th class="text-left">Pagado</th>
+                      <th class="text-left">Observaciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-if="!detalleCompraSeleccionada.guias?.length">
+                      <td colspan="5" class="text-center text-grey-7">
+                        Aun no hay guias registradas.
+                      </td>
+                    </tr>
+                    <tr
+                      v-for="guia in detalleCompraSeleccionada.guias"
+                      :key="guia.id"
+                    >
+                      <td>{{ guia.fecha_registro }}</td>
+                      <td>{{ formatearMonto(guia.monto_bs) }}</td>
+                      <td>{{ guia.estado_label }}</td>
+                      <td>{{ guia.pagado ? "Si" : "No" }}</td>
+                      <td>{{ guia.observaciones || "-" }}</td>
+                    </tr>
+                  </tbody>
+                </q-markup-table>
+              </div>
+
+              <div class="contenedor-tabla-simple">
+                <div class="text-subtitle1 text-weight-bold q-mb-sm">
+                  Recepciones e ingreso a inventario
+                </div>
+                <q-markup-table flat bordered class="tabla-simple-compras">
+                  <thead>
+                    <tr>
+                      <th class="text-left">Fecha recepcion</th>
+                      <th class="text-left">Estado recepcion</th>
+                      <th class="text-left">Guia asociada</th>
+                      <th class="text-left">Ingreso a inventario</th>
+                      <th class="text-left">Fecha ingreso</th>
+                      <th class="text-left">Detalle recepcionado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-if="!detalleCompraSeleccionada.recepciones?.length">
+                      <td colspan="6" class="text-center text-grey-7">
+                        Aun no hay recepciones registradas.
+                      </td>
+                    </tr>
+                    <tr
+                      v-for="recepcion in detalleCompraSeleccionada.recepciones"
+                      :key="recepcion.id"
+                    >
+                      <td>{{ recepcion.fecha_recepcion }}</td>
+                      <td>{{ recepcion.estado_recepcion_label }}</td>
+                      <td>
+                        {{
+                          detalleCompraSeleccionada.guias.find(
+                            (guia) => guia.id === recepcion.compra_guia_id
+                          )?.fecha_registro || "-"
+                        }}
+                      </td>
+                      <td>
+                        {{ recepcion.ingresado_inventario ? "Si" : "No" }}
+                      </td>
+                      <td>{{ recepcion.fecha_ingreso_inventario || "-" }}</td>
+                      <td>
+                        <div
+                          v-for="detalle in recepcion.detalles"
+                          :key="detalle.id"
+                        >
+                          {{ detalle.detalle_texto }}: {{ detalle.cantidad_recibida }}
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </q-markup-table>
+              </div>
             </div>
-          </div>
         </q-card-section>
       </q-card>
     </q-dialog>
@@ -242,14 +505,22 @@
     <q-dialog v-model="dialogoPagosCreditoAbierto" maximized>
       <q-card class="dialogo-detalle-producto">
         <q-card-section class="q-pa-lg">
-          <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
+          <div
+            class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
+          >
             <div>
               <div class="text-h6 text-weight-bold">Pagos de credito</div>
               <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
                 Registra pagos por sucursal y revisa cuanto falta por cancelar.
               </p>
             </div>
-            <q-btn flat round dense icon="close" @click="dialogoPagosCreditoAbierto = false" />
+            <q-btn
+              flat
+              round
+              dense
+              icon="close"
+              @click="dialogoPagosCreditoAbierto = false"
+            />
           </div>
         </q-card-section>
 
@@ -262,13 +533,38 @@
 
           <div v-else-if="detalleCompraSeleccionada" class="columna-compras">
             <div class="rejilla-compras-simple">
-              <q-input :model-value="detalleCompraSeleccionada.nro_pedido" outlined label="Nro compra" disable />
-              <q-input :model-value="detalleCompraSeleccionada.proveedor" outlined label="Proveedor" disable />
-              <q-input :model-value="detalleCompraSeleccionada.fecha_pedido" outlined label="Fecha" disable />
-              <q-input :model-value="detalleCompraSeleccionada.tipo_compra_label" outlined label="Tipo" disable />
+              <q-input
+                :model-value="detalleCompraSeleccionada.nro_pedido"
+                outlined
+                label="Nro compra"
+                disable
+              />
+              <q-input
+                :model-value="detalleCompraSeleccionada.proveedor"
+                outlined
+                label="Proveedor"
+                disable
+              />
+              <q-input
+                :model-value="detalleCompraSeleccionada.fecha_pedido"
+                outlined
+                label="Fecha"
+                disable
+              />
+              <q-input
+                :model-value="detalleCompraSeleccionada.tipo_compra_label"
+                outlined
+                label="Tipo"
+                disable
+              />
               <div class="bloque-estado-pago">
                 <div class="text-caption text-grey-7">Estado de pago</div>
-                <q-badge rounded :class="claseEstadoPago(detalleCompraSeleccionada.estado_pago)">
+                <q-badge
+                  rounded
+                  :class="
+                    claseEstadoPago(detalleCompraSeleccionada.estado_pago)
+                  "
+                >
                   {{ detalleCompraSeleccionada.estado_pago_label }}
                 </q-badge>
               </div>
@@ -278,20 +574,34 @@
               <div class="tarjeta-resumen-pago tarjeta-resumen-pago--neutral">
                 <div class="text-caption text-grey-7">Total compra</div>
                 <div class="text-h6 text-weight-bold">
-                  $ {{ formatearMonto(detalleCompraSeleccionada.total_productos_usd) }}
+                  $
+                  {{
+                    formatearMonto(
+                      detalleCompraSeleccionada.total_productos_usd
+                    )
+                  }}
                 </div>
                 <div class="text-body2 text-grey-8">
-                  Bs. {{ formatearMonto(detalleCompraSeleccionada.total_productos_bs) }}
+                  Bs.
+                  {{
+                    formatearMonto(detalleCompraSeleccionada.total_productos_bs)
+                  }}
                 </div>
               </div>
 
               <div class="tarjeta-resumen-pago tarjeta-resumen-pago--success">
                 <div class="text-caption text-grey-7">Total pagado</div>
                 <div class="text-h6 text-weight-bold">
-                  $ {{ formatearMonto(detalleCompraSeleccionada.total_pagado_usd) }}
+                  $
+                  {{
+                    formatearMonto(detalleCompraSeleccionada.total_pagado_usd)
+                  }}
                 </div>
                 <div class="text-body2 text-grey-8">
-                  Bs. {{ formatearMonto(detalleCompraSeleccionada.total_pagado_bs) }}
+                  Bs.
+                  {{
+                    formatearMonto(detalleCompraSeleccionada.total_pagado_bs)
+                  }}
                 </div>
               </div>
 
@@ -304,87 +614,174 @@
                   Bs. {{ formatearMonto(saldoPendientePreviewBs) }}
                 </div>
               </div>
+
+              <div
+                class="tarjeta-resumen-pago"
+                :class="claseTarjetaDiferenciaCambiaria(diferenciaCambiariaPreviewTipo)"
+              >
+                <div class="text-caption text-grey-7">
+                  {{ etiquetaDiferenciaCambiaria(diferenciaCambiariaPreviewTipo) }}
+                </div>
+                <div class="text-h6 text-weight-bold">
+                  Bs. {{ formatearMontoAbsoluto(diferenciaCambiariaPreviewBs) }}
+                </div>
+                <div class="text-body2 text-grey-8">
+                  Referencia: Bs. {{ formatearMonto(referenciaPagadoPreviewBs) }}
+                </div>
+              </div>
             </div>
 
-            <q-banner v-if="errorPagoCredito" rounded class="bg-red-1 text-red-10">
-              {{ errorPagoCredito }}
-            </q-banner>
+              <q-banner
+                v-if="errorPagoCredito"
+                rounded
+                class="bg-red-1 text-red-10"
+              >
+                {{ errorPagoCredito }}
+              </q-banner>
+                <q-banner
+                  v-else-if="
+                    pagoCreditoPreviewUsd >
+                    Number(detalleCompraSeleccionada.saldo_pendiente_usd || 0) +
+                      0.0001
+                "
+                rounded
+                class="bg-red-1 text-red-10"
+                >
+                  La suma de abonos supera el saldo pendiente de la compra.
+                </q-banner>
+                <q-banner
+                  v-else-if="!puedeRegistrarPagoCredito"
+                  rounded
+                  class="bg-blue-1 text-blue-10"
+                >
+                  Esta compra ya fue pagada por completo.
+                </q-banner>
 
             <q-card flat bordered class="tarjeta-compra-principal">
               <q-card-section class="q-pa-lg">
-                <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
+                <div
+                  class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
+                >
                   <div>
-                    <div class="text-subtitle1 text-weight-bold">Registrar pago</div>
+                    <div class="text-subtitle1 text-weight-bold">
+                      Registrar pago
+                    </div>
                     <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                      Cada sucursal puede ir abonando poco a poco hasta completar la compra.
+                      Cada sucursal puede ir abonando poco a poco hasta
+                      completar la compra.
                     </p>
                   </div>
 
-                  <q-btn
-                    unelevated
-                    color="dark"
-                    text-color="white"
-                    label="Guardar pago"
-                    :loading="guardandoPagoCredito"
-                    @click="guardarPagoCredito"
-                  />
-                </div>
-              </q-card-section>
+                    <div class="row q-gutter-sm">
+                      <q-btn
+                        v-if="puedeRegistrarPagoCredito"
+                        flat
+                        color="primary"
+                        icon="add"
+                        label="Agregar abono"
+                        @click="agregarFilaPagoCredito"
+                      />
+                      <q-btn
+                        v-if="puedeRegistrarPagoCredito"
+                        unelevated
+                        color="dark"
+                        text-color="white"
+                        label="Guardar pago"
+                        :loading="guardandoPagoCredito"
+                        @click="guardarPagoCredito"
+                      />
+                    </div>
+                  </div>
+                </q-card-section>
 
-              <q-separator />
+                <q-separator />
 
-              <q-card-section class="q-pa-lg">
-                <div class="rejilla-compras-simple">
-                  <q-select
-                    v-model="formularioPagoCredito.sucursalId"
-                    outlined
-                    emit-value
-                    map-options
-                    label="Sucursal"
-                    :options="sucursales"
-                    option-value="value"
-                    option-label="label"
-                  />
-                  <q-input
-                    v-model="formularioPagoCredito.fechaAbono"
-                    outlined
-                    type="date"
-                    label="Fecha de pago"
-                  />
-                  <q-input
-                    v-model.number="formularioPagoCredito.tipoCambioAbono"
-                    outlined
-                    type="number"
-                    min="0.01"
-                    step="0.0001"
-                    label="Tipo de cambio"
-                    @update:model-value="recalcularPagoCredito"
-                  />
-                  <q-input
-                    :model-value="formularioPagoCredito.abonoUsd"
-                    outlined
-                    type="number"
-                    min="0"
-                    step="0.0001"
-                    label="Pago USD"
-                    @update:model-value="actualizarMontoPagoCredito('usd', $event)"
-                  />
-                  <q-input
-                    :model-value="formularioPagoCredito.abonoBs"
-                    outlined
-                    type="number"
-                    min="0"
-                    step="0.0001"
-                    label="Pago Bs"
-                    @update:model-value="actualizarMontoPagoCredito('bs', $event)"
-                  />
-                  <q-input
-                    v-model="formularioPagoCredito.observaciones"
-                    outlined
-                    label="Observaciones"
-                  />
-                </div>
-              </q-card-section>
+                <q-card-section class="q-pa-lg">
+                  <div class="columna-compras q-gutter-md">
+                    <div
+                      v-for="(pago, indice) in formularioPagoCredito.pagos"
+                      :key="pago.uid"
+                      class="rejilla-pagos-simple"
+                    >
+                      <q-select
+                        v-model="pago.sucursalId"
+                        outlined
+                        emit-value
+                        map-options
+                        label="Sucursal"
+                        :options="sucursales"
+                        option-value="value"
+                        option-label="label"
+                      />
+                      <q-input
+                        v-model="pago.fechaAbono"
+                        outlined
+                        type="date"
+                        label="Fecha de pago"
+                      />
+                      <q-input
+                        v-model.number="pago.tipoCambioAbono"
+                        outlined
+                        type="number"
+                        min="0.01"
+                        step="0.0001"
+                        label="Tipo de cambio"
+                        @update:model-value="recalcularPagoCredito(pago)"
+                      />
+                      <q-input
+                        :model-value="pago.abonoUsd"
+                        outlined
+                        type="number"
+                        min="0"
+                        step="0.0001"
+                        label="Pago USD"
+                        @update:model-value="
+                          actualizarMontoPagoCredito(pago, 'usd', $event)
+                        "
+                      />
+                      <q-input
+                        :model-value="pago.abonoBs"
+                        outlined
+                        type="number"
+                        min="0"
+                        step="0.0001"
+                        label="Pago Bs"
+                        @update:model-value="
+                          actualizarMontoPagoCredito(pago, 'bs', $event)
+                        "
+                      />
+                      <q-input
+                        v-model="pago.observaciones"
+                        outlined
+                        label="Observaciones"
+                      />
+                      <div class="campo-pago-accion">
+                        <q-btn
+                          flat
+                          round
+                          dense
+                          color="negative"
+                          icon="delete"
+                          :disable="formularioPagoCredito.pagos.length === 1"
+                          @click="eliminarFilaPagoCredito(indice)"
+                        />
+                      </div>
+                      <div class="resumen-diferencia-fila">
+                        <span class="text-caption text-grey-7">
+                          Referencia Bs:
+                          {{ formatearMonto(referenciaPagoCreditoFila(pago)) }}
+                        </span>
+                        <span
+                          class="text-caption text-weight-medium"
+                          :class="claseTextoDiferenciaCambiaria(diferenciaPagoCreditoFilaTipo(pago))"
+                        >
+                          {{ etiquetaDiferenciaCambiaria(diferenciaPagoCreditoFilaTipo(pago)) }}:
+                          Bs. {{ formatearMontoAbsoluto(diferenciaPagoCreditoFila(pago)) }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </q-card-section>
             </q-card>
 
             <div class="contenedor-tabla-simple">
@@ -396,22 +793,32 @@
                     <th class="text-left">Tipo cambio</th>
                     <th class="text-left">Pago USD</th>
                     <th class="text-left">Pago Bs</th>
+                    <th class="text-left">Referencia Bs</th>
+                    <th class="text-left">Diferencia Bs</th>
                     <th class="text-left">Observaciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-if="!detalleCompraSeleccionada.abonos?.length">
-                    <td colspan="6" class="text-center text-grey-7">
+                    <td colspan="8" class="text-center text-grey-7">
                       Aun no hay pagos registrados para esta compra.
                     </td>
                   </tr>
-                  <tr v-for="abono in detalleCompraSeleccionada.abonos" :key="abono.id">
+                  <tr
+                    v-for="abono in detalleCompraSeleccionada.abonos"
+                    :key="abono.id"
+                  >
                     <td>{{ abono.sucursal }}</td>
                     <td>{{ abono.fecha_abono }}</td>
                     <td>{{ formatearMonto(abono.tipo_cambio_abono) }}</td>
                     <td>{{ formatearMonto(abono.abono_usd) }}</td>
                     <td>{{ formatearMonto(abono.abono_bs) }}</td>
-                    <td>{{ abono.observaciones || '-' }}</td>
+                    <td>{{ formatearMonto(abono.referencia_bs) }}</td>
+                    <td :class="claseTextoDiferenciaCambiaria(abono.diferencia_cambiaria_tipo)">
+                      {{ etiquetaDiferenciaCambiaria(abono.diferencia_cambiaria_tipo) }}:
+                      Bs. {{ formatearMontoAbsoluto(abono.diferencia_cambiaria_bs) }}
+                    </td>
+                    <td>{{ abono.observaciones || "-" }}</td>
                   </tr>
                 </tbody>
               </q-markup-table>
@@ -424,14 +831,23 @@
     <q-dialog v-model="dialogoGuiasAbierto" maximized>
       <q-card class="dialogo-detalle-producto">
         <q-card-section class="q-pa-lg">
-          <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
+          <div
+            class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
+          >
             <div>
               <div class="text-h6 text-weight-bold">Control de guias</div>
               <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                Registra las guias de traslado de esta compra y revisa su historial.
+                Registra las guias de traslado de esta compra y revisa su
+                historial.
               </p>
             </div>
-            <q-btn flat round dense icon="close" @click="dialogoGuiasAbierto = false" />
+            <q-btn
+              flat
+              round
+              dense
+              icon="close"
+              @click="dialogoGuiasAbierto = false"
+            />
           </div>
         </q-card-section>
 
@@ -444,12 +860,34 @@
 
           <div v-else-if="detalleCompraSeleccionada" class="columna-compras">
             <div class="rejilla-compras-simple">
-              <q-input :model-value="detalleCompraSeleccionada.nro_pedido" outlined label="Nro compra" disable />
-              <q-input :model-value="detalleCompraSeleccionada.proveedor" outlined label="Proveedor" disable />
-              <q-input :model-value="detalleCompraSeleccionada.fecha_pedido" outlined label="Fecha" disable />
-              <q-input :model-value="detalleCompraSeleccionada.estado_label" outlined label="Estado logístico" disable />
               <q-input
-                :model-value="`Bs. ${formatearMonto(detalleCompraSeleccionada.total_guias_bs)}`"
+                :model-value="detalleCompraSeleccionada.nro_pedido"
+                outlined
+                label="Nro compra"
+                disable
+              />
+              <q-input
+                :model-value="detalleCompraSeleccionada.proveedor"
+                outlined
+                label="Proveedor"
+                disable
+              />
+              <q-input
+                :model-value="detalleCompraSeleccionada.fecha_pedido"
+                outlined
+                label="Fecha"
+                disable
+              />
+              <q-input
+                :model-value="detalleCompraSeleccionada.estado_label"
+                outlined
+                label="Estado logístico"
+                disable
+              />
+              <q-input
+                :model-value="`Bs. ${formatearMonto(
+                  detalleCompraSeleccionada.total_guias_bs
+                )}`"
                 outlined
                 label="Total guias"
                 disable
@@ -462,29 +900,35 @@
 
             <q-card flat bordered class="tarjeta-compra-principal">
               <q-card-section class="q-pa-lg">
-                <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
+                <div
+                  class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
+                >
                   <div>
                     <div class="text-subtitle1 text-weight-bold">
-                      {{ guiaEditandoId ? 'Editar guia' : 'Registrar guia' }}
+                      {{ guiaEditandoId ? "Editar guia" : "Registrar guia" }}
                     </div>
                     <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                      Las guias se registran solo en bolivianos y pueden quedar en transito o recogidas.
+                      Las guias se registran solo en bolivianos y pueden quedar
+                      en transito o recogidas.
                     </p>
                   </div>
 
-                  <div class="row q-gutter-sm">
-                    <q-btn
-                      v-if="guiaEditandoId"
-                      flat
-                      color="grey-8"
+                    <div class="row q-gutter-sm">
+                      <q-btn
+                        v-if="guiaEditandoId"
+                        flat
+                        color="grey-8"
                       label="Cancelar edicion"
                       @click="reiniciarFormularioGuia"
-                    />
-                    <q-btn
-                      unelevated
-                      color="dark"
-                      text-color="white"
-                      :label="guiaEditandoId ? 'Actualizar guia' : 'Guardar guia'"
+                      />
+                      <q-btn
+                        v-if="puedeRegistrarGuias"
+                        unelevated
+                        color="dark"
+                        text-color="white"
+                        :label="
+                        guiaEditandoId ? 'Actualizar guia' : 'Guardar guia'
+                      "
                       :loading="guardandoGuia"
                       @click="guardarGuia"
                     />
@@ -494,74 +938,132 @@
 
               <q-separator />
 
-              <q-card-section class="q-pa-lg">
-                <div class="rejilla-compras-simple">
-                  <q-input
-                    v-model="formularioGuia.fechaRegistro"
-                    outlined
-                    type="date"
-                    label="Fecha de guia"
-                  />
-                  <q-input
-                    v-model.number="formularioGuia.montoBs"
-                    outlined
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    label="Monto Bs"
-                  />
-                  <q-select
-                    v-model="formularioGuia.estado"
-                    outlined
-                    emit-value
-                    map-options
-                    label="Estado"
-                    :options="estadosGuia"
-                    option-value="value"
-                    option-label="label"
-                  />
-                  <q-toggle
-                    v-model="formularioGuia.pagado"
-                    label="Guia pagada"
-                    color="primary"
-                    left-label
-                  />
-                  <q-input
-                    v-model="formularioGuia.observaciones"
-                    outlined
-                    label="Observaciones"
-                  />
-                </div>
-              </q-card-section>
-            </q-card>
+                  <q-card-section class="q-pa-lg">
+                    <div v-if="puedeRegistrarGuias" class="rejilla-guias-simple">
+                      <q-input
+                      v-model="formularioGuia.fechaRegistro"
+                      outlined
+                      type="date"
+                      class="campo-guia"
+                      label="Fecha de guia"
+                    />
+                    <q-input
+                      v-model.number="formularioGuia.montoBs"
+                      outlined
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      class="campo-guia"
+                      label="Monto Bs"
+                    />
+                    <q-select
+                      v-model="formularioGuia.estado"
+                      outlined
+                      emit-value
+                      map-options
+                      class="campo-guia"
+                      label="Estado"
+                      :options="estadosGuia"
+                      option-value="value"
+                      option-label="label"
+                    />
+                    <div class="campo-guia campo-guia--toggle">
+                      <q-toggle
+                        v-model="formularioGuia.pagado"
+                        label="Guia pagada"
+                        color="primary"
+                        left-label
+                      />
+                    </div>
+                    <q-input
+                      v-model="formularioGuia.observaciones"
+                      outlined
+                      class="campo-guia"
+                      label="Observaciones"
+                    />
+                    <div class="columna-campo-archivo campo-guia">
+                      <q-file
+                        v-model="formularioGuia.fotoGuia"
+                        outlined
+                        clearable
+                        accept=".jpg,.jpeg,.png,.webp"
+                        label="Foto de guia opcional"
+                      />
+                      <a
+                        v-if="formularioGuia.fotoUrlActual && !formularioGuia.fotoGuia"
+                        :href="resolverUrlArchivo(formularioGuia.fotoUrlActual)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="enlace-comprobante"
+                      >
+                        Ver foto actual
+                        </a>
+                      </div>
+                    </div>
+                    <q-banner
+                      v-else
+                      rounded
+                      class="bg-blue-1 text-blue-10"
+                    >
+                      Esta compra ya no necesita registrar mas guias.
+                    </q-banner>
+                  </q-card-section>
+                </q-card>
 
             <div class="contenedor-tabla-simple">
               <q-markup-table flat bordered class="tabla-simple-compras">
                 <thead>
-                  <tr>
-                    <th class="text-left">Fecha</th>
-                    <th class="text-left">Monto Bs</th>
-                    <th class="text-left">Estado</th>
-                    <th class="text-left">Pagado</th>
-                    <th class="text-left">Observaciones</th>
-                    <th class="text-left">Accion</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-if="!detalleCompraSeleccionada.guias?.length">
-                    <td colspan="6" class="text-center text-grey-7">
-                      Aun no hay guias registradas para esta compra.
-                    </td>
-                  </tr>
-                  <tr v-for="guia in detalleCompraSeleccionada.guias" :key="guia.id">
+                    <tr>
+                      <th class="text-left">Fecha</th>
+                      <th class="text-left">Monto Bs</th>
+                      <th class="text-left">Estado</th>
+                      <th class="text-left">Pagado</th>
+                      <th class="text-left">Foto</th>
+                      <th class="text-left">Observaciones</th>
+                      <th class="text-left">Accion</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-if="!detalleCompraSeleccionada.guias?.length">
+                      <td colspan="7" class="text-center text-grey-7">
+                        Aun no hay guias registradas para esta compra.
+                      </td>
+                    </tr>
+                  <tr
+                    v-for="guia in detalleCompraSeleccionada.guias"
+                    :key="guia.id"
+                  >
                     <td>{{ guia.fecha_registro }}</td>
-                    <td>{{ formatearMonto(guia.monto_bs) }}</td>
-                    <td>{{ guia.estado_label }}</td>
-                    <td>{{ guia.pagado ? 'Si' : 'No' }}</td>
-                    <td>{{ guia.observaciones || '-' }}</td>
-                    <td>
-                      <q-btn flat dense color="primary" label="Editar" @click="editarGuia(guia)" />
-                    </td>
+                      <td>{{ formatearMonto(guia.monto_bs) }}</td>
+                      <td>{{ guia.estado_label }}</td>
+                      <td>{{ guia.pagado ? "Si" : "No" }}</td>
+                      <td>
+                        <a
+                          v-if="guia.foto_url"
+                          :href="resolverUrlArchivo(guia.foto_url)"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="enlace-comprobante"
+                        >
+                          Ver foto
+                        </a>
+                        <span v-else>-</span>
+                      </td>
+                      <td>{{ guia.observaciones || "-" }}</td>
+                      <td>
+                        <q-btn
+                          flat
+                          dense
+                          :color="guiaYaRecepcionada(guia) ? 'grey-6' : 'primary'"
+                          :disable="guiaYaRecepcionada(guia)"
+                          :label="guiaYaRecepcionada(guia) ? 'Bloqueada' : 'Editar'"
+                          @click="editarGuia(guia)"
+                        >
+                          <q-tooltip v-if="guiaYaRecepcionada(guia)">
+                            Esta guia ya fue usada en una recepcion
+                          </q-tooltip>
+                        </q-btn>
+                      </td>
                   </tr>
                 </tbody>
               </q-markup-table>
@@ -574,14 +1076,23 @@
     <q-dialog v-model="dialogoRecepcionAbierto" maximized>
       <q-card class="dialogo-detalle-producto">
         <q-card-section class="q-pa-lg">
-          <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
+          <div
+            class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
+          >
             <div>
               <div class="text-h6 text-weight-bold">Recepcion de compra</div>
               <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                Registra lo que llego hoy y el sistema lo acumulara sobre el pedido.
+                Registra lo que llego hoy y el sistema lo acumulara sobre el
+                pedido.
               </p>
             </div>
-            <q-btn flat round dense icon="close" @click="dialogoRecepcionAbierto = false" />
+            <q-btn
+              flat
+              round
+              dense
+              icon="close"
+              @click="dialogoRecepcionAbierto = false"
+            />
           </div>
         </q-card-section>
 
@@ -594,41 +1105,85 @@
 
           <div v-else-if="detalleCompraSeleccionada" class="columna-compras">
             <div class="rejilla-compras-simple">
-              <q-input :model-value="detalleCompraSeleccionada.nro_pedido" outlined label="Nro compra" disable />
-              <q-input :model-value="detalleCompraSeleccionada.proveedor" outlined label="Proveedor" disable />
-              <q-input :model-value="detalleCompraSeleccionada.estado_label" outlined label="Estado actual" disable />
-              <q-input :model-value="detalleCompraSeleccionada.fecha_pedido" outlined label="Fecha del pedido" disable />
-              <q-input :model-value="cantidadRecibidaTotal" outlined label="Total recibido" disable />
-              <q-input :model-value="cantidadPendienteTotal" outlined label="Total pendiente" disable />
+              <q-input
+                :model-value="detalleCompraSeleccionada.nro_pedido"
+                outlined
+                label="Nro compra"
+                disable
+              />
+              <q-input
+                :model-value="detalleCompraSeleccionada.proveedor"
+                outlined
+                label="Proveedor"
+                disable
+              />
+              <q-input
+                :model-value="detalleCompraSeleccionada.estado_label"
+                outlined
+                label="Estado actual"
+                disable
+              />
+              <q-input
+                :model-value="detalleCompraSeleccionada.fecha_pedido"
+                outlined
+                label="Fecha del pedido"
+                disable
+              />
+              <q-input
+                :model-value="cantidadRecibidaTotal"
+                outlined
+                label="Total recibido"
+                disable
+              />
+              <q-input
+                :model-value="cantidadPendienteTotal"
+                outlined
+                label="Total pendiente"
+                disable
+              />
             </div>
 
-            <q-banner v-if="errorRecepcion" rounded class="bg-red-1 text-red-10">
+            <q-banner
+              v-if="errorRecepcion"
+              rounded
+              class="bg-red-1 text-red-10"
+            >
               {{ errorRecepcion }}
             </q-banner>
 
             <q-card flat bordered class="tarjeta-compra-principal">
               <q-card-section class="q-pa-lg">
-                <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
+                <div
+                  class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
+                >
                   <div>
-                    <div class="text-subtitle1 text-weight-bold">Registrar recepcion</div>
+                    <div class="text-subtitle1 text-weight-bold">
+                      Registrar recepcion
+                    </div>
                     <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                      Usa “Cantidad que llego hoy” para registrar esta tanda de entrega.
+                      Usa “Cantidad que llego hoy” para registrar esta tanda de
+                      entrega.
                     </p>
                   </div>
 
                   <div class="row q-gutter-sm">
-                    <q-btn
-                      v-if="cantidadPendienteTotal > 0 && detalleCompraSeleccionada.estado !== 'incompleto'"
+                      <q-btn
+                        v-if="
+                          puedeRegistrarRecepcion &&
+                          cantidadPendienteTotal > 0 &&
+                          detalleCompraSeleccionada.estado !== 'incompleto'
+                        "
                       outline
                       color="negative"
                       label="Cerrar incompleto"
                       @click="dialogoCerrarIncompletoAbierto = true"
-                    />
-                    <q-btn
-                      unelevated
-                      color="dark"
-                      text-color="white"
-                      label="Guardar recepcion"
+                      />
+                      <q-btn
+                        v-if="puedeRegistrarRecepcion"
+                        unelevated
+                        color="dark"
+                        text-color="white"
+                        label="Guardar recepcion"
                       :loading="guardandoRecepcion"
                       @click="guardarRecepcion"
                     />
@@ -638,37 +1193,45 @@
 
               <q-separator />
 
-              <q-card-section class="q-pa-lg">
-                <div class="rejilla-compras-simple">
-                  <q-input
+                <q-card-section class="q-pa-lg">
+                  <div v-if="puedeRegistrarRecepcion" class="rejilla-compras-simple">
+                    <q-input
                     v-model="formularioRecepcion.fechaRecepcion"
                     outlined
                     type="date"
                     label="Fecha de recepcion"
                   />
-                  <q-select
-                    v-model="formularioRecepcion.compraGuiaId"
-                    outlined
-                    emit-value
-                    map-options
-                    clearable
-                    label="Guia recogida"
-                    :options="guiasRecogidasDisponibles"
-                    option-value="value"
-                    option-label="label"
-                  />
-                  <q-input
-                    v-model="formularioRecepcion.observaciones"
-                    outlined
-                    label="Observaciones generales"
-                  />
-                </div>
-              </q-card-section>
+                    <q-select
+                      v-model="formularioRecepcion.compraGuiaId"
+                      outlined
+                      emit-value
+                      map-options
+                      clearable
+                      label="Guia recogida"
+                      :options="guiasRecogidasDisponibles"
+                      option-disable="disable"
+                      option-value="value"
+                      option-label="label"
+                    />
+                    <q-input
+                      v-model="formularioRecepcion.observaciones"
+                      outlined
+                      label="Observaciones generales"
+                    />
+                  </div>
+                  <q-banner
+                    v-else
+                    rounded
+                    class="bg-blue-1 text-blue-10"
+                  >
+                    Esta compra ya no tiene cantidades pendientes por recepcionar.
+                  </q-banner>
+                </q-card-section>
 
-              <q-separator />
+                <q-separator />
 
-              <q-card-section class="q-pa-lg">
-                <div class="contenedor-tabla-simple">
+                <q-card-section v-if="puedeRegistrarRecepcion" class="q-pa-lg">
+                  <div class="contenedor-tabla-simple">
                   <q-markup-table flat bordered class="tabla-simple-compras">
                     <thead>
                       <tr>
@@ -681,7 +1244,10 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="detalle in formularioRecepcion.detalles" :key="detalle.compraDetalleId">
+                      <tr
+                        v-for="detalle in formularioRecepcion.detalles"
+                        :key="detalle.compraDetalleId"
+                      >
                         <td>{{ detalle.detalleTexto }}</td>
                         <td>{{ detalle.cantidadPedida }}</td>
                         <td>{{ detalle.cantidadRecibidaAcumulada }}</td>
@@ -696,8 +1262,14 @@
                             :max="detalle.cantidadPendiente"
                           />
                         </td>
-                        <td class="columna-tabla-simple columna-tabla-simple--detalle">
-                          <q-input v-model="detalle.observaciones" outlined dense />
+                        <td
+                          class="columna-tabla-simple columna-tabla-simple--detalle"
+                        >
+                          <q-input
+                            v-model="detalle.observaciones"
+                            outlined
+                            dense
+                          />
                         </td>
                       </tr>
                     </tbody>
@@ -711,9 +1283,18 @@
               rounded
               class="bg-orange-1 text-orange-10"
             >
-              Devolucion pendiente del proveedor:
-              $ {{ formatearMonto(detalleCompraSeleccionada.devolucion_pendiente_usd) }}
-              / Bs. {{ formatearMonto(detalleCompraSeleccionada.devolucion_pendiente_bs) }}
+              Devolucion pendiente del proveedor: $
+              {{
+                formatearMonto(
+                  detalleCompraSeleccionada.devolucion_pendiente_usd
+                )
+              }}
+              / Bs.
+              {{
+                formatearMonto(
+                  detalleCompraSeleccionada.devolucion_pendiente_bs
+                )
+              }}
             </q-banner>
 
             <div class="contenedor-tabla-simple">
@@ -732,13 +1313,20 @@
                       Aun no hay recepciones registradas para esta compra.
                     </td>
                   </tr>
-                  <tr v-for="recepcion in detalleCompraSeleccionada.recepciones" :key="recepcion.id">
+                  <tr
+                    v-for="recepcion in detalleCompraSeleccionada.recepciones"
+                    :key="recepcion.id"
+                  >
                     <td>{{ recepcion.fecha_recepcion }}</td>
                     <td>{{ recepcion.estado_recepcion_label }}</td>
-                    <td>{{ recepcion.observaciones || '-' }}</td>
+                    <td>{{ recepcion.observaciones || "-" }}</td>
                     <td>
-                      <div v-for="detalle in recepcion.detalles" :key="detalle.id">
-                        {{ detalle.detalle_texto }}: {{ detalle.cantidad_recibida }}
+                      <div
+                        v-for="detalle in recepcion.detalles"
+                        :key="detalle.id"
+                      >
+                        {{ detalle.detalle_texto }}:
+                        {{ detalle.cantidad_recibida }}
                       </div>
                     </td>
                   </tr>
@@ -753,14 +1341,23 @@
     <q-dialog v-model="dialogoIngresoInventarioAbierto" maximized>
       <q-card class="dialogo-detalle-producto">
         <q-card-section class="q-pa-lg">
-          <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
+          <div
+            class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
+          >
             <div>
               <div class="text-h6 text-weight-bold">Ingreso a inventario</div>
               <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                Ingresa al inventario lo que ya fue recepcionado, aunque la compra siga incompleta.
+                Ingresa al inventario lo que ya fue recepcionado, aunque la
+                compra siga incompleta.
               </p>
             </div>
-            <q-btn flat round dense icon="close" @click="dialogoIngresoInventarioAbierto = false" />
+            <q-btn
+              flat
+              round
+              dense
+              icon="close"
+              @click="dialogoIngresoInventarioAbierto = false"
+            />
           </div>
         </q-card-section>
 
@@ -773,9 +1370,24 @@
 
           <div v-else-if="detalleCompraSeleccionada" class="columna-compras">
             <div class="rejilla-compras-simple">
-              <q-input :model-value="detalleCompraSeleccionada.nro_pedido" outlined label="Nro compra" disable />
-              <q-input :model-value="detalleCompraSeleccionada.proveedor" outlined label="Proveedor" disable />
-              <q-input :model-value="detalleCompraSeleccionada.estado_label" outlined label="Estado actual" disable />
+              <q-input
+                :model-value="detalleCompraSeleccionada.nro_pedido"
+                outlined
+                label="Nro compra"
+                disable
+              />
+              <q-input
+                :model-value="detalleCompraSeleccionada.proveedor"
+                outlined
+                label="Proveedor"
+                disable
+              />
+              <q-input
+                :model-value="detalleCompraSeleccionada.estado_label"
+                outlined
+                label="Estado actual"
+                disable
+              />
               <q-select
                 v-model="formularioIngresoInventario.recepcionId"
                 outlined
@@ -789,7 +1401,11 @@
               />
             </div>
 
-            <q-banner v-if="errorIngresoInventario" rounded class="bg-red-1 text-red-10">
+            <q-banner
+              v-if="errorIngresoInventario"
+              rounded
+              class="bg-red-1 text-red-10"
+            >
               {{ errorIngresoInventario }}
             </q-banner>
 
@@ -798,7 +1414,8 @@
               rounded
               class="bg-blue-1 text-blue-10"
             >
-              Esta compra no tiene recepciones pendientes de ingreso a inventario.
+              Esta compra no tiene recepciones pendientes de ingreso a
+              inventario.
             </q-banner>
 
             <div v-else class="columna-compras">
@@ -810,11 +1427,17 @@
                 class="tarjeta-compra-principal"
               >
                 <q-card-section class="q-pa-lg">
-                  <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
+                  <div
+                    class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
+                  >
                     <div>
-                      <div class="text-subtitle1 text-weight-bold">{{ detalle.detalleTexto }}</div>
+                      <div class="text-subtitle1 text-weight-bold">
+                        {{ detalle.detalleTexto }}
+                      </div>
                       <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                        Cantidad recepcionada: {{ detalle.cantidadRecibida }} | Costo: $ {{ formatearMonto(detalle.costoUsd) }} / Bs. {{ formatearMonto(detalle.costoBs) }}
+                        Cantidad recepcionada: {{ detalle.cantidadRecibida }} |
+                        Costo: $ {{ formatearMonto(detalle.costoUsd) }} / Bs.
+                        {{ formatearMonto(detalle.costoBs) }}
                       </p>
                     </div>
                     <q-toggle
@@ -843,7 +1466,9 @@
                       :options="opcionesProductosInventario"
                       option-value="value"
                       option-label="label"
-                      @update:model-value="seleccionarProductoExistenteIngreso(detalle, $event)"
+                      @update:model-value="
+                        seleccionarProductoExistenteIngreso(detalle, $event)
+                      "
                     />
                     <q-input
                       v-model="detalle.modelo"
@@ -901,11 +1526,24 @@
                         <q-tooltip>Nueva categoria</q-tooltip>
                       </q-btn>
                     </div>
-                    <q-input :model-value="detalle.costoUsd" outlined disable label="Costo USD" />
-                    <q-input :model-value="detalle.costoBs" outlined disable label="Costo Bs" />
+                    <q-input
+                      :model-value="detalle.costoUsd"
+                      outlined
+                      disable
+                      label="Costo USD"
+                    />
+                    <q-input
+                      :model-value="detalle.costoBs"
+                      outlined
+                      disable
+                      label="Costo Bs"
+                    />
                   </div>
 
-                  <div v-if="detalle.crearProducto" class="columna-compras q-mt-md">
+                  <div
+                    v-if="detalle.crearProducto"
+                    class="columna-compras q-mt-md"
+                  >
                     <div class="rejilla-compras-simple">
                       <q-input
                         v-model.number="detalle.tipoCambioVenta"
@@ -913,8 +1551,8 @@
                         type="number"
                         min="0.0001"
                         step="0.0001"
-                        label="Tipo cambio referencia"
-                        @update:model-value="sincronizarMontosVentaDesdeTipoCambio(detalle)"
+                        disable
+                        label="Tipo cambio de compra"
                       />
                       <q-input
                         :model-value="detalle.precioUnitarioUsd"
@@ -923,7 +1561,14 @@
                         min="0"
                         step="0.0001"
                         label="Precio unitario USD"
-                        @update:model-value="actualizarMontoVentaIngreso(detalle, 'precioUnitario', 'usd', $event)"
+                        @update:model-value="
+                          actualizarMontoVentaIngreso(
+                            detalle,
+                            'precioUnitario',
+                            'usd',
+                            $event
+                          )
+                        "
                       />
                       <q-input
                         :model-value="detalle.precioUnitarioBs"
@@ -932,7 +1577,14 @@
                         min="0"
                         step="0.0001"
                         label="Precio unitario Bs"
-                        @update:model-value="actualizarMontoVentaIngreso(detalle, 'precioUnitario', 'bs', $event)"
+                        @update:model-value="
+                          actualizarMontoVentaIngreso(
+                            detalle,
+                            'precioUnitario',
+                            'bs',
+                            $event
+                          )
+                        "
                       />
                       <q-input
                         :model-value="detalle.precioMayoristaUsd"
@@ -941,7 +1593,14 @@
                         min="0"
                         step="0.0001"
                         label="Precio mayorista USD"
-                        @update:model-value="actualizarMontoVentaIngreso(detalle, 'precioMayorista', 'usd', $event)"
+                        @update:model-value="
+                          actualizarMontoVentaIngreso(
+                            detalle,
+                            'precioMayorista',
+                            'usd',
+                            $event
+                          )
+                        "
                       />
                       <q-input
                         :model-value="detalle.precioMayoristaBs"
@@ -950,8 +1609,43 @@
                         min="0"
                         step="0.0001"
                         label="Precio mayorista Bs"
-                        @update:model-value="actualizarMontoVentaIngreso(detalle, 'precioMayorista', 'bs', $event)"
+                        @update:model-value="
+                          actualizarMontoVentaIngreso(
+                            detalle,
+                            'precioMayorista',
+                            'bs',
+                            $event
+                          )
+                        "
                       />
+                    </div>
+                  </div>
+
+                  <div class="rejilla-resumen-ingreso q-mt-md">
+                    <div class="tarjeta-resumen-ingreso tarjeta-resumen-ingreso--neutral">
+                      <div class="text-caption text-grey-7">Cantidad a ingresar</div>
+                      <div class="text-h6 text-weight-bold">
+                        {{ detalle.cantidadRecibida }}
+                      </div>
+                    </div>
+                    <div class="tarjeta-resumen-ingreso tarjeta-resumen-ingreso--success">
+                      <div class="text-caption text-grey-7">Distribuido</div>
+                      <div class="text-h6 text-weight-bold">
+                        {{ totalDistribuidoIngreso(detalle) }}
+                      </div>
+                    </div>
+                    <div
+                      class="tarjeta-resumen-ingreso"
+                      :class="
+                        cantidadPendienteDistribucion(detalle) > 0
+                          ? 'tarjeta-resumen-ingreso--warning'
+                          : 'tarjeta-resumen-ingreso--done'
+                      "
+                    >
+                      <div class="text-caption text-grey-7">Pendiente distribuir</div>
+                      <div class="text-h6 text-weight-bold">
+                        {{ cantidadPendienteDistribucion(detalle) }}
+                      </div>
                     </div>
                   </div>
                 </q-card-section>
@@ -959,32 +1653,53 @@
                 <q-separator />
 
                 <q-card-section class="q-pa-lg">
-                  <div class="text-subtitle2 text-weight-bold q-mb-md">Distribucion por sucursal</div>
-                  <div class="contenedor-tabla-simple">
-                    <q-markup-table flat bordered class="tabla-simple-compras">
-                      <thead>
-                        <tr>
-                          <th class="text-left">Sucursal</th>
-                          <th class="text-left">Cantidad</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr v-for="item in detalle.distribucionSucursales" :key="`${detalle.recepcionDetalleId}-${item.sucursalId}`">
-                          <td>{{ item.sucursal }}</td>
-                          <td class="columna-tabla-simple">
-                            <q-input
-                              :model-value="item.cantidad"
-                              outlined
-                              dense
-                              type="number"
-                              min="0"
-                              @update:model-value="actualizarDistribucionIngreso(detalle, item.sucursalId, $event)"
-                            />
-                          </td>
-                        </tr>
-                      </tbody>
-                    </q-markup-table>
+                  <div class="text-subtitle2 text-weight-bold q-mb-md">
+                    Distribucion por sucursal
                   </div>
+                  <div class="rejilla-distribucion-sucursales">
+                    <div
+                      v-for="item in detalle.distribucionSucursales"
+                      :key="`${detalle.recepcionDetalleId}-${item.sucursalId}`"
+                      class="tarjeta-distribucion-sucursal"
+                    >
+                      <div class="text-subtitle2 text-weight-bold">
+                        {{ item.sucursal }}
+                      </div>
+                      <div class="rejilla-distribucion-sucursal-campos q-mt-md">
+                        <q-input
+                          :model-value="item.cantidad"
+                          outlined
+                          dense
+                          type="number"
+                          min="0"
+                          :max="detalle.cantidadRecibida"
+                          label="Cantidad"
+                          @update:model-value="
+                            actualizarDistribucionIngreso(
+                              detalle,
+                              item.sucursalId,
+                              $event
+                            )
+                          "
+                        />
+                        <q-input
+                          v-model="item.observaciones"
+                          outlined
+                          dense
+                          label="Observaciones"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <q-banner
+                    v-if="cantidadPendienteDistribucion(detalle) > 0"
+                    rounded
+                    class="bg-amber-1 text-amber-10 q-mt-md"
+                  >
+                    Todavia faltan
+                    {{ cantidadPendienteDistribucion(detalle) }}
+                    unidad(es) por asignar a sucursales.
+                  </q-banner>
 
                   <q-toggle
                     v-model="detalle.registrarSeries"
@@ -995,7 +1710,10 @@
                     @update:model-value="sincronizarSeriesIngreso(detalle)"
                   />
 
-                  <div v-if="detalle.registrarSeries" class="contenedor-tabla-simple q-mt-md">
+                  <div
+                    v-if="detalle.registrarSeries"
+                    class="contenedor-tabla-simple q-mt-md"
+                  >
                     <q-markup-table flat bordered class="tabla-simple-compras">
                       <thead>
                         <tr>
@@ -1005,13 +1723,32 @@
                         </tr>
                       </thead>
                       <tbody>
-                        <tr v-for="serie in detalle.series" :key="serie.idTemporal">
-                          <td>{{ sucursales.find((item) => item.id === serie.sucursalId)?.label || 'Sucursal' }}</td>
-                          <td class="columna-tabla-simple">
-                            <q-input v-model="serie.numeroSerie" outlined dense />
+                        <tr
+                          v-for="serie in detalle.series"
+                          :key="serie.idTemporal"
+                        >
+                          <td>
+                            {{
+                              sucursales.find(
+                                (item) => item.id === serie.sucursalId
+                              )?.label || "Sucursal"
+                            }}
                           </td>
-                          <td class="columna-tabla-simple columna-tabla-simple--detalle">
-                            <q-input v-model="serie.observaciones" outlined dense />
+                          <td class="columna-tabla-simple">
+                            <q-input
+                              v-model="serie.numeroSerie"
+                              outlined
+                              dense
+                            />
+                          </td>
+                          <td
+                            class="columna-tabla-simple columna-tabla-simple--detalle"
+                          >
+                            <q-input
+                              v-model="serie.observaciones"
+                              outlined
+                              dense
+                            />
                           </td>
                         </tr>
                       </tbody>
@@ -1037,21 +1774,33 @@
     </q-dialog>
 
     <q-dialog v-model="dialogoCerrarIncompletoAbierto">
-      <q-card style="width: min(92vw, 560px);">
+      <q-card style="width: min(92vw, 560px)">
         <q-card-section class="row items-center justify-between">
           <div>
-            <div class="text-h6 text-weight-bold">Cerrar compra como incompleta</div>
+            <div class="text-h6 text-weight-bold">
+              Cerrar compra como incompleta
+            </div>
             <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
               Usa esta opcion solo si el proveedor ya no enviara lo pendiente.
             </p>
           </div>
-          <q-btn flat round dense icon="close" @click="dialogoCerrarIncompletoAbierto = false" />
+          <q-btn
+            flat
+            round
+            dense
+            icon="close"
+            @click="dialogoCerrarIncompletoAbierto = false"
+          />
         </q-card-section>
 
         <q-separator />
 
         <q-card-section class="q-gutter-md">
-          <q-banner v-if="errorCerrarIncompleto" rounded class="bg-red-1 text-red-10">
+          <q-banner
+            v-if="errorCerrarIncompleto"
+            rounded
+            class="bg-red-1 text-red-10"
+          >
             {{ errorCerrarIncompleto }}
           </q-banner>
 
@@ -1064,14 +1813,20 @@
           />
 
           <q-banner rounded class="bg-grey-1 text-grey-9">
-            Se calculara la devolucion pendiente con base en las cantidades faltantes y el precio original del pedido.
+            Se calculara la devolucion pendiente con base en las cantidades
+            faltantes y el precio original del pedido.
           </q-banner>
         </q-card-section>
 
         <q-separator />
 
         <q-card-actions align="right" class="q-pa-md">
-          <q-btn flat color="grey-8" label="Cancelar" @click="dialogoCerrarIncompletoAbierto = false" />
+          <q-btn
+            flat
+            color="grey-8"
+            label="Cancelar"
+            @click="dialogoCerrarIncompletoAbierto = false"
+          />
           <q-btn
             unelevated
             color="negative"
@@ -1084,7 +1839,7 @@
     </q-dialog>
 
     <q-dialog v-model="dialogoMarcaAbierto">
-      <q-card style="width: min(92vw, 420px);">
+      <q-card style="width: min(92vw, 420px)">
         <q-card-section>
           <div class="text-h6 text-weight-bold">Nueva marca</div>
         </q-card-section>
@@ -1092,7 +1847,12 @@
           <q-input v-model="nuevaMarca" outlined label="Nombre de la marca" />
         </q-card-section>
         <q-card-actions align="right" class="q-pa-md">
-          <q-btn flat color="grey-8" label="Cancelar" @click="dialogoMarcaAbierto = false" />
+          <q-btn
+            flat
+            color="grey-8"
+            label="Cancelar"
+            @click="dialogoMarcaAbierto = false"
+          />
           <q-btn
             unelevated
             color="dark"
@@ -1106,15 +1866,24 @@
     </q-dialog>
 
     <q-dialog v-model="dialogoCategoriaAbierto">
-      <q-card style="width: min(92vw, 420px);">
+      <q-card style="width: min(92vw, 420px)">
         <q-card-section>
           <div class="text-h6 text-weight-bold">Nueva categoria</div>
         </q-card-section>
         <q-card-section>
-          <q-input v-model="nuevaCategoria" outlined label="Nombre de la categoria" />
+          <q-input
+            v-model="nuevaCategoria"
+            outlined
+            label="Nombre de la categoria"
+          />
         </q-card-section>
         <q-card-actions align="right" class="q-pa-md">
-          <q-btn flat color="grey-8" label="Cancelar" @click="dialogoCategoriaAbierto = false" />
+          <q-btn
+            flat
+            color="grey-8"
+            label="Cancelar"
+            @click="dialogoCategoriaAbierto = false"
+          />
           <q-btn
             unelevated
             color="dark"
@@ -1130,8 +1899,10 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
-import { useQuasar } from 'quasar'
+  import { computed, onMounted, reactive, ref } from "vue";
+  import { useQuasar } from "quasar";
+  import { useRouter } from "vue-router";
+  import { resolverUrlArchivo } from "src/services/auth";
 import {
   actualizarGuiaCompra,
   cerrarCompraIncompleta,
@@ -1141,250 +1912,455 @@ import {
   obtenerFormularioCompra,
   registrarGuiaCompra,
   registrarPagoCredito,
-  registrarRecepcionCompra
-} from 'src/services/compras'
-import { listarProductos, obtenerDatosFormularioProducto, registrarCategoria, registrarMarca } from 'src/services/productos'
+  registrarRecepcionCompra,
+} from "src/services/compras";
+import {
+  listarProductos,
+  obtenerDatosFormularioProducto,
+  registrarCategoria,
+  registrarMarca,
+} from "src/services/productos";
 
 defineOptions({
-  name: 'ComprasListaPage'
-})
+  name: "ComprasListaPage",
+});
 
-const cargandoCompras = ref(false)
-const cargandoDetalle = ref(false)
-const guardandoPagoCredito = ref(false)
-const guardandoGuia = ref(false)
-const guardandoRecepcion = ref(false)
-const cerrandoIncompleto = ref(false)
-const ingresandoInventario = ref(false)
-const errorGeneral = ref('')
-const errorPagoCredito = ref('')
-const errorGuia = ref('')
-const errorRecepcion = ref('')
-const errorCerrarIncompleto = ref('')
-const errorIngresoInventario = ref('')
-const compras = ref([])
-const tiposCompra = ref([])
-const sucursales = ref([])
-const marcas = ref([])
-const categorias = ref([])
-const productosInventario = ref([])
-const dialogoDetalleAbierto = ref(false)
-const dialogoPagosCreditoAbierto = ref(false)
-const dialogoGuiasAbierto = ref(false)
-const dialogoRecepcionAbierto = ref(false)
-const dialogoCerrarIncompletoAbierto = ref(false)
-const dialogoIngresoInventarioAbierto = ref(false)
-const dialogoMarcaAbierto = ref(false)
-const dialogoCategoriaAbierto = ref(false)
-const detalleCompraSeleccionada = ref(null)
-const $q = useQuasar()
-const guiaEditandoId = ref(null)
-const guardandoMarca = ref(false)
-const guardandoCategoria = ref(false)
-const nuevaMarca = ref('')
-const nuevaCategoria = ref('')
+const cargandoCompras = ref(false);
+const cargandoDetalle = ref(false);
+const guardandoPagoCredito = ref(false);
+const guardandoGuia = ref(false);
+const guardandoRecepcion = ref(false);
+const cerrandoIncompleto = ref(false);
+const ingresandoInventario = ref(false);
+const errorGeneral = ref("");
+const errorPagoCredito = ref("");
+const errorGuia = ref("");
+const errorRecepcion = ref("");
+const errorCerrarIncompleto = ref("");
+const errorIngresoInventario = ref("");
+const compras = ref([]);
+const tiposCompra = ref([]);
+const sucursales = ref([]);
+const marcas = ref([]);
+const categorias = ref([]);
+const productosInventario = ref([]);
+const dialogoDetalleAbierto = ref(false);
+const dialogoPagosCreditoAbierto = ref(false);
+const dialogoGuiasAbierto = ref(false);
+const dialogoRecepcionAbierto = ref(false);
+const dialogoCerrarIncompletoAbierto = ref(false);
+const dialogoIngresoInventarioAbierto = ref(false);
+const dialogoMarcaAbierto = ref(false);
+const dialogoCategoriaAbierto = ref(false);
+const detalleCompraSeleccionada = ref(null);
+const $q = useQuasar();
+const router = useRouter();
+const guiaEditandoId = ref(null);
+const guardandoMarca = ref(false);
+const guardandoCategoria = ref(false);
+const nuevaMarca = ref("");
+const nuevaCategoria = ref("");
 const filtros = reactive({
-  nroPedido: '',
-  proveedor: '',
+  nroPedido: "",
+  proveedor: "",
   tipoCompra: null,
-  estado: null
-})
-const formularioPagoCredito = reactive(crearFormularioPagoCredito())
-const formularioGuia = reactive(crearFormularioGuia())
-const formularioRecepcion = reactive(crearFormularioRecepcion())
-const formularioCerrarIncompleto = reactive(crearFormularioCerrarIncompleto())
-const formularioIngresoInventario = reactive(crearFormularioIngresoInventario())
+  estado: null,
+});
+const formularioPagoCredito = reactive(crearFormularioPagoCredito());
+const formularioGuia = reactive(crearFormularioGuia());
+const formularioRecepcion = reactive(crearFormularioRecepcion());
+const formularioCerrarIncompleto = reactive(crearFormularioCerrarIncompleto());
+const formularioIngresoInventario = reactive(
+  crearFormularioIngresoInventario()
+);
 
 const columnasCompras = [
-  { name: 'nro_pedido', label: 'Nro compra', align: 'left', field: 'nro_pedido' },
-  { name: 'proveedor', label: 'Proveedor', align: 'left', field: 'proveedor' },
-  { name: 'fecha_pedido', label: 'Fecha', align: 'left', field: 'fecha_pedido' },
-  { name: 'tipo_compra', label: 'Tipo', align: 'left', field: 'tipo_compra_label' },
-  { name: 'estado', label: 'Estado', align: 'left', field: 'estado_label' },
-  { name: 'estado_pago', label: 'Pago', align: 'left', field: 'estado_pago_label' },
-  { name: 'total_productos', label: 'Total', align: 'left', field: 'total_productos_usd' },
-  { name: 'acciones', label: 'Acciones', align: 'left', field: 'id' }
-]
+  {
+    name: "nro_pedido",
+    label: "Nro compra",
+    align: "left",
+    field: "nro_pedido",
+  },
+  { name: "proveedor", label: "Proveedor", align: "left", field: "proveedor" },
+  {
+    name: "fecha_pedido",
+    label: "Fecha",
+    align: "left",
+    field: "fecha_pedido",
+  },
+  {
+    name: "tipo_compra",
+    label: "Tipo",
+    align: "left",
+    field: "tipo_compra_label",
+  },
+  { name: "estado", label: "Estado", align: "left", field: "estado_label" },
+  {
+    name: "estado_pago",
+    label: "Pago",
+    align: "left",
+    field: "estado_pago_label",
+  },
+  {
+    name: "total_productos",
+    label: "Total",
+    align: "left",
+    field: "total_productos_usd",
+  },
+  { name: "acciones", label: "Acciones", align: "left", field: "id" },
+];
 
 const estadosCompra = [
-  { value: 'registrado', label: 'Registrado' },
-  { value: 'pendiente_ingreso_inventario', label: 'Pendiente de ingreso a inventario' },
-  { value: 'en_transito', label: 'En transito' },
-  { value: 'pendiente_recepcion', label: 'Pendiente de recepcion' },
-  { value: 'parcial', label: 'Parcial' },
-  { value: 'completado', label: 'Completado' },
-  { value: 'incompleto', label: 'Incompleto' },
-  { value: 'cerrado', label: 'Cerrado' }
-]
+  { value: "registrado", label: "Registrado" },
+  {
+    value: "pendiente_ingreso_inventario",
+    label: "Pendiente de ingreso a inventario",
+  },
+  { value: "en_transito", label: "En transito" },
+  { value: "pendiente_recepcion", label: "Pendiente de recepcion" },
+  { value: "parcial", label: "Parcial" },
+  { value: "completado", label: "Completado" },
+  { value: "incompleto", label: "Incompleto" },
+  { value: "cerrado", label: "Cerrado" },
+];
 const estadosGuia = [
-  { value: 'en_transito', label: 'En transito' },
-  { value: 'recogido', label: 'Recogido' }
-]
+  { value: "en_transito", label: "En transito" },
+  { value: "recogido", label: "Recogido" },
+];
 
 const comprasFiltradas = computed(() => {
-  const terminoProveedor = filtros.proveedor.trim().toLowerCase()
-  const terminoNro = filtros.nroPedido.trim().toLowerCase()
+  const terminoProveedor = filtros.proveedor.trim().toLowerCase();
+  const terminoNro = filtros.nroPedido.trim().toLowerCase();
 
   return compras.value.filter((compra) => {
-    const coincideProveedor = !terminoProveedor ||
-      String(compra.proveedor || '').toLowerCase().includes(terminoProveedor)
-    const coincideNro = !terminoNro ||
-      String(compra.nro_pedido || '').toLowerCase().includes(terminoNro)
-    const coincideTipo = !filtros.tipoCompra || compra.tipo_compra === filtros.tipoCompra
-    const coincideEstado = !filtros.estado || compra.estado === filtros.estado
+    const coincideProveedor =
+      !terminoProveedor ||
+      String(compra.proveedor || "")
+        .toLowerCase()
+        .includes(terminoProveedor);
+    const coincideNro =
+      !terminoNro ||
+      String(compra.nro_pedido || "")
+        .toLowerCase()
+        .includes(terminoNro);
+    const coincideTipo =
+      !filtros.tipoCompra || compra.tipo_compra === filtros.tipoCompra;
+    const coincideEstado = !filtros.estado || compra.estado === filtros.estado;
 
-    return coincideProveedor && coincideNro && coincideTipo && coincideEstado
-  })
-})
+    return coincideProveedor && coincideNro && coincideTipo && coincideEstado;
+  });
+});
 
-const pagoCreditoPreviewUsd = computed(() => Number(formularioPagoCredito.abonoUsd || 0))
-const pagoCreditoPreviewBs = computed(() => Number(formularioPagoCredito.abonoBs || 0))
-const saldoPendientePreviewUsd = computed(() => {
-  const saldoActual = Number(detalleCompraSeleccionada.value?.saldo_pendiente_usd || 0)
-  return Math.max(0, redondearMonto(saldoActual - pagoCreditoPreviewUsd.value))
-})
-const saldoPendientePreviewBs = computed(() => {
-  const saldoActual = Number(detalleCompraSeleccionada.value?.saldo_pendiente_bs || 0)
-  return Math.max(0, redondearMonto(saldoActual - pagoCreditoPreviewBs.value))
-})
-const guiasRecogidasDisponibles = computed(() =>
-  (detalleCompraSeleccionada.value?.guias || [])
-    .filter((guia) => guia.estado === 'recogido')
-    .map((guia) => ({
-      value: guia.id,
-      label: `${guia.fecha_registro} - Bs. ${formatearMonto(guia.monto_bs)}`
-    }))
-)
-const cantidadRecibidaTotal = computed(() =>
-  (detalleCompraSeleccionada.value?.detalles || []).reduce(
-    (acumulado, detalle) => acumulado + Number(detalle.cantidad_recibida_acumulada || 0),
+const pagoCreditoPreviewUsd = computed(() =>
+  formularioPagoCredito.pagos.reduce(
+    (acumulado, pago) => acumulado + Number(pago.abonoUsd || 0),
     0
   )
-)
+);
+const pagoCreditoPreviewBs = computed(() =>
+  formularioPagoCredito.pagos.reduce(
+    (acumulado, pago) => acumulado + Number(pago.abonoBs || 0),
+    0
+  )
+);
+const tipoCambioReferenciaCompra = computed(() => {
+  const totalUsd = Number(detalleCompraSeleccionada.value?.total_productos_usd || 0);
+  const totalBs = Number(detalleCompraSeleccionada.value?.total_productos_bs || 0);
+
+  if (totalUsd > 0 && totalBs > 0) {
+    return redondearMonto(totalBs / totalUsd, 6);
+  }
+
+  return redondearMonto(
+    Number(detalleCompraSeleccionada.value?.tipo_cambio_general || 0),
+    6
+  );
+});
+const referenciaPagoCreditoPreviewBs = computed(() =>
+  formularioPagoCredito.pagos.reduce(
+    (acumulado, pago) => acumulado + referenciaPagoCreditoFila(pago),
+    0
+  )
+);
+const saldoPendientePreviewUsd = computed(() => {
+  const saldoActual = Number(
+    detalleCompraSeleccionada.value?.saldo_pendiente_usd || 0
+  );
+  return Math.max(0, redondearMonto(saldoActual - pagoCreditoPreviewUsd.value));
+});
+const saldoPendientePreviewBs = computed(() => {
+  const saldoActual = Number(
+    detalleCompraSeleccionada.value?.saldo_pendiente_bs || 0
+  );
+  return Math.max(0, redondearMonto(saldoActual - pagoCreditoPreviewBs.value));
+});
+const referenciaPagadoPreviewBs = computed(() =>
+  redondearMonto(
+    Number(detalleCompraSeleccionada.value?.referencia_pagado_bs || 0) +
+      referenciaPagoCreditoPreviewBs.value
+  )
+);
+const diferenciaCambiariaPreviewBs = computed(() =>
+  redondearMonto(
+    Number(detalleCompraSeleccionada.value?.diferencia_cambiaria_total_bs || 0) +
+      pagoCreditoPreviewBs.value -
+      referenciaPagoCreditoPreviewBs.value
+  )
+);
+const diferenciaCambiariaPreviewTipo = computed(() =>
+  determinarTipoDiferenciaCambiaria(diferenciaCambiariaPreviewBs.value)
+);
+const guiasUsadasEnRecepcion = computed(() =>
+  new Set(
+    (detalleCompraSeleccionada.value?.recepciones || [])
+      .map((recepcion) => recepcion.compra_guia_id)
+      .filter(Boolean)
+  )
+);
+const guiasRecogidasDisponibles = computed(() =>
+  (detalleCompraSeleccionada.value?.guias || [])
+    .filter((guia) => guia.estado === "recogido")
+    .map((guia) => {
+      const usada = guiasUsadasEnRecepcion.value.has(guia.id);
+      return {
+        value: guia.id,
+        label: `${guia.fecha_registro} - Bs. ${formatearMonto(guia.monto_bs)}${
+          usada ? " | Ya usada en recepcion" : ""
+        }`,
+        disable: usada,
+      };
+    })
+);
+const cantidadRecibidaTotal = computed(() =>
+  (detalleCompraSeleccionada.value?.detalles || []).reduce(
+    (acumulado, detalle) =>
+      acumulado + Number(detalle.cantidad_recibida_acumulada || 0),
+    0
+  )
+);
 const cantidadPendienteTotal = computed(() =>
   (detalleCompraSeleccionada.value?.detalles || []).reduce(
     (acumulado, detalle) => acumulado + Number(detalle.cantidad_pendiente || 0),
     0
   )
-)
+);
+const puedeRegistrarPagoCredito = computed(
+  () =>
+    detalleCompraSeleccionada.value?.tipo_compra === "a_credito" &&
+    Number(detalleCompraSeleccionada.value?.saldo_pendiente_usd || 0) > 0.0001 &&
+    detalleCompraSeleccionada.value?.estado_pago !== "pagado"
+);
+const puedeRegistrarGuias = computed(
+  () =>
+    Number(detalleCompraSeleccionada.value?.tiempo_entrega_dias || 0) > 0 &&
+    Number(cantidadPendienteTotal.value || 0) > 0 &&
+    !["completado", "incompleto", "cerrado"].includes(
+      detalleCompraSeleccionada.value?.estado
+    )
+);
+const puedeRegistrarRecepcion = computed(
+  () =>
+    Number(cantidadPendienteTotal.value || 0) > 0 &&
+    !["completado", "incompleto", "cerrado"].includes(
+      detalleCompraSeleccionada.value?.estado
+    )
+);
 const opcionesProductosInventario = computed(() =>
   productosInventario.value.map((producto) => ({
     ...producto,
     value: producto.id,
     label: `${producto.modelo} | ${producto.marca} | ${producto.categoria}`,
-    busqueda: `${producto.modelo} ${producto.marca} ${producto.categoria}`.toLowerCase()
+    busqueda:
+      `${producto.modelo} ${producto.marca} ${producto.categoria}`.toLowerCase(),
   }))
-)
+);
 const recepcionesPendientesIngreso = computed(() =>
-  (detalleCompraSeleccionada.value?.recepciones || []).filter((recepcion) => recepcion.ingresado_inventario !== true)
-)
+  (detalleCompraSeleccionada.value?.recepciones || []).filter(
+    (recepcion) => recepcion.ingresado_inventario !== true
+  )
+);
 const opcionesRecepcionesPendientes = computed(() =>
   recepcionesPendientesIngreso.value.map((recepcion) => ({
     value: recepcion.id,
-    label: `${recepcion.fecha_recepcion} - ${recepcion.estado_recepcion_label}`
+    label: `${recepcion.fecha_recepcion} - ${recepcion.estado_recepcion_label}`,
   }))
-)
-const recepcionSeleccionadaIngreso = computed(() =>
-  recepcionesPendientesIngreso.value.find((recepcion) => recepcion.id === formularioIngresoInventario.recepcionId) || null
-)
+);
+const recepcionSeleccionadaIngreso = computed(
+  () =>
+    recepcionesPendientesIngreso.value.find(
+      (recepcion) => recepcion.id === formularioIngresoInventario.recepcionId
+    ) || null
+);
 
-function formatearMonto (valor) {
-  return Number(valor || 0).toFixed(2)
+function formatearMonto(valor) {
+  return Number(valor || 0).toFixed(2);
 }
 
-function claseEstadoPago (estadoPago) {
-  if (estadoPago === 'pagado') return 'badge-estado badge-estado--pagado'
-  if (estadoPago === 'pago_parcial') return 'badge-estado badge-estado--parcial'
-  return 'badge-estado badge-estado--pendiente'
+function formatearMontoAbsoluto(valor) {
+  return formatearMonto(Math.abs(Number(valor || 0)));
 }
 
-function claseEstadoCompra (estadoCompra) {
-  if (estadoCompra === 'completado') {
-    return 'badge-estado badge-estado--pagado'
-  }
-
-  if (estadoCompra === 'incompleto') {
-    return 'badge-estado badge-estado--pendiente'
-  }
-
-  if (estadoCompra === 'parcial') {
-    return 'badge-estado badge-estado--parcial'
-  }
-
-  if (estadoCompra === 'pendiente_ingreso_inventario') {
-    return 'badge-estado badge-estado--inventario'
-  }
-
-  return 'badge-estado badge-estado--neutro'
+function determinarTipoDiferenciaCambiaria(diferenciaBs) {
+  const diferencia = Number(diferenciaBs || 0);
+  if (diferencia > 0.0001) return "perdida";
+  if (diferencia < -0.0001) return "ahorro";
+  return "sin_diferencia";
 }
 
-function crearFormularioPagoCredito () {
+function etiquetaDiferenciaCambiaria(tipo) {
+  if (tipo === "perdida") return "Perdida cambiaria";
+  if (tipo === "ahorro") return "Ahorro cambiario";
+  return "Sin diferencia cambiaria";
+}
+
+function claseTarjetaDiferenciaCambiaria(tipo) {
+  if (tipo === "perdida") return "tarjeta-resumen-pago--danger";
+  if (tipo === "ahorro") return "tarjeta-resumen-pago--success";
+  return "tarjeta-resumen-pago--neutral";
+}
+
+function claseTextoDiferenciaCambiaria(tipo) {
+  if (tipo === "perdida") return "text-negative";
+  if (tipo === "ahorro") return "text-positive";
+  return "text-grey-8";
+}
+
+function referenciaPagoCreditoFila(pago) {
+  const tipoCambioReferencia = Number(tipoCambioReferenciaCompra.value || 0);
+  return redondearMonto(Number(pago?.abonoUsd || 0) * tipoCambioReferencia);
+}
+
+function diferenciaPagoCreditoFila(pago) {
+  return redondearMonto(
+    Number(pago?.abonoBs || 0) - referenciaPagoCreditoFila(pago)
+  );
+}
+
+function diferenciaPagoCreditoFilaTipo(pago) {
+  return determinarTipoDiferenciaCambiaria(diferenciaPagoCreditoFila(pago));
+}
+
+function claseEstadoPago(estadoPago) {
+  if (estadoPago === "pagado") return "badge-estado badge-estado--pagado";
+  if (estadoPago === "pago_parcial")
+    return "badge-estado badge-estado--parcial";
+  return "badge-estado badge-estado--pendiente";
+}
+
+function claseEstadoCompra(estadoCompra) {
+  if (estadoCompra === "completado") {
+    return "badge-estado badge-estado--pagado";
+  }
+
+  if (estadoCompra === "incompleto") {
+    return "badge-estado badge-estado--pendiente";
+  }
+
+  if (estadoCompra === "parcial") {
+    return "badge-estado badge-estado--parcial";
+  }
+
+  if (estadoCompra === "pendiente_ingreso_inventario") {
+    return "badge-estado badge-estado--inventario";
+  }
+
+  return "badge-estado badge-estado--neutro";
+}
+
+function puedeEditarCompra(compra) {
+  return ["registrado", "pendiente_ingreso_inventario"].includes(
+    compra?.estado
+  );
+}
+
+function crearFormularioPagoCredito() {
   return {
+    pagos: [crearFilaPagoCredito()],
+  };
+}
+
+function crearFilaPagoCredito() {
+  return {
+    uid: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
     sucursalId: null,
     fechaAbono: new Date().toISOString().slice(0, 10),
     tipoCambioAbono: 9,
-    monedaReferencia: 'usd',
+    monedaReferencia: "usd",
     abonoUsd: 0,
     abonoBs: 0,
-    observaciones: ''
-  }
+    observaciones: "",
+  };
 }
 
-function crearFormularioGuia () {
+function crearFormularioGuia() {
   return {
     fechaRegistro: new Date().toISOString().slice(0, 10),
     montoBs: 0,
-    estado: 'en_transito',
+    estado: "en_transito",
     pagado: false,
-    observaciones: ''
-  }
+    observaciones: "",
+    fotoGuia: null,
+    fotoUrlActual: "",
+  };
 }
 
-function crearFormularioRecepcion () {
+function crearFormularioRecepcion() {
   return {
     compraGuiaId: null,
     fechaRecepcion: new Date().toISOString().slice(0, 10),
-    observaciones: '',
-    detalles: []
-  }
+    observaciones: "",
+    detalles: [],
+  };
 }
 
-function crearFormularioCerrarIncompleto () {
+function crearFormularioCerrarIncompleto() {
   return {
-    observaciones: ''
-  }
+    observaciones: "",
+  };
 }
 
-function crearFormularioIngresoInventario () {
+function crearFormularioIngresoInventario() {
   return {
     recepcionId: null,
-    detalles: []
-  }
+    detalles: [],
+  };
 }
 
-function crearDetalleIngresoInventario (detalleRecepcion) {
+function crearDetalleIngresoInventario(detalleRecepcion) {
   const detalleCompra = (detalleCompraSeleccionada.value?.detalles || []).find(
     (detalle) => detalle.id === detalleRecepcion.compra_detalle_id
-  )
-  const tipoCambioBase = Number(detalleCompra?.precio_unitario_usd || 0) > 0
-    ? redondearMonto(Number(detalleCompra?.precio_unitario_bs || 0) / Number(detalleCompra?.precio_unitario_usd || 1), 4)
-    : 9
+  );
+  const tipoCambioBase =
+    Number(detalleCompra?.tipo_cambio_aplicado || 0) > 0
+      ? redondearMonto(Number(detalleCompra?.tipo_cambio_aplicado || 0), 6)
+      : Number(detalleCompra?.precio_unitario_usd || 0) > 0
+        ? redondearMonto(
+            Number(detalleCompra?.precio_unitario_bs || 0) /
+              Number(detalleCompra?.precio_unitario_usd || 1),
+            6
+          )
+        : Number(tipoCambioReferenciaCompra.value || 9);
 
-  const productoId = detalleCompra?.producto_id || null
+  const productoId = detalleCompra?.producto_id || null;
   const productoExistente = productoId
     ? productosInventario.value.find((producto) => producto.id === productoId)
-    : null
+    : null;
 
-  return {
-    recepcionDetalleId: detalleRecepcion.id,
-    compraDetalleId: detalleRecepcion.compra_detalle_id,
-    cantidadRecibida: Number(detalleRecepcion.cantidad_recibida || 0),
+    return {
+      recepcionDetalleId: detalleRecepcion.id,
+      compraDetalleId: detalleRecepcion.compra_detalle_id,
+      cantidadRecibida: Number(detalleRecepcion.cantidad_recibida || 0),
     detalleTexto: detalleRecepcion.detalle_texto,
     productoId,
     crearProducto: !productoId,
-    modelo: productoExistente?.modelo || detalleCompra?.producto_modelo || detalleRecepcion.detalle_texto || '',
+    modelo:
+      productoExistente?.modelo ||
+      detalleCompra?.producto_modelo ||
+      detalleRecepcion.detalle_texto ||
+      "",
     marcaId: productoExistente?.marca_id || detalleCompra?.marca_id || null,
-    categoriaId: productoExistente?.categoria_id || detalleCompra?.categoria_id || null,
+    categoriaId:
+      productoExistente?.categoria_id || detalleCompra?.categoria_id || null,
     costoUsd: Number(detalleCompra?.precio_unitario_usd || 0),
     costoBs: Number(detalleCompra?.precio_unitario_bs || 0),
     tipoCambioVenta: tipoCambioBase > 0 ? tipoCambioBase : 9,
@@ -1393,662 +2369,881 @@ function crearDetalleIngresoInventario (detalleRecepcion) {
     precioMayoristaUsd: 0,
     precioMayoristaBs: 0,
     registrarSeries: false,
-    distribucionSucursales: sucursales.value.map((sucursal, indice) => ({
-      sucursalId: sucursal.id,
-      sucursal: sucursal.label,
-      cantidad: indice === 0 ? Number(detalleRecepcion.cantidad_recibida || 0) : 0
-    })),
-    series: []
+      distribucionSucursales: sucursales.value.map((sucursal, indice) => ({
+        sucursalId: sucursal.id,
+        sucursal: sucursal.label,
+        cantidad:
+          indice === 0 ? Number(detalleRecepcion.cantidad_recibida || 0) : 0,
+        observaciones: "",
+      })),
+      series: [],
+    };
   }
+
+function normalizarNumero(valor) {
+  const numero = Number(valor || 0);
+  return Number.isFinite(numero) ? numero : 0;
 }
 
-function normalizarNumero (valor) {
-  const numero = Number(valor || 0)
-  return Number.isFinite(numero) ? numero : 0
+function redondearMonto(valor, precision = 4) {
+  return Number(normalizarNumero(valor).toFixed(precision));
 }
 
-function redondearMonto (valor, precision = 4) {
-  return Number(normalizarNumero(valor).toFixed(precision))
-}
-
-function mostrarNotificacion (tipo, mensaje) {
-  if (typeof $q?.notify === 'function') {
+function mostrarNotificacion(tipo, mensaje) {
+  if (typeof $q?.notify === "function") {
     $q.notify({
       type: tipo,
-      message: mensaje
-    })
+      message: mensaje,
+    });
   }
 }
 
-function reiniciarFormularioPagoCredito () {
-  Object.assign(formularioPagoCredito, crearFormularioPagoCredito())
+function reiniciarFormularioPagoCredito() {
+  Object.assign(formularioPagoCredito, crearFormularioPagoCredito());
 }
 
-function reiniciarFormularioGuia () {
-  Object.assign(formularioGuia, crearFormularioGuia())
-  guiaEditandoId.value = null
+function agregarFilaPagoCredito() {
+  formularioPagoCredito.pagos.push(crearFilaPagoCredito());
 }
 
-function reiniciarFormularioCerrarIncompleto () {
-  Object.assign(formularioCerrarIncompleto, crearFormularioCerrarIncompleto())
+function eliminarFilaPagoCredito(indice) {
+  if (formularioPagoCredito.pagos.length === 1) {
+    return;
+  }
+
+  formularioPagoCredito.pagos.splice(indice, 1);
 }
 
-function reiniciarFormularioIngresoInventario () {
-  Object.assign(formularioIngresoInventario, crearFormularioIngresoInventario())
+function reiniciarFormularioGuia() {
+  Object.assign(formularioGuia, crearFormularioGuia());
+  guiaEditandoId.value = null;
 }
 
-function cargarFormularioRecepcionDesdeCompra () {
+function guiaYaRecepcionada(guia) {
+  return guiasUsadasEnRecepcion.value.has(guia.id);
+}
+
+function reiniciarFormularioCerrarIncompleto() {
+  Object.assign(formularioCerrarIncompleto, crearFormularioCerrarIncompleto());
+}
+
+function reiniciarFormularioIngresoInventario() {
+  Object.assign(
+    formularioIngresoInventario,
+    crearFormularioIngresoInventario()
+  );
+}
+
+function cargarFormularioRecepcionDesdeCompra() {
   Object.assign(formularioRecepcion, {
     ...crearFormularioRecepcion(),
-    detalles: (detalleCompraSeleccionada.value?.detalles || []).map((detalle) => ({
-      compraDetalleId: detalle.id,
-      detalleTexto: detalle.detalle_texto,
-      cantidadPedida: Number(detalle.cantidad_pedida || 0),
-      cantidadRecibidaAcumulada: Number(detalle.cantidad_recibida_acumulada || 0),
-      cantidadPendiente: Number(detalle.cantidad_pendiente || 0),
-      cantidadRecibida: 0,
-      observaciones: ''
-    }))
-  })
+    detalles: (detalleCompraSeleccionada.value?.detalles || []).map(
+      (detalle) => ({
+        compraDetalleId: detalle.id,
+        detalleTexto: detalle.detalle_texto,
+        cantidadPedida: Number(detalle.cantidad_pedida || 0),
+        cantidadRecibidaAcumulada: Number(
+          detalle.cantidad_recibida_acumulada || 0
+        ),
+        cantidadPendiente: Number(detalle.cantidad_pendiente || 0),
+        cantidadRecibida: 0,
+        observaciones: "",
+      })
+    ),
+  });
 }
 
-function cargarFormularioIngresoInventarioDesdeCompra () {
-  const recepcionPendiente = recepcionesPendientesIngreso.value[0] || null
+function cargarFormularioIngresoInventarioDesdeCompra() {
+  const recepcionPendiente = recepcionesPendientesIngreso.value[0] || null;
 
   Object.assign(formularioIngresoInventario, {
     ...crearFormularioIngresoInventario(),
     recepcionId: recepcionPendiente?.id || null,
-    detalles: (recepcionPendiente?.detalles || []).map((detalleRecepcion) => crearDetalleIngresoInventario(detalleRecepcion))
-  })
+    detalles: (recepcionPendiente?.detalles || []).map((detalleRecepcion) =>
+      crearDetalleIngresoInventario(detalleRecepcion)
+    ),
+  });
 }
 
-function actualizarRecepcionIngreso (recepcionId) {
-  const recepcion = recepcionesPendientesIngreso.value.find((item) => item.id === recepcionId) || null
-  formularioIngresoInventario.recepcionId = recepcionId
-  formularioIngresoInventario.detalles = (recepcion?.detalles || []).map((detalleRecepcion) => crearDetalleIngresoInventario(detalleRecepcion))
+function actualizarRecepcionIngreso(recepcionId) {
+  const recepcion =
+    recepcionesPendientesIngreso.value.find(
+      (item) => item.id === recepcionId
+    ) || null;
+  formularioIngresoInventario.recepcionId = recepcionId;
+  formularioIngresoInventario.detalles = (recepcion?.detalles || []).map(
+    (detalleRecepcion) => crearDetalleIngresoInventario(detalleRecepcion)
+  );
 }
 
-function sincronizarSeriesIngreso (detalle) {
+function sincronizarSeriesIngreso(detalle) {
   if (!detalle.registrarSeries) {
-    detalle.series = []
-    return
+    detalle.series = [];
+    return;
   }
 
-  const nuevasSeries = []
+  const nuevasSeries = [];
 
   detalle.distribucionSucursales.forEach((item) => {
-    const cantidad = Math.max(0, Math.trunc(normalizarNumero(item.cantidad)))
-    item.cantidad = cantidad
+    const cantidad = Math.max(0, Math.trunc(normalizarNumero(item.cantidad)));
+    item.cantidad = cantidad;
 
     for (let indice = 0; indice < cantidad; indice += 1) {
-      const existentesSucursal = detalle.series.filter((serie) => serie.sucursalId === item.sucursalId)
-      const existente = existentesSucursal[indice]
+      const existentesSucursal = detalle.series.filter(
+        (serie) => serie.sucursalId === item.sucursalId
+      );
+      const existente = existentesSucursal[indice];
 
-      nuevasSeries.push(existente || {
-        idTemporal: `${detalle.recepcionDetalleId}-${item.sucursalId}-${indice}`,
-        sucursalId: item.sucursalId,
-        numeroSerie: '',
-        observaciones: ''
-      })
+      nuevasSeries.push(
+        existente || {
+          idTemporal: `${detalle.recepcionDetalleId}-${item.sucursalId}-${indice}`,
+          sucursalId: item.sucursalId,
+          numeroSerie: "",
+          observaciones: "",
+        }
+      );
     }
-  })
+  });
 
-  detalle.series = nuevasSeries
+  detalle.series = nuevasSeries;
 }
 
-function actualizarDistribucionIngreso (detalle, sucursalId, valor) {
-  const fila = detalle.distribucionSucursales.find((item) => item.sucursalId === sucursalId)
-  if (!fila) {
-    return
+  function actualizarDistribucionIngreso(detalle, sucursalId, valor) {
+    const fila = detalle.distribucionSucursales.find(
+      (item) => item.sucursalId === sucursalId
+    );
+    if (!fila) {
+      return;
+    }
+
+    const cantidadSolicitada = Math.max(0, Math.trunc(normalizarNumero(valor)));
+    const cantidadActual = Number(fila.cantidad || 0);
+    const delta = cantidadSolicitada - cantidadActual;
+
+    if (delta > 0) {
+      let restantePorMover = delta;
+
+      const filasOrigen = detalle.distribucionSucursales.filter(
+        (item) => item.sucursalId !== sucursalId && Number(item.cantidad || 0) > 0
+      );
+
+      for (const origen of filasOrigen) {
+        if (restantePorMover <= 0) {
+          break;
+        }
+
+        const disponible = Number(origen.cantidad || 0);
+        const mover = Math.min(disponible, restantePorMover);
+        origen.cantidad = disponible - mover;
+        restantePorMover -= mover;
+      }
+
+      fila.cantidad = cantidadActual + (delta - restantePorMover);
+
+      if (restantePorMover > 0) {
+        mostrarNotificacion(
+          "warning",
+          `Solo se pudieron mover ${delta - restantePorMover} unidad(es) hacia "${fila.sucursal}" en "${detalle.detalleTexto}".`
+        );
+      }
+    } else {
+      fila.cantidad = cantidadSolicitada;
+    }
+
+    sincronizarSeriesIngreso(detalle);
   }
 
-  fila.cantidad = Math.max(0, Math.trunc(normalizarNumero(valor)))
-  sincronizarSeriesIngreso(detalle)
-}
-
-function actualizarMontoVentaIngreso (detalle, prefijo, monedaOrigen, valor) {
-  const tipoCambio = Math.max(0.0001, normalizarNumero(detalle.tipoCambioVenta))
-  detalle.tipoCambioVenta = tipoCambio
-  const monto = normalizarNumero(valor)
-
-  if (monedaOrigen === 'usd') {
-    detalle[`${prefijo}Usd`] = monto
-    detalle[`${prefijo}Bs`] = redondearMonto(monto * tipoCambio)
-    return
+  function totalDistribuidoIngreso(detalle) {
+    return detalle.distribucionSucursales.reduce(
+      (total, item) => total + Number(item.cantidad || 0),
+      0
+    );
   }
 
-  detalle[`${prefijo}Bs`] = monto
-  detalle[`${prefijo}Usd`] = redondearMonto(monto / tipoCambio)
+  function cantidadPendienteDistribucion(detalle) {
+    return Math.max(
+      0,
+      Number(detalle.cantidadRecibida || 0) - totalDistribuidoIngreso(detalle)
+    );
+  }
+
+function actualizarMontoVentaIngreso(detalle, prefijo, monedaOrigen, valor) {
+  const tipoCambio = Math.max(
+    0.0001,
+    normalizarNumero(detalle.tipoCambioVenta)
+  );
+  detalle.tipoCambioVenta = tipoCambio;
+  const monto = normalizarNumero(valor);
+
+  if (monedaOrigen === "usd") {
+    detalle[`${prefijo}Usd`] = monto;
+    detalle[`${prefijo}Bs`] = redondearMonto(monto * tipoCambio);
+    return;
+  }
+
+  detalle[`${prefijo}Bs`] = monto;
+  detalle[`${prefijo}Usd`] = redondearMonto(monto / tipoCambio);
 }
 
-function sincronizarMontosVentaDesdeTipoCambio (detalle) {
-  actualizarMontoVentaIngreso(detalle, 'precioUnitario', 'usd', detalle.precioUnitarioUsd)
-  actualizarMontoVentaIngreso(detalle, 'precioMayorista', 'usd', detalle.precioMayoristaUsd)
+function sincronizarMontosVentaDesdeTipoCambio(detalle) {
+  actualizarMontoVentaIngreso(
+    detalle,
+    "precioUnitario",
+    "usd",
+    detalle.precioUnitarioUsd
+  );
+  actualizarMontoVentaIngreso(
+    detalle,
+    "precioMayorista",
+    "usd",
+    detalle.precioMayoristaUsd
+  );
 }
 
-function seleccionarProductoExistenteIngreso (detalle, productoId) {
-  detalle.productoId = productoId
-  const producto = productosInventario.value.find((item) => item.id === productoId)
+function seleccionarProductoExistenteIngreso(detalle, productoId) {
+  detalle.productoId = productoId;
+  const producto = productosInventario.value.find(
+    (item) => item.id === productoId
+  );
 
   if (!producto) {
-    detalle.crearProducto = true
-    return
+    detalle.crearProducto = true;
+    return;
   }
 
-  detalle.crearProducto = false
-  detalle.modelo = producto.modelo
-  detalle.marcaId = producto.marca_id
-  detalle.categoriaId = producto.categoria_id
+  detalle.crearProducto = false;
+  detalle.modelo = producto.modelo;
+  detalle.marcaId = producto.marca_id;
+  detalle.categoriaId = producto.categoria_id;
 }
 
-function recalcularPagoCredito () {
-  const tipoCambio = Math.max(0.0001, normalizarNumero(formularioPagoCredito.tipoCambioAbono))
-  formularioPagoCredito.tipoCambioAbono = tipoCambio
+function recalcularPagoCredito(pago) {
+  const tipoCambio = Math.max(
+    0.0001,
+    normalizarNumero(pago.tipoCambioAbono)
+  );
+  pago.tipoCambioAbono = tipoCambio;
 
-  if (formularioPagoCredito.monedaReferencia === 'bs') {
-    formularioPagoCredito.abonoBs = redondearMonto(formularioPagoCredito.abonoBs)
-    formularioPagoCredito.abonoUsd = redondearMonto(formularioPagoCredito.abonoBs / tipoCambio)
+  if (pago.monedaReferencia === "bs") {
+    pago.abonoBs = redondearMonto(pago.abonoBs);
+    pago.abonoUsd = redondearMonto(pago.abonoBs / tipoCambio);
   } else {
-    formularioPagoCredito.monedaReferencia = 'usd'
-    formularioPagoCredito.abonoUsd = redondearMonto(formularioPagoCredito.abonoUsd)
-    formularioPagoCredito.abonoBs = redondearMonto(formularioPagoCredito.abonoUsd * tipoCambio)
+    pago.monedaReferencia = "usd";
+    pago.abonoUsd = redondearMonto(pago.abonoUsd);
+    pago.abonoBs = redondearMonto(pago.abonoUsd * tipoCambio);
   }
 }
 
-function actualizarMontoPagoCredito (monedaOrigen, valor) {
-  formularioPagoCredito.monedaReferencia = monedaOrigen
-  if (monedaOrigen === 'usd') {
-    formularioPagoCredito.abonoUsd = normalizarNumero(valor)
+function actualizarMontoPagoCredito(pago, monedaOrigen, valor) {
+  pago.monedaReferencia = monedaOrigen;
+  if (monedaOrigen === "usd") {
+    pago.abonoUsd = normalizarNumero(valor);
   } else {
-    formularioPagoCredito.abonoBs = normalizarNumero(valor)
+    pago.abonoBs = normalizarNumero(valor);
   }
 
-  recalcularPagoCredito()
+  recalcularPagoCredito(pago);
 }
 
-function validarPagoCredito () {
-  if (!formularioPagoCredito.sucursalId) {
-    return 'Selecciona la sucursal que realiza el pago.'
+function validarPagoCredito() {
+  const filaSinSucursal = formularioPagoCredito.pagos.find(
+    (pago) => !pago.sucursalId
+  );
+  if (filaSinSucursal) {
+    return "Selecciona la sucursal en cada abono.";
   }
 
-  if (!formularioPagoCredito.fechaAbono) {
-    return 'La fecha del pago es obligatoria.'
+  const filaSinFecha = formularioPagoCredito.pagos.find(
+    (pago) => !pago.fechaAbono
+  );
+  if (filaSinFecha) {
+    return "La fecha del pago es obligatoria en cada abono.";
   }
 
-  if (Number(formularioPagoCredito.abonoUsd || 0) <= 0) {
-    return 'El pago en USD debe ser mayor a cero.'
+  const filaMontoInvalido = formularioPagoCredito.pagos.find(
+    (pago) => Number(pago.abonoUsd || 0) <= 0
+  );
+  if (filaMontoInvalido) {
+    return "Cada abono debe ser mayor a cero en USD.";
   }
 
-  return ''
+  if (
+    pagoCreditoPreviewUsd.value >
+    Number(detalleCompraSeleccionada.value?.saldo_pendiente_usd || 0) + 0.0001
+  ) {
+    return "La suma de abonos no puede sobrepasar el saldo pendiente.";
+  }
+
+  return "";
 }
 
-function validarGuia () {
+function validarGuia() {
   if (!formularioGuia.fechaRegistro) {
-    return 'La fecha de la guia es obligatoria.'
+    return "La fecha de la guia es obligatoria.";
   }
 
   if (Number(formularioGuia.montoBs || 0) < 0) {
-    return 'El monto de la guia no puede ser negativo.'
+    return "El monto de la guia no puede ser negativo.";
   }
 
-  return ''
+  return "";
 }
 
-function validarRecepcion () {
+function validarRecepcion() {
   if (!formularioRecepcion.fechaRecepcion) {
-    return 'La fecha de recepcion es obligatoria.'
+    return "La fecha de recepcion es obligatoria.";
   }
 
-  const tieneCantidades = formularioRecepcion.detalles.some((detalle) => Number(detalle.cantidadRecibida || 0) > 0)
+  if (
+    Number(detalleCompraSeleccionada.value?.tiempo_entrega_dias || 0) > 0 &&
+    !formularioRecepcion.compraGuiaId
+  ) {
+    return "Debes seleccionar una guia recogida para registrar esta recepcion.";
+  }
+
+  const tieneCantidades = formularioRecepcion.detalles.some(
+    (detalle) => Number(detalle.cantidadRecibida || 0) > 0
+  );
   if (!tieneCantidades) {
-    return 'Debes registrar al menos una cantidad que llego hoy.'
+    return "Debes registrar al menos una cantidad que llego hoy.";
   }
 
   const detalleExcedido = formularioRecepcion.detalles.find(
-    (detalle) => Number(detalle.cantidadRecibida || 0) > Number(detalle.cantidadPendiente || 0)
-  )
+    (detalle) =>
+      Number(detalle.cantidadRecibida || 0) >
+      Number(detalle.cantidadPendiente || 0)
+  );
   if (detalleExcedido) {
-    return 'Una de las lineas supera la cantidad pendiente por recepcionar.'
+    return "Una de las lineas supera la cantidad pendiente por recepcionar.";
   }
 
-  return ''
+  return "";
 }
 
-async function cargarCompras () {
-  cargandoCompras.value = true
-  errorGeneral.value = ''
+async function cargarCompras() {
+  cargandoCompras.value = true;
+  errorGeneral.value = "";
 
   try {
-    const datos = await listarCompras()
-    compras.value = datos.compras || []
+    const datos = await listarCompras();
+    compras.value = datos.compras || [];
   } catch (error) {
-    errorGeneral.value = error.message || 'No se pudo cargar la lista de compras.'
+    errorGeneral.value =
+      error.message || "No se pudo cargar la lista de compras.";
   } finally {
-    cargandoCompras.value = false
+    cargandoCompras.value = false;
   }
 }
 
-async function cargarFormularioBasico () {
+async function cargarFormularioBasico() {
   const [datosCompras, datosProductos, productos] = await Promise.all([
     obtenerFormularioCompra(),
     obtenerDatosFormularioProducto(),
-    listarProductos()
-  ])
+    listarProductos(),
+  ]);
 
-  tiposCompra.value = datosCompras.tipos_compra || []
-  sucursales.value = datosCompras.sucursales || datosProductos.sucursales || []
-  marcas.value = datosProductos.marcas || []
-  categorias.value = datosProductos.categorias || []
-  productosInventario.value = productos.productos || []
+  tiposCompra.value = datosCompras.tipos_compra || [];
+  sucursales.value = datosCompras.sucursales || datosProductos.sucursales || [];
+  marcas.value = datosProductos.marcas || [];
+  categorias.value = datosProductos.categorias || [];
+  productosInventario.value = productos.productos || [];
 }
 
-async function abrirDetalle (idCompra) {
-  dialogoDetalleAbierto.value = true
-  dialogoPagosCreditoAbierto.value = false
-  dialogoGuiasAbierto.value = false
-  dialogoRecepcionAbierto.value = false
-  dialogoIngresoInventarioAbierto.value = false
-  cargandoDetalle.value = true
-  detalleCompraSeleccionada.value = null
+async function abrirDetalle(idCompra) {
+  dialogoDetalleAbierto.value = true;
+  dialogoPagosCreditoAbierto.value = false;
+  dialogoGuiasAbierto.value = false;
+  dialogoRecepcionAbierto.value = false;
+  dialogoIngresoInventarioAbierto.value = false;
+  cargandoDetalle.value = true;
+  detalleCompraSeleccionada.value = null;
 
   try {
-    const respuesta = await obtenerDetalleCompra(idCompra)
-    detalleCompraSeleccionada.value = respuesta.compra || null
+    const respuesta = await obtenerDetalleCompra(idCompra);
+    detalleCompraSeleccionada.value = respuesta.compra || null;
   } catch (error) {
-    errorGeneral.value = error.message || 'No se pudo cargar el detalle de la compra.'
-    dialogoDetalleAbierto.value = false
+    errorGeneral.value =
+      error.message || "No se pudo cargar el detalle de la compra.";
+    dialogoDetalleAbierto.value = false;
   } finally {
-    cargandoDetalle.value = false
+    cargandoDetalle.value = false;
   }
 }
 
-async function abrirPagosCredito (idCompra) {
-  dialogoPagosCreditoAbierto.value = true
-  dialogoDetalleAbierto.value = false
-  dialogoGuiasAbierto.value = false
-  dialogoRecepcionAbierto.value = false
-  dialogoIngresoInventarioAbierto.value = false
-  cargandoDetalle.value = true
-  detalleCompraSeleccionada.value = null
-  errorPagoCredito.value = ''
-  reiniciarFormularioPagoCredito()
+async function abrirPagosCredito(idCompra) {
+  dialogoPagosCreditoAbierto.value = true;
+  dialogoDetalleAbierto.value = false;
+  dialogoGuiasAbierto.value = false;
+  dialogoRecepcionAbierto.value = false;
+  dialogoIngresoInventarioAbierto.value = false;
+  cargandoDetalle.value = true;
+  detalleCompraSeleccionada.value = null;
+  errorPagoCredito.value = "";
+  reiniciarFormularioPagoCredito();
 
   try {
-    const respuesta = await obtenerDetalleCompra(idCompra)
-    detalleCompraSeleccionada.value = respuesta.compra || null
+    const respuesta = await obtenerDetalleCompra(idCompra);
+    detalleCompraSeleccionada.value = respuesta.compra || null;
   } catch (error) {
-    errorGeneral.value = error.message || 'No se pudo cargar los pagos de la compra.'
-    dialogoPagosCreditoAbierto.value = false
+    errorGeneral.value =
+      error.message || "No se pudo cargar los pagos de la compra.";
+    dialogoPagosCreditoAbierto.value = false;
   } finally {
-    cargandoDetalle.value = false
+    cargandoDetalle.value = false;
   }
 }
 
-async function abrirGuias (idCompra) {
-  dialogoGuiasAbierto.value = true
-  dialogoDetalleAbierto.value = false
-  dialogoPagosCreditoAbierto.value = false
-  dialogoRecepcionAbierto.value = false
-  dialogoIngresoInventarioAbierto.value = false
-  cargandoDetalle.value = true
-  detalleCompraSeleccionada.value = null
-  errorGuia.value = ''
-  reiniciarFormularioGuia()
+async function abrirGuias(idCompra) {
+  dialogoGuiasAbierto.value = true;
+  dialogoDetalleAbierto.value = false;
+  dialogoPagosCreditoAbierto.value = false;
+  dialogoRecepcionAbierto.value = false;
+  dialogoIngresoInventarioAbierto.value = false;
+  cargandoDetalle.value = true;
+  detalleCompraSeleccionada.value = null;
+  errorGuia.value = "";
+  reiniciarFormularioGuia();
 
   try {
-    const respuesta = await obtenerDetalleCompra(idCompra)
-    detalleCompraSeleccionada.value = respuesta.compra || null
+    const respuesta = await obtenerDetalleCompra(idCompra);
+    detalleCompraSeleccionada.value = respuesta.compra || null;
   } catch (error) {
-    errorGeneral.value = error.message || 'No se pudo cargar las guias de la compra.'
-    dialogoGuiasAbierto.value = false
+    errorGeneral.value =
+      error.message || "No se pudo cargar las guias de la compra.";
+    dialogoGuiasAbierto.value = false;
   } finally {
-    cargandoDetalle.value = false
+    cargandoDetalle.value = false;
   }
 }
 
-async function abrirRecepcion (idCompra) {
-  dialogoRecepcionAbierto.value = true
-  dialogoDetalleAbierto.value = false
-  dialogoPagosCreditoAbierto.value = false
-  dialogoGuiasAbierto.value = false
-  dialogoCerrarIncompletoAbierto.value = false
-  dialogoIngresoInventarioAbierto.value = false
-  cargandoDetalle.value = true
-  detalleCompraSeleccionada.value = null
-  errorRecepcion.value = ''
-  errorCerrarIncompleto.value = ''
-  reiniciarFormularioCerrarIncompleto()
+async function abrirRecepcion(idCompra) {
+  dialogoRecepcionAbierto.value = true;
+  dialogoDetalleAbierto.value = false;
+  dialogoPagosCreditoAbierto.value = false;
+  dialogoGuiasAbierto.value = false;
+  dialogoCerrarIncompletoAbierto.value = false;
+  dialogoIngresoInventarioAbierto.value = false;
+  cargandoDetalle.value = true;
+  detalleCompraSeleccionada.value = null;
+  errorRecepcion.value = "";
+  errorCerrarIncompleto.value = "";
+  reiniciarFormularioCerrarIncompleto();
 
   try {
-    const respuesta = await obtenerDetalleCompra(idCompra)
-    detalleCompraSeleccionada.value = respuesta.compra || null
-    cargarFormularioRecepcionDesdeCompra()
+    const respuesta = await obtenerDetalleCompra(idCompra);
+    detalleCompraSeleccionada.value = respuesta.compra || null;
+    cargarFormularioRecepcionDesdeCompra();
   } catch (error) {
-    errorGeneral.value = error.message || 'No se pudo cargar la recepcion de la compra.'
-    dialogoRecepcionAbierto.value = false
+    errorGeneral.value =
+      error.message || "No se pudo cargar la recepcion de la compra.";
+    dialogoRecepcionAbierto.value = false;
   } finally {
-    cargandoDetalle.value = false
+    cargandoDetalle.value = false;
   }
 }
 
-async function abrirIngresoInventario (idCompra) {
-  dialogoIngresoInventarioAbierto.value = true
-  dialogoDetalleAbierto.value = false
-  dialogoPagosCreditoAbierto.value = false
-  dialogoGuiasAbierto.value = false
-  dialogoRecepcionAbierto.value = false
-  dialogoCerrarIncompletoAbierto.value = false
-  cargandoDetalle.value = true
-  detalleCompraSeleccionada.value = null
-  errorIngresoInventario.value = ''
-  reiniciarFormularioIngresoInventario()
+async function abrirIngresoInventario(idCompra) {
+  dialogoIngresoInventarioAbierto.value = true;
+  dialogoDetalleAbierto.value = false;
+  dialogoPagosCreditoAbierto.value = false;
+  dialogoGuiasAbierto.value = false;
+  dialogoRecepcionAbierto.value = false;
+  dialogoCerrarIncompletoAbierto.value = false;
+  cargandoDetalle.value = true;
+  detalleCompraSeleccionada.value = null;
+  errorIngresoInventario.value = "";
+  reiniciarFormularioIngresoInventario();
 
   try {
-    const respuesta = await obtenerDetalleCompra(idCompra)
-    detalleCompraSeleccionada.value = respuesta.compra || null
-    cargarFormularioIngresoInventarioDesdeCompra()
+    const respuesta = await obtenerDetalleCompra(idCompra);
+    detalleCompraSeleccionada.value = respuesta.compra || null;
+    cargarFormularioIngresoInventarioDesdeCompra();
   } catch (error) {
-    errorGeneral.value = error.message || 'No se pudo cargar el ingreso a inventario de la compra.'
-    dialogoIngresoInventarioAbierto.value = false
+    errorGeneral.value =
+      error.message ||
+      "No se pudo cargar el ingreso a inventario de la compra.";
+    dialogoIngresoInventarioAbierto.value = false;
   } finally {
-    cargandoDetalle.value = false
+    cargandoDetalle.value = false;
   }
 }
 
-async function guardarPagoCredito () {
-  errorPagoCredito.value = ''
+async function guardarPagoCredito() {
+  errorPagoCredito.value = "";
 
-  const errorValidacion = validarPagoCredito()
+  const errorValidacion = validarPagoCredito();
   if (errorValidacion) {
-    errorPagoCredito.value = errorValidacion
-    return
+    errorPagoCredito.value = errorValidacion;
+    return;
   }
 
   if (!detalleCompraSeleccionada.value?.id) {
-    errorPagoCredito.value = 'No se encontro la compra a pagar.'
-    return
+    errorPagoCredito.value = "No se encontro la compra a pagar.";
+    return;
   }
 
-  guardandoPagoCredito.value = true
+  guardandoPagoCredito.value = true;
 
   try {
-    const respuesta = await registrarPagoCredito(detalleCompraSeleccionada.value.id, {
-      sucursal_id: formularioPagoCredito.sucursalId,
-      fecha_abono: formularioPagoCredito.fechaAbono,
-      tipo_cambio_abono: Number(formularioPagoCredito.tipoCambioAbono || 0),
-      moneda_referencia: formularioPagoCredito.monedaReferencia,
-      abono_usd: Number(formularioPagoCredito.abonoUsd || 0),
-      abono_bs: Number(formularioPagoCredito.abonoBs || 0),
-      observaciones: formularioPagoCredito.observaciones.trim() || null
-    })
+    let respuesta = null;
 
-    detalleCompraSeleccionada.value = respuesta.compra || null
-    await cargarCompras()
-    reiniciarFormularioPagoCredito()
-    mostrarNotificacion('positive', respuesta.message || 'Pago registrado correctamente.')
-  } catch (error) {
-    errorPagoCredito.value = error.message || 'No se pudo registrar el pago.'
-  } finally {
-    guardandoPagoCredito.value = false
-  }
-}
-
-async function guardarGuia () {
-  errorGuia.value = ''
-
-  const errorValidacion = validarGuia()
-  if (errorValidacion) {
-    errorGuia.value = errorValidacion
-    return
-  }
-
-  if (!detalleCompraSeleccionada.value?.id) {
-    errorGuia.value = 'No se encontro la compra para registrar la guia.'
-    return
-  }
-
-  guardandoGuia.value = true
-
-  try {
-    const payload = {
-      fecha_registro: formularioGuia.fechaRegistro,
-      monto_bs: Number(formularioGuia.montoBs || 0),
-      estado: formularioGuia.estado,
-      pagado: formularioGuia.pagado,
-      observaciones: formularioGuia.observaciones.trim() || null
+    for (const pago of formularioPagoCredito.pagos) {
+      respuesta = await registrarPagoCredito(detalleCompraSeleccionada.value.id, {
+        sucursal_id: pago.sucursalId,
+        fecha_abono: pago.fechaAbono,
+        tipo_cambio_abono: Number(pago.tipoCambioAbono || 0),
+        moneda_referencia: pago.monedaReferencia,
+        abono_usd: Number(pago.abonoUsd || 0),
+        abono_bs: Number(pago.abonoBs || 0),
+        observaciones: pago.observaciones.trim() || null,
+      });
     }
+
+    detalleCompraSeleccionada.value = respuesta?.compra || null;
+    await cargarCompras();
+    reiniciarFormularioPagoCredito();
+    mostrarNotificacion(
+      "positive",
+      respuesta?.message || "Pagos registrados correctamente."
+    );
+  } catch (error) {
+    errorPagoCredito.value = error.message || "No se pudo registrar el pago.";
+  } finally {
+    guardandoPagoCredito.value = false;
+  }
+}
+
+async function guardarGuia() {
+  errorGuia.value = "";
+  const esEdicion = Boolean(guiaEditandoId.value);
+
+  const errorValidacion = validarGuia();
+  if (errorValidacion) {
+    errorGuia.value = errorValidacion;
+    return;
+  }
+
+  if (!detalleCompraSeleccionada.value?.id) {
+    errorGuia.value = "No se encontro la compra para registrar la guia.";
+    return;
+  }
+
+  guardandoGuia.value = true;
+
+  try {
+      const payload = {
+        fecha_registro: formularioGuia.fechaRegistro,
+        monto_bs: Number(formularioGuia.montoBs || 0),
+        estado: formularioGuia.estado,
+        pagado: formularioGuia.pagado,
+        observaciones: formularioGuia.observaciones.trim() || null,
+        foto_guia: formularioGuia.fotoGuia || null,
+      };
 
     const respuesta = guiaEditandoId.value
       ? await actualizarGuiaCompra(guiaEditandoId.value, payload)
-      : await registrarGuiaCompra(detalleCompraSeleccionada.value.id, payload)
+      : await registrarGuiaCompra(detalleCompraSeleccionada.value.id, payload);
 
-    detalleCompraSeleccionada.value = respuesta.compra || null
-    await cargarCompras()
-    reiniciarFormularioGuia()
-    mostrarNotificacion('positive', respuesta.message || 'Guia guardada correctamente.')
+    detalleCompraSeleccionada.value = respuesta.compra || null;
+    await cargarCompras();
+    reiniciarFormularioGuia();
+    mostrarNotificacion(
+      "positive",
+      respuesta.message ||
+        (esEdicion
+          ? "Guia actualizada correctamente."
+          : "Guia guardada correctamente.")
+    );
+    dialogoGuiasAbierto.value = false;
   } catch (error) {
-    errorGuia.value = error.message || 'No se pudo registrar la guia.'
+    errorGuia.value = error.message || "No se pudo registrar la guia.";
   } finally {
-    guardandoGuia.value = false
+    guardandoGuia.value = false;
   }
 }
 
-function editarGuia (guia) {
-  guiaEditandoId.value = guia.id
+function editarGuia(guia) {
+  if (guiaYaRecepcionada(guia)) {
+    mostrarNotificacion(
+      "warning",
+      "Esta guia ya fue usada en una recepcion y no se puede editar."
+    );
+    return;
+  }
+
+  guiaEditandoId.value = guia.id;
   Object.assign(formularioGuia, {
     fechaRegistro: guia.fecha_registro || new Date().toISOString().slice(0, 10),
     montoBs: Number(guia.monto_bs || 0),
-    estado: guia.estado || 'en_transito',
+    estado: guia.estado || "en_transito",
     pagado: Boolean(guia.pagado),
-    observaciones: guia.observaciones || ''
-  })
+    observaciones: guia.observaciones || "",
+    fotoGuia: null,
+    fotoUrlActual: guia.foto_url || "",
+  });
 }
 
-async function guardarRecepcion () {
-  errorRecepcion.value = ''
+async function guardarRecepcion() {
+  errorRecepcion.value = "";
 
-  const errorValidacion = validarRecepcion()
+  const errorValidacion = validarRecepcion();
   if (errorValidacion) {
-    errorRecepcion.value = errorValidacion
-    return
+    errorRecepcion.value = errorValidacion;
+    return;
   }
 
   if (!detalleCompraSeleccionada.value?.id) {
-    errorRecepcion.value = 'No se encontro la compra para registrar la recepcion.'
-    return
+    errorRecepcion.value =
+      "No se encontro la compra para registrar la recepcion.";
+    return;
   }
 
-  guardandoRecepcion.value = true
+  guardandoRecepcion.value = true;
 
   try {
-    const respuesta = await registrarRecepcionCompra(detalleCompraSeleccionada.value.id, {
-      compra_guia_id: formularioRecepcion.compraGuiaId || null,
-      fecha_recepcion: formularioRecepcion.fechaRecepcion,
-      observaciones: formularioRecepcion.observaciones.trim() || null,
-      detalles: formularioRecepcion.detalles
-        .filter((detalle) => Number(detalle.cantidadRecibida || 0) > 0)
-        .map((detalle) => ({
-          compra_detalle_id: detalle.compraDetalleId,
-          cantidad_recibida: Number(detalle.cantidadRecibida || 0),
-          observaciones: detalle.observaciones.trim() || null
-        }))
-    })
+    const respuesta = await registrarRecepcionCompra(
+      detalleCompraSeleccionada.value.id,
+      {
+        compra_guia_id: formularioRecepcion.compraGuiaId || null,
+        fecha_recepcion: formularioRecepcion.fechaRecepcion,
+        observaciones: formularioRecepcion.observaciones.trim() || null,
+        detalles: formularioRecepcion.detalles
+          .filter((detalle) => Number(detalle.cantidadRecibida || 0) > 0)
+          .map((detalle) => ({
+            compra_detalle_id: detalle.compraDetalleId,
+            cantidad_recibida: Number(detalle.cantidadRecibida || 0),
+            observaciones: detalle.observaciones.trim() || null,
+          })),
+      }
+    );
 
-    detalleCompraSeleccionada.value = respuesta.compra || null
-    await cargarCompras()
-    cargarFormularioRecepcionDesdeCompra()
-    mostrarNotificacion('positive', respuesta.message || 'Recepcion registrada correctamente.')
+    detalleCompraSeleccionada.value = respuesta.compra || null;
+    await cargarCompras();
+    cargarFormularioRecepcionDesdeCompra();
+    mostrarNotificacion(
+      "positive",
+      respuesta.message || "Recepcion registrada correctamente."
+    );
   } catch (error) {
-    errorRecepcion.value = error.message || 'No se pudo registrar la recepcion.'
+    errorRecepcion.value =
+      error.message || "No se pudo registrar la recepcion.";
   } finally {
-    guardandoRecepcion.value = false
+    guardandoRecepcion.value = false;
   }
 }
 
-async function cerrarIncompleto () {
-  errorCerrarIncompleto.value = ''
+async function cerrarIncompleto() {
+  errorCerrarIncompleto.value = "";
 
   if (!detalleCompraSeleccionada.value?.id) {
-    errorCerrarIncompleto.value = 'No se encontro la compra para cerrar como incompleta.'
-    return
+    errorCerrarIncompleto.value =
+      "No se encontro la compra para cerrar como incompleta.";
+    return;
   }
 
   if (Number(cantidadPendienteTotal.value || 0) <= 0) {
-    errorCerrarIncompleto.value = 'La compra ya no tiene cantidades pendientes.'
-    return
+    errorCerrarIncompleto.value =
+      "La compra ya no tiene cantidades pendientes.";
+    return;
   }
 
-  cerrandoIncompleto.value = true
+  cerrandoIncompleto.value = true;
 
   try {
-    const respuesta = await cerrarCompraIncompleta(detalleCompraSeleccionada.value.id, {
-      confirmar_cierre: true,
-      observaciones: formularioCerrarIncompleto.observaciones.trim() || null
-    })
+    const respuesta = await cerrarCompraIncompleta(
+      detalleCompraSeleccionada.value.id,
+      {
+        confirmar_cierre: true,
+        observaciones: formularioCerrarIncompleto.observaciones.trim() || null,
+      }
+    );
 
-    detalleCompraSeleccionada.value = respuesta.compra || null
-    await cargarCompras()
-    dialogoCerrarIncompletoAbierto.value = false
-    reiniciarFormularioCerrarIncompleto()
-    mostrarNotificacion('positive', respuesta.message || 'Compra cerrada como incompleta.')
+    detalleCompraSeleccionada.value = respuesta.compra || null;
+    await cargarCompras();
+    dialogoCerrarIncompletoAbierto.value = false;
+    reiniciarFormularioCerrarIncompleto();
+    mostrarNotificacion(
+      "positive",
+      respuesta.message || "Compra cerrada como incompleta."
+    );
   } catch (error) {
-    errorCerrarIncompleto.value = error.message || 'No se pudo cerrar la compra como incompleta.'
+    errorCerrarIncompleto.value =
+      error.message || "No se pudo cerrar la compra como incompleta.";
   } finally {
-    cerrandoIncompleto.value = false
+    cerrandoIncompleto.value = false;
   }
 }
 
-function validarIngresoInventario () {
+function validarIngresoInventario() {
   if (!formularioIngresoInventario.recepcionId) {
-    return 'Selecciona una recepcion pendiente para ingresar al inventario.'
+    return "Selecciona una recepcion pendiente para ingresar al inventario.";
   }
 
   if (!formularioIngresoInventario.detalles.length) {
-    return 'La recepcion seleccionada no tiene lineas para ingresar.'
+    return "La recepcion seleccionada no tiene lineas para ingresar.";
   }
 
   for (const detalle of formularioIngresoInventario.detalles) {
     const cantidadDistribuida = detalle.distribucionSucursales.reduce(
       (total, item) => total + Number(item.cantidad || 0),
       0
-    )
+    );
 
     if (cantidadDistribuida !== Number(detalle.cantidadRecibida || 0)) {
-      return `La distribucion del detalle "${detalle.detalleTexto}" debe coincidir con la cantidad recibida.`
+      return `La distribucion del detalle "${detalle.detalleTexto}" debe coincidir con la cantidad recibida.`;
     }
 
     if (detalle.crearProducto) {
       if (!detalle.modelo || !detalle.marcaId || !detalle.categoriaId) {
-        return `Completa modelo, marca y categoria para el detalle "${detalle.detalleTexto}".`
+        return `Completa modelo, marca y categoria para el detalle "${detalle.detalleTexto}".`;
       }
 
-      if (Number(detalle.precioUnitarioUsd || 0) < 0 || Number(detalle.precioUnitarioBs || 0) < 0) {
-        return `Los precios unitarios del detalle "${detalle.detalleTexto}" no son validos.`
+      if (
+        Number(detalle.precioUnitarioUsd || 0) < 0 ||
+        Number(detalle.precioUnitarioBs || 0) < 0
+      ) {
+        return `Los precios unitarios del detalle "${detalle.detalleTexto}" no son validos.`;
       }
     } else if (!detalle.productoId) {
-      return `Selecciona un producto existente o marca crear producto para "${detalle.detalleTexto}".`
+      return `Selecciona un producto existente o marca crear producto para "${detalle.detalleTexto}".`;
     }
 
-    if (detalle.registrarSeries && detalle.series.length !== Number(detalle.cantidadRecibida || 0)) {
-      return `Debes registrar una serie por cada unidad del detalle "${detalle.detalleTexto}".`
+    if (
+      detalle.registrarSeries &&
+      detalle.series.length !== Number(detalle.cantidadRecibida || 0)
+    ) {
+      return `Debes registrar una serie por cada unidad del detalle "${detalle.detalleTexto}".`;
     }
   }
 
-  return ''
+  return "";
 }
 
-async function guardarIngresoInventario () {
-  errorIngresoInventario.value = ''
+async function guardarIngresoInventario() {
+  errorIngresoInventario.value = "";
 
-  const errorValidacion = validarIngresoInventario()
+  const errorValidacion = validarIngresoInventario();
   if (errorValidacion) {
-    errorIngresoInventario.value = errorValidacion
-    return
+    errorIngresoInventario.value = errorValidacion;
+    return;
   }
 
-  ingresandoInventario.value = true
+  ingresandoInventario.value = true;
 
   try {
-    const respuesta = await ingresarRecepcionInventario(formularioIngresoInventario.recepcionId, {
-      detalles: formularioIngresoInventario.detalles.map((detalle) => ({
-        recepcion_detalle_id: detalle.recepcionDetalleId,
-        producto_id: detalle.crearProducto ? null : detalle.productoId,
-        crear_producto: detalle.crearProducto === true,
-        modelo: detalle.crearProducto ? detalle.modelo.trim() : null,
-        marca_id: detalle.crearProducto ? detalle.marcaId : null,
-        categoria_id: detalle.crearProducto ? detalle.categoriaId : null,
-        tipo_cambio_venta: detalle.crearProducto ? Number(detalle.tipoCambioVenta || 0) : null,
-        precio_unitario_usd: detalle.crearProducto ? Number(detalle.precioUnitarioUsd || 0) : null,
-        precio_unitario_bs: detalle.crearProducto ? Number(detalle.precioUnitarioBs || 0) : null,
-        precio_mayorista_usd: detalle.crearProducto ? Number(detalle.precioMayoristaUsd || 0) : null,
-        precio_mayorista_bs: detalle.crearProducto ? Number(detalle.precioMayoristaBs || 0) : null,
-        registrar_series: detalle.registrarSeries === true,
-        distribucion_sucursales: detalle.distribucionSucursales.map((item) => ({
-          sucursal_id: item.sucursalId,
-          cantidad: Number(item.cantidad || 0)
+    const respuesta = await ingresarRecepcionInventario(
+      formularioIngresoInventario.recepcionId,
+      {
+        detalles: formularioIngresoInventario.detalles.map((detalle) => ({
+          recepcion_detalle_id: detalle.recepcionDetalleId,
+          producto_id: detalle.crearProducto ? null : detalle.productoId,
+          crear_producto: detalle.crearProducto === true,
+          modelo: detalle.crearProducto ? detalle.modelo.trim() : null,
+          marca_id: detalle.crearProducto ? detalle.marcaId : null,
+          categoria_id: detalle.crearProducto ? detalle.categoriaId : null,
+          tipo_cambio_venta: detalle.crearProducto
+            ? Number(detalle.tipoCambioVenta || 0)
+            : null,
+          precio_unitario_usd: detalle.crearProducto
+            ? Number(detalle.precioUnitarioUsd || 0)
+            : null,
+          precio_unitario_bs: detalle.crearProducto
+            ? Number(detalle.precioUnitarioBs || 0)
+            : null,
+          precio_mayorista_usd: detalle.crearProducto
+            ? Number(detalle.precioMayoristaUsd || 0)
+            : null,
+          precio_mayorista_bs: detalle.crearProducto
+            ? Number(detalle.precioMayoristaBs || 0)
+            : null,
+          registrar_series: detalle.registrarSeries === true,
+          distribucion_sucursales: detalle.distribucionSucursales.map(
+            (item) => ({
+              sucursal_id: item.sucursalId,
+              cantidad: Number(item.cantidad || 0),
+            })
+          ),
+          series: detalle.series.map((serie) => ({
+            sucursal_id: serie.sucursalId,
+            numero_serie: serie.numeroSerie || null,
+            observaciones: serie.observaciones || null,
+          })),
         })),
-        series: detalle.series.map((serie) => ({
-          sucursal_id: serie.sucursalId,
-          numero_serie: serie.numeroSerie || null,
-          observaciones: serie.observaciones || null
-        }))
-      }))
-    })
+      }
+    );
 
-    detalleCompraSeleccionada.value = respuesta.compra || null
-    await Promise.all([cargarCompras(), cargarFormularioBasico()])
-    cargarFormularioIngresoInventarioDesdeCompra()
-    mostrarNotificacion('positive', respuesta.message || 'Recepcion ingresada al inventario correctamente.')
-  } catch (error) {
-    errorIngresoInventario.value = error.message || 'No se pudo ingresar la recepcion al inventario.'
+      detalleCompraSeleccionada.value = respuesta.compra || null;
+      await Promise.all([cargarCompras(), cargarFormularioBasico()]);
+      mostrarNotificacion(
+        "positive",
+        respuesta.message || "Productos enviados al inventario correctamente."
+      );
+      dialogoIngresoInventarioAbierto.value = false;
+      reiniciarFormularioIngresoInventario();
+      await router.push("/inventario");
+    } catch (error) {
+    errorIngresoInventario.value =
+      error.message || "No se pudo ingresar la recepcion al inventario.";
   } finally {
-    ingresandoInventario.value = false
+    ingresandoInventario.value = false;
   }
 }
 
-async function guardarMarcaNueva () {
+async function guardarMarcaNueva() {
   if (!nuevaMarca.value.trim()) {
-    errorIngresoInventario.value = 'Ingresa el nombre de la marca.'
-    return
+    errorIngresoInventario.value = "Ingresa el nombre de la marca.";
+    return;
   }
 
-  guardandoMarca.value = true
+  guardandoMarca.value = true;
 
   try {
-    const respuesta = await registrarMarca(nuevaMarca.value.trim())
-    marcas.value = [...marcas.value, respuesta.marca].sort((a, b) => a.label.localeCompare(b.label))
-    nuevaMarca.value = ''
-    dialogoMarcaAbierto.value = false
-    mostrarNotificacion('positive', respuesta.message || 'Marca registrada correctamente.')
+    const respuesta = await registrarMarca(nuevaMarca.value.trim());
+    marcas.value = [...marcas.value, respuesta.marca].sort((a, b) =>
+      a.label.localeCompare(b.label)
+    );
+    nuevaMarca.value = "";
+    dialogoMarcaAbierto.value = false;
+    mostrarNotificacion(
+      "positive",
+      respuesta.message || "Marca registrada correctamente."
+    );
   } catch (error) {
-    errorIngresoInventario.value = error.message || 'No se pudo registrar la marca.'
+    errorIngresoInventario.value =
+      error.message || "No se pudo registrar la marca.";
   } finally {
-    guardandoMarca.value = false
+    guardandoMarca.value = false;
   }
 }
 
-async function guardarCategoriaNueva () {
+async function guardarCategoriaNueva() {
   if (!nuevaCategoria.value.trim()) {
-    errorIngresoInventario.value = 'Ingresa el nombre de la categoria.'
-    return
+    errorIngresoInventario.value = "Ingresa el nombre de la categoria.";
+    return;
   }
 
-  guardandoCategoria.value = true
+  guardandoCategoria.value = true;
 
   try {
-    const respuesta = await registrarCategoria(nuevaCategoria.value.trim())
-    categorias.value = [...categorias.value, respuesta.categoria].sort((a, b) => a.label.localeCompare(b.label))
-    nuevaCategoria.value = ''
-    dialogoCategoriaAbierto.value = false
-    mostrarNotificacion('positive', respuesta.message || 'Categoria registrada correctamente.')
+    const respuesta = await registrarCategoria(nuevaCategoria.value.trim());
+    categorias.value = [...categorias.value, respuesta.categoria].sort((a, b) =>
+      a.label.localeCompare(b.label)
+    );
+    nuevaCategoria.value = "";
+    dialogoCategoriaAbierto.value = false;
+    mostrarNotificacion(
+      "positive",
+      respuesta.message || "Categoria registrada correctamente."
+    );
   } catch (error) {
-    errorIngresoInventario.value = error.message || 'No se pudo registrar la categoria.'
+    errorIngresoInventario.value =
+      error.message || "No se pudo registrar la categoria.";
   } finally {
-    guardandoCategoria.value = false
+    guardandoCategoria.value = false;
   }
 }
 
 onMounted(async () => {
-  await Promise.all([cargarFormularioBasico(), cargarCompras()])
-})
+  await Promise.all([cargarFormularioBasico(), cargarCompras()]);
+});
 </script>

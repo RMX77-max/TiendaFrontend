@@ -43,15 +43,6 @@
       </q-card-section>
     </q-card>
 
-    <q-banner
-      v-if="!puedeSolicitarTransferencias"
-      rounded
-      class="bg-orange-1 text-orange-10 q-mt-lg"
-    >
-      Solo los roles supervisor y vendedor pueden registrar solicitudes de
-      transferencia.
-    </q-banner>
-
     <q-card flat bordered class="tarjeta-inventario q-mt-lg">
       <q-card-section class="q-pa-none">
         <div class="cabecera-inventario q-pa-md">

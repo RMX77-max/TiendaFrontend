@@ -56,6 +56,26 @@ function construirFormularioCompra (formulario, incluirMetodoPut = false) {
   return formData
 }
 
+function construirFormularioGuia (formulario, incluirMetodoPut = false) {
+  const formData = new FormData()
+
+  if (incluirMetodoPut) {
+    formData.append('_method', 'PUT')
+  }
+
+  agregarCampoFormulario(formData, 'fecha_registro', formulario.fecha_registro)
+  agregarCampoFormulario(formData, 'monto_bs', formulario.monto_bs)
+  agregarCampoFormulario(formData, 'estado', formulario.estado)
+  agregarCampoFormulario(formData, 'pagado', formulario.pagado ? 1 : 0)
+  agregarCampoFormulario(formData, 'observaciones', formulario.observaciones)
+
+  if (formulario.foto_guia instanceof File) {
+    formData.append('foto_guia', formulario.foto_guia)
+  }
+
+  return formData
+}
+
 async function obtenerFormularioCompra () {
   return solicitarApi('/compras/formulario')
 }
@@ -111,7 +131,8 @@ async function registrarPagoCredito (idCompra, formulario) {
 async function registrarGuiaCompra (idCompra, formulario) {
   return solicitarApi(`/compras/${idCompra}/guias`, {
     method: 'POST',
-    body: JSON.stringify(formulario)
+    body: construirFormularioGuia(formulario),
+    esFormulario: true
   })
 }
 
@@ -138,8 +159,9 @@ async function ingresarRecepcionInventario (idRecepcion, formulario) {
 
 async function actualizarGuiaCompra (idGuia, formulario) {
   return solicitarApi(`/compras/guias/${idGuia}`, {
-    method: 'PUT',
-    body: JSON.stringify(formulario)
+    method: 'POST',
+    body: construirFormularioGuia(formulario, true),
+    esFormulario: true
   })
 }
 

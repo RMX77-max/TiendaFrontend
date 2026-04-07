@@ -4,6 +4,38 @@ const CLAVE_TOKEN = "punto_tecnologico_token";
 const CLAVE_USUARIO = "punto_tecnologico_usuario";
 const URL_BASE_API = String(process.env.API_BASE_URL || "").replace(/\/+$/, "");
 
+function obtenerBaseBackend() {
+  return URL_BASE_API.replace(/(?:\/index\.php)?\/api$/i, "");
+}
+
+function resolverUrlArchivo(ruta) {
+  const valor = String(ruta || "").trim();
+
+  if (!valor) {
+    return "";
+  }
+
+  const baseBackend = obtenerBaseBackend();
+  const baseUrl = new URL(baseBackend);
+
+  if (/^https?:\/\//i.test(valor)) {
+    const urlArchivo = new URL(valor);
+
+    if (
+      urlArchivo.origin === baseUrl.origin &&
+      urlArchivo.pathname.startsWith("/storage/")
+    ) {
+      return `${baseBackend}${urlArchivo.pathname}${urlArchivo.search}${urlArchivo.hash}`;
+    }
+
+    return valor;
+  }
+
+  const rutaNormalizada = valor.startsWith("/") ? valor : `/${valor}`;
+
+  return `${baseBackend}${rutaNormalizada}`;
+}
+
 function leerUsuarioGuardado() {
   const usuarioGuardado = sessionStorage.getItem(CLAVE_USUARIO);
 
@@ -142,6 +174,7 @@ export {
   estado as estadoAutenticacion,
   iniciarSesion,
   limpiarSesion,
+  resolverUrlArchivo,
   solicitar as solicitarApi,
   URL_BASE_API,
 };

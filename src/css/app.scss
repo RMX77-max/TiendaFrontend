@@ -589,6 +589,37 @@ body {
   gap: 16px;
 }
 
+.rejilla-guias-simple {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.95fr) minmax(140px, 0.95fr) minmax(170px, 1fr) minmax(150px, 0.8fr) minmax(220px, 1.2fr) minmax(220px, 1.2fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.rejilla-pagos-simple {
+  display: grid;
+  grid-template-columns: minmax(170px, 1fr) minmax(150px, 0.9fr) minmax(150px, 0.9fr) minmax(160px, 1fr) minmax(160px, 1fr) minmax(220px, 1.2fr) auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.campo-guia {
+  min-width: 0;
+}
+
+.campo-guia--toggle {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+}
+
+.campo-pago-accion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+}
+
 .contenedor-tabla-simple {
   overflow-x: auto;
 }
@@ -620,6 +651,12 @@ body {
 
 .rejilla-resumen-pagos-credito {
   display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.rejilla-resumen-ingreso {
+  display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
 }
@@ -628,6 +665,47 @@ body {
   padding: 18px;
   border-radius: 18px;
   border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.tarjeta-resumen-ingreso {
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.tarjeta-resumen-ingreso--neutral {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.tarjeta-resumen-ingreso--success {
+  background: #dcfce7;
+}
+
+.tarjeta-resumen-ingreso--warning {
+  background: #fef3c7;
+}
+
+.tarjeta-resumen-ingreso--done {
+  background: #dbeafe;
+}
+
+.rejilla-distribucion-sucursales {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.tarjeta-distribucion-sucursal {
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.03);
+  border: 1px solid var(--pt-border);
+}
+
+.rejilla-distribucion-sucursal-campos {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 12px;
 }
 
 .tarjeta-resumen-pago--neutral {
@@ -640,6 +718,17 @@ body {
 
 .tarjeta-resumen-pago--warning {
   background: #fef3c7;
+}
+
+.tarjeta-resumen-pago--danger {
+  background: #fee2e2;
+}
+
+.resumen-diferencia-fila {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  grid-column: 1 / -1;
 }
 
 .badge-estado {
@@ -791,9 +880,13 @@ body {
   .rejilla-compras-superior,
   .rejilla-resumen-pagos-credito,
   .rejilla-compras-simple,
-  .rejilla-fila-detalle,
-  .rejilla-resumen-compra,
-  .rejilla-unidad-detalle,
+    .rejilla-guias-simple,
+    .rejilla-pagos-simple,
+    .rejilla-fila-detalle,
+    .rejilla-resumen-ingreso,
+    .rejilla-distribucion-sucursales,
+    .rejilla-resumen-compra,
+    .rejilla-unidad-detalle,
   .rejilla-totales-operacion,
   .formulario-usuarios,
   .formulario-transferencia,
@@ -818,13 +911,36 @@ body {
   .rejilla-compras-superior,
   .rejilla-resumen-pagos-credito,
   .rejilla-compras-simple,
-  .rejilla-fila-detalle,
-  .rejilla-resumen-compra,
-  .rejilla-unidad-detalle,
-  .rejilla-totales-operacion,
+    .rejilla-guias-simple,
+    .rejilla-pagos-simple,
+    .rejilla-fila-detalle,
+    .rejilla-resumen-ingreso,
+    .rejilla-distribucion-sucursales,
+    .rejilla-resumen-compra,
+    .rejilla-unidad-detalle,
+    .rejilla-totales-operacion,
   .formulario-usuarios,
   .formulario-transferencia,
-  .formulario-respuesta-transferencia {
-    grid-template-columns: 1fr;
+    .formulario-respuesta-transferencia {
+      grid-template-columns: 1fr;
+    }
+
+    .rejilla-distribucion-sucursal-campos {
+      grid-template-columns: 1fr;
+    }
   }
+.columna-campo-archivo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.enlace-comprobante {
+  color: #1565c0;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.enlace-comprobante:hover {
+  text-decoration: underline;
 }

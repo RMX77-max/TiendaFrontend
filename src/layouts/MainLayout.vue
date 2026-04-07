@@ -15,7 +15,9 @@
           <div class="marca-aplicacion">PT</div>
           <div>
             <div class="text-subtitle1 text-weight-bold">Punto Tecnologico</div>
-            <div class="text-caption text-grey-7">Sistema interno de ventas</div>
+            <div class="text-caption text-grey-7">
+              Sistema interno de ventas
+            </div>
           </div>
         </q-toolbar-title>
 
@@ -37,10 +39,14 @@
     </q-header>
 
     <q-drawer v-model="leftDrawerOpen" show-if-above bordered class="bg-grey-1">
-        <div class="q-pa-md">
-          <div class="text-overline text-grey-7">Usuario activo</div>
-        <div class="text-subtitle1 text-weight-bold">{{ estadoAutenticacion.usuario?.nombre_completo }}</div>
-        <div class="text-body2 text-grey-7">{{ estadoAutenticacion.usuario?.nombre_usuario }}</div>
+      <div class="q-pa-md">
+        <div class="text-overline text-grey-7">Usuario activo</div>
+        <div class="text-subtitle1 text-weight-bold">
+          {{ estadoAutenticacion.usuario?.nombre_completo }}
+        </div>
+        <div class="text-body2 text-grey-7">
+          {{ estadoAutenticacion.usuario?.nombre_usuario }}
+        </div>
       </div>
 
       <q-separator />
@@ -68,73 +74,82 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { estadoAutenticacion, cerrarSesion } from 'src/services/auth'
+import { computed, ref } from "vue";
+import { useRouter } from "vue-router";
+import { estadoAutenticacion, cerrarSesion } from "src/services/auth";
 
 defineOptions({
-  name: 'MainLayout'
-})
+  name: "MainLayout",
+});
 
-const router = useRouter()
-const leftDrawerOpen = ref(false)
-const cerrandoSesion = ref(false)
+const router = useRouter();
+const leftDrawerOpen = ref(false);
+const cerrandoSesion = ref(false);
 const etiquetasRol = {
-  gerente: 'Gerente',
-  auxiliar_administrativo: 'Auxiliar administrativo',
-  supervisor_sucursal: 'Supervisor',
-  vendedor: 'Vendedor'
-}
+  gerente: "Gerente",
+  auxiliar_administrativo: "Auxiliar administrativo",
+  supervisor_sucursal: "Supervisor",
+  vendedor: "Vendedor",
+};
 const enlacesMenu = [
   {
-    to: '/inventario',
-    etiqueta: 'Inventario',
-    icono: 'table_view',
-    roles: ['gerente', 'auxiliar_administrativo', 'supervisor_sucursal', 'vendedor']
+    to: "/inventario",
+    etiqueta: "Inventario",
+    icono: "table_view",
+    roles: [
+      "gerente",
+      "auxiliar_administrativo",
+      "supervisor_sucursal",
+      "vendedor",
+    ],
   },
   {
-    to: '/inicio',
-    etiqueta: 'Inicio',
-    icono: 'dashboard',
-    roles: ['gerente', 'auxiliar_administrativo']
+    to: "/inicio",
+    etiqueta: "Inicio",
+    icono: "dashboard",
+    roles: ["gerente", "auxiliar_administrativo"],
   },
   {
-    to: '/usuarios',
-    etiqueta: 'Usuarios',
-    icono: 'group',
-    roles: ['gerente']
+    to: "/productos",
+    etiqueta: "Registar Productos",
+    icono: "inventory_2",
+    roles: ["gerente", "auxiliar_administrativo"],
   },
   {
-    to: '/productos',
-    etiqueta: 'Productos',
-    icono: 'inventory_2',
-    roles: ['gerente', 'auxiliar_administrativo']
+    to: "/compras",
+    etiqueta: "Compras",
+    icono: "shopping_cart",
+    roles: ["gerente", "auxiliar_administrativo", "supervisor_sucursal"],
   },
   {
-    to: '/compras',
-    etiqueta: 'Compras',
-    icono: 'shopping_cart',
-    roles: ['gerente', 'auxiliar_administrativo', 'supervisor_sucursal']
-  }
-]
+    to: "/usuarios",
+    etiqueta: "Usuarios",
+    icono: "group",
+    roles: ["gerente"],
+  },
+];
 
-const etiquetaRol = computed(() => etiquetasRol[estadoAutenticacion.usuario?.rol] || 'Sin rol')
+const etiquetaRol = computed(
+  () => etiquetasRol[estadoAutenticacion.usuario?.rol] || "Sin rol"
+);
 const enlacesMenuVisibles = computed(() =>
-  enlacesMenu.filter((enlace) => enlace.roles.includes(estadoAutenticacion.usuario?.rol))
-)
+  enlacesMenu.filter((enlace) =>
+    enlace.roles.includes(estadoAutenticacion.usuario?.rol)
+  )
+);
 
-function toggleLeftDrawer () {
-  leftDrawerOpen.value = !leftDrawerOpen.value
+function toggleLeftDrawer() {
+  leftDrawerOpen.value = !leftDrawerOpen.value;
 }
 
-async function manejarCierreSesion () {
-  cerrandoSesion.value = true
+async function manejarCierreSesion() {
+  cerrandoSesion.value = true;
 
   try {
-    await cerrarSesion()
-    await router.replace('/login')
+    await cerrarSesion();
+    await router.replace("/login");
   } finally {
-    cerrandoSesion.value = false
+    cerrandoSesion.value = false;
   }
 }
 </script>
