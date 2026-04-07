@@ -10,6 +10,9 @@
 
 const { configure } = require("quasar/wrappers");
 
+const URL_API_DESARROLLO = "http://localhost/Tiendabackend/public/api";
+const URL_API_PRODUCCION = "https://api.microcenter-bolivia.com/index.php/api";
+
 module.exports = configure(function (ctx) {
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
@@ -40,9 +43,7 @@ module.exports = configure(function (ctx) {
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#build
     build: {
       env: {
-        API_BASE_URL: ctx.dev
-          ? "http://localhost/Tiendabackend/public/api"
-          : "https://api.microcenter-bolivia.com/index.php/api",
+        API_BASE_URL: ctx.dev ? URL_API_DESARROLLO : URL_API_PRODUCCION,
       },
       target: {
         browser: ["es2019", "edge88", "firefox78", "chrome87", "safari13.1"],

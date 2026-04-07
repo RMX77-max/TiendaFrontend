@@ -2,7 +2,7 @@ import { reactive } from "vue";
 
 const CLAVE_TOKEN = "punto_tecnologico_token";
 const CLAVE_USUARIO = "punto_tecnologico_usuario";
-const URL_BASE_API = process.env.API_BASE_URL;
+const URL_BASE_API = String(process.env.API_BASE_URL || "").replace(/\/+$/, "");
 
 function leerUsuarioGuardado() {
   const usuarioGuardado = sessionStorage.getItem(CLAVE_USUARIO);
@@ -51,6 +51,7 @@ async function solicitar(ruta, opciones = {}) {
 
   if (estado.token) {
     cabeceras.Authorization = `Bearer ${estado.token}`;
+    cabeceras["X-Access-Token"] = estado.token;
   }
 
   const respuesta = await fetch(`${URL_BASE_API}${ruta}`, {
