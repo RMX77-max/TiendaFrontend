@@ -287,6 +287,10 @@ body {
   min-width: 0;
 }
 
+.campo-formulario-producto--ancho-completo {
+  grid-column: 1 / -1;
+}
+
 .campo-formulario-producto--medio {
   grid-column: span 1;
 }
