@@ -38,7 +38,13 @@
       </q-toolbar>
     </q-header>
 
-    <q-drawer v-model="leftDrawerOpen" show-if-above bordered class="bg-grey-1">
+    <q-drawer
+      v-model="leftDrawerOpen"
+      show-if-above
+      bordered
+      :behavior="$q.screen.lt.md ? 'mobile' : 'desktop'"
+      class="bg-grey-1"
+    >
       <div class="q-pa-md">
         <div class="text-overline text-grey-7">Usuario activo</div>
         <div class="text-subtitle1 text-weight-bold">
@@ -58,6 +64,7 @@
           clickable
           :to="enlace.to"
           :exact="enlace.exact === true"
+          @click="manejarClickEnlace"
         >
           <q-item-section avatar>
             <q-icon :name="enlace.icono" />
@@ -75,6 +82,7 @@
 
 <script setup>
 import { computed, ref } from "vue";
+import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
 import { estadoAutenticacion, cerrarSesion } from "src/services/auth";
 
@@ -83,6 +91,7 @@ defineOptions({
 });
 
 const router = useRouter();
+const $q = useQuasar();
 const leftDrawerOpen = ref(false);
 const cerrandoSesion = ref(false);
 const etiquetasRol = {
@@ -95,7 +104,7 @@ const enlacesMenu = [
   {
     to: "/inventario",
     etiqueta: "Inventario",
-    icono: "table_view",
+    icono: "inventory",
     roles: [
       "gerente",
       "auxiliar_administrativo",
@@ -106,25 +115,25 @@ const enlacesMenu = [
   {
     to: "/inicio",
     etiqueta: "Inicio",
-    icono: "dashboard",
+    icono: "space_dashboard",
     roles: ["gerente", "auxiliar_administrativo"],
   },
   {
     to: "/productos",
     etiqueta: "Registar Productos",
-    icono: "inventory_2",
+    icono: "category",
     roles: ["gerente", "auxiliar_administrativo"],
   },
   {
     to: "/compras",
     etiqueta: "Compras",
-    icono: "shopping_cart",
+    icono: "receipt_long",
     roles: ["gerente", "auxiliar_administrativo", "supervisor_sucursal"],
   },
   {
     to: "/usuarios",
     etiqueta: "Usuarios",
-    icono: "group",
+    icono: "manage_accounts",
     roles: ["gerente"],
   },
 ];
@@ -140,6 +149,12 @@ const enlacesMenuVisibles = computed(() =>
 
 function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value;
+}
+
+function manejarClickEnlace() {
+  if ($q.screen.lt.md) {
+    leftDrawerOpen.value = false;
+  }
 }
 
 async function manejarCierreSesion() {

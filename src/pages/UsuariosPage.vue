@@ -94,6 +94,7 @@
                 :type="mostrarContrasena ? 'text' : 'password'"
                 label="Contrasena"
                 lazy-rules
+                reactive-rules
                 :rules="[reglaRequerida, reglaContrasena]"
               >
                 <template #append>
@@ -247,14 +248,25 @@
 
               <template #body-cell-acciones="propiedades">
                 <q-td :props="propiedades">
-                  <q-btn
-                    size="sm"
-                    unelevated
-                    :color="propiedades.row.activo ? 'negative' : 'positive'"
-                    :label="propiedades.row.activo ? 'Inactivar' : 'Activar'"
-                    :loading="idsUsuariosProcesando.includes(propiedades.row.id)"
-                    @click="actualizarEstadoUsuario(propiedades.row)"
-                  />
+                  <div class="row items-center q-gutter-sm">
+                    <q-btn
+                      v-if="puedeCambiarSucursal(propiedades.row)"
+                      size="sm"
+                      flat
+                      color="primary"
+                      icon="store"
+                      label="Cambiar sucursal"
+                      @click="abrirDialogoCambioSucursal(propiedades.row)"
+                    />
+                    <q-btn
+                      size="sm"
+                      unelevated
+                      :color="propiedades.row.activo ? 'negative' : 'positive'"
+                      :label="propiedades.row.activo ? 'Inactivar' : 'Activar'"
+                      :loading="idsUsuariosProcesando.includes(propiedades.row.id)"
+                      @click="actualizarEstadoUsuario(propiedades.row)"
+                    />
+                  </div>
                 </q-td>
               </template>
             </q-table>
@@ -262,12 +274,86 @@
         </q-card-section>
       </q-card>
     </div>
+
+    <q-dialog v-model="dialogoCambioSucursalAbierto">
+      <q-card class="tarjeta-dialogo-transferencia">
+        <q-card-section class="q-pa-lg">
+          <div class="text-h6 text-weight-bold">Cambiar sucursal</div>
+          <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
+            Reasigna al trabajador a otra sucursal sin modificar sus credenciales.
+          </p>
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section class="q-pa-lg">
+          <q-banner v-if="errorCambioSucursal" rounded class="bg-red-1 text-red-10 q-mb-lg">
+            {{ errorCambioSucursal }}
+          </q-banner>
+
+          <div v-if="usuarioCambioSucursal" class="formulario-usuarios">
+            <div class="campo-formulario-usuarios">
+              <q-input
+                :model-value="usuarioCambioSucursal.nombre_completo"
+                outlined
+                disable
+                label="Trabajador"
+              />
+            </div>
+
+            <div class="campo-formulario-usuarios">
+              <q-input
+                :model-value="usuarioCambioSucursal.rol_etiqueta"
+                outlined
+                disable
+                label="Rol"
+              />
+            </div>
+
+            <div class="campo-formulario-usuarios">
+              <q-input
+                :model-value="usuarioCambioSucursal.sucursal || 'No asignada'"
+                outlined
+                disable
+                label="Sucursal actual"
+              />
+            </div>
+
+            <div class="campo-formulario-usuarios">
+              <q-select
+                v-model="formularioCambioSucursal.sucursal"
+                outlined
+                emit-value
+                map-options
+                label="Nueva sucursal"
+                :options="sucursales"
+                option-value="value"
+                option-label="label"
+              />
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right" class="q-pa-lg">
+          <q-btn flat color="grey-8" label="Cancelar" @click="cerrarDialogoCambioSucursal" />
+          <q-btn
+            unelevated
+            color="dark"
+            text-color="white"
+            label="Guardar cambio"
+            :loading="guardandoCambioSucursal"
+            @click="guardarCambioSucursal"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import {
+  actualizarSucursalUsuario,
   cambiarEstadoUsuario,
   obtenerDatosModuloUsuarios,
   registrarUsuario
@@ -283,12 +369,19 @@ const mostrarContrasena = ref(false)
 const mensajeFormulario = ref('')
 const errorFormulario = ref('')
 const errorListado = ref('')
+const errorCambioSucursal = ref('')
 const roles = ref([])
 const sucursales = ref([])
 const usuarios = ref([])
 const idsUsuariosProcesando = ref([])
+const dialogoCambioSucursalAbierto = ref(false)
+const guardandoCambioSucursal = ref(false)
+const usuarioCambioSucursal = ref(null)
 
 const formulario = reactive(crearFormularioVacio())
+const formularioCambioSucursal = reactive({
+  sucursal: null
+})
 
 const columnasUsuarios = [
   { name: 'usuario', label: 'Usuario', align: 'left', field: 'nombre_completo', sortable: true },
@@ -337,6 +430,10 @@ function reglaSucursal (valor) {
 
 function requiereSucursal (rol) {
   return ['vendedor', 'supervisor_sucursal'].includes(rol)
+}
+
+function puedeCambiarSucursal (usuario) {
+  return requiereSucursal(usuario.rol)
 }
 
 function reiniciarFormulario () {
@@ -392,6 +489,54 @@ async function actualizarEstadoUsuario (usuario) {
     errorListado.value = error.message || 'No se pudo actualizar el estado del usuario.'
   } finally {
     idsUsuariosProcesando.value = idsUsuariosProcesando.value.filter(id => id !== usuario.id)
+  }
+}
+
+function abrirDialogoCambioSucursal (usuario) {
+  usuarioCambioSucursal.value = usuario
+  formularioCambioSucursal.sucursal = usuario.sucursal || null
+  errorCambioSucursal.value = ''
+  dialogoCambioSucursalAbierto.value = true
+}
+
+function cerrarDialogoCambioSucursal () {
+  dialogoCambioSucursalAbierto.value = false
+  usuarioCambioSucursal.value = null
+  formularioCambioSucursal.sucursal = null
+  errorCambioSucursal.value = ''
+}
+
+async function guardarCambioSucursal () {
+  errorCambioSucursal.value = ''
+
+  if (!usuarioCambioSucursal.value?.id) {
+    errorCambioSucursal.value = 'No se encontro el usuario seleccionado.'
+    return
+  }
+
+  if (!formularioCambioSucursal.sucursal) {
+    errorCambioSucursal.value = 'Selecciona la nueva sucursal.'
+    return
+  }
+
+  guardandoCambioSucursal.value = true
+
+  try {
+    const respuesta = await actualizarSucursalUsuario(
+      usuarioCambioSucursal.value.id,
+      formularioCambioSucursal.sucursal
+    )
+
+    usuarios.value = usuarios.value.map(item =>
+      item.id === usuarioCambioSucursal.value.id ? respuesta.usuario : item
+    )
+
+    cerrarDialogoCambioSucursal()
+  } catch (error) {
+    errorCambioSucursal.value =
+      error.message || 'No se pudo actualizar la sucursal del usuario.'
+  } finally {
+    guardandoCambioSucursal.value = false
   }
 }
 

@@ -72,13 +72,21 @@
               outlined
               use-input
               input-debounce="0"
+              :input-value="textoProveedorBusqueda"
+              :display-value="proveedorEnEdicion ? '' : textoVisibleProveedor"
               emit-value
               map-options
+              clearable
               label="Proveedor / persona de compra"
               :options="proveedoresFiltrados"
               option-value="value"
               option-label="label"
               @filter="filtrarProveedores"
+              @update:input-value="actualizarTextoProveedorBusqueda"
+              @update:model-value="seleccionarProveedorCompra"
+              @clear="limpiarProveedorCompra"
+              @focus="proveedorEnEdicion = true"
+              @blur="proveedorEnEdicion = false"
             >
               <template #after>
                 <q-btn
@@ -229,7 +237,7 @@
                       outlined
                       type="number"
                       min="0.01"
-                      step="0.0001"
+                      step="0.01"
                       @update:model-value="recalcularFila(detalle)"
                     />
                   </td>
@@ -240,7 +248,7 @@
                       outlined
                       type="number"
                       min="0"
-                      step="0.0001"
+                      step="0.01"
                       @update:model-value="
                         actualizarMontoDetalle(detalle, 'usd', $event)
                       "
@@ -253,7 +261,7 @@
                       outlined
                       type="number"
                       min="0"
-                      step="0.0001"
+                      step="0.01"
                       @update:model-value="
                         actualizarMontoDetalle(detalle, 'bs', $event)
                       "
@@ -421,7 +429,7 @@
                       outlined
                       type="number"
                       min="0.01"
-                      step="0.0001"
+                      step="0.01"
                       @update:model-value="recalcularAbono(abono)"
                     />
                   </td>
@@ -432,7 +440,7 @@
                       outlined
                       type="number"
                       min="0"
-                      step="0.0001"
+                      step="0.01"
                       @update:model-value="
                         actualizarMontoAbono(abono, 'usd', $event)
                       "
@@ -445,7 +453,7 @@
                       outlined
                       type="number"
                       min="0"
-                      step="0.0001"
+                      step="0.01"
                       @update:model-value="
                         actualizarMontoAbono(abono, 'bs', $event)
                       "
@@ -582,6 +590,7 @@ const errorGeneral = ref("");
 const errorProveedor = ref("");
 const mensajeExito = ref("");
 const textoProveedorBusqueda = ref("");
+const proveedorEnEdicion = ref(false);
 const opcionesProductosFiltradas = reactive({});
 
 const formulario = reactive(crearFormulario());
@@ -595,6 +604,17 @@ const proveedoresFiltrados = computed(() => {
       .toLowerCase()
       .includes(termino)
   );
+});
+const textoVisibleProveedor = computed(() => {
+  if (!formulario.proveedorId) {
+    return textoProveedorBusqueda.value;
+  }
+
+  const proveedorSeleccionado = proveedores.value.find(
+    (item) => Number(item.value) === Number(formulario.proveedorId)
+  );
+
+  return proveedorSeleccionado?.label || textoProveedorBusqueda.value;
 });
 
 const productosPreparados = computed(() =>
@@ -732,12 +752,40 @@ function normalizarNumero(valor) {
   return Number.isFinite(numero) ? numero : 0;
 }
 
-function redondearMonto(valor, precision = 4) {
+function redondearMonto(valor, precision = 2) {
   return Number(normalizarNumero(valor).toFixed(precision));
+}
+
+function limitarDosDecimales(valor) {
+  return redondearMonto(valor);
 }
 
 function formatearMonto(valor) {
   return Number(valor || 0).toFixed(2);
+}
+
+function actualizarTextoProveedorBusqueda(valor) {
+  textoProveedorBusqueda.value = String(valor || "");
+}
+
+function seleccionarProveedorCompra(idProveedor) {
+  const proveedor = proveedores.value.find(
+    (item) => Number(item.value) === Number(idProveedor)
+  );
+
+  formulario.proveedorId = idProveedor;
+  if (proveedor) {
+    textoProveedorBusqueda.value = proveedor.label || "";
+    return;
+  }
+
+  if (!idProveedor) {
+    formulario.proveedorId = null;
+  }
+}
+
+function limpiarProveedorCompra() {
+  formulario.proveedorId = null;
 }
 
 function referenciaAbonoBs(abono) {
@@ -776,9 +824,9 @@ function mostrarNotificacion(tipo, mensaje) {
 function recalcularFila(detalle) {
   const cantidad = Math.max(1, Math.trunc(normalizarNumero(detalle.cantidad)));
   const tipoCambio = Math.max(
-    0.0001,
-    normalizarNumero(detalle.tipoCambioAplicado)
-  );
+      0.01,
+      limitarDosDecimales(normalizarNumero(detalle.tipoCambioAplicado))
+    );
   detalle.cantidad = cantidad;
   detalle.tipoCambioAplicado = tipoCambio;
 
@@ -802,15 +850,18 @@ function recalcularFila(detalle) {
 function actualizarMontoDetalle(detalle, monedaOrigen, valor) {
   detalle.monedaReferencia = monedaOrigen;
   if (monedaOrigen === "usd") {
-    detalle.precioUnitarioUsd = normalizarNumero(valor);
+    detalle.precioUnitarioUsd = limitarDosDecimales(valor);
   } else {
-    detalle.precioUnitarioBs = normalizarNumero(valor);
+    detalle.precioUnitarioBs = limitarDosDecimales(valor);
   }
   recalcularFila(detalle);
 }
 
 function recalcularAbono(abono) {
-  const tipoCambio = Math.max(0.0001, normalizarNumero(abono.tipoCambioAbono));
+  const tipoCambio = Math.max(
+    0.01,
+    limitarDosDecimales(normalizarNumero(abono.tipoCambioAbono))
+  );
   abono.tipoCambioAbono = tipoCambio;
 
   if (abono.monedaReferencia === "bs") {
@@ -826,9 +877,9 @@ function recalcularAbono(abono) {
 function actualizarMontoAbono(abono, monedaOrigen, valor) {
   abono.monedaReferencia = monedaOrigen;
   if (monedaOrigen === "usd") {
-    abono.abonoUsd = normalizarNumero(valor);
+    abono.abonoUsd = limitarDosDecimales(valor);
   } else {
-    abono.abonoBs = normalizarNumero(valor);
+    abono.abonoBs = limitarDosDecimales(valor);
   }
   recalcularAbono(abono);
 }
@@ -872,7 +923,7 @@ function filtrarProductos(indice, valor, actualizar) {
 
 function filtrarProveedores(valor, actualizar) {
   actualizar(() => {
-    textoProveedorBusqueda.value = String(valor || "");
+    actualizarTextoProveedorBusqueda(valor);
   });
 }
 
@@ -896,6 +947,9 @@ function seleccionarProductoDetalle(detalle, idProducto) {
   );
   detalle.productoId = idProducto;
   if (!producto) {
+    if (!idProducto) {
+      detalle.productoId = null;
+    }
     return;
   }
 
@@ -935,7 +989,7 @@ async function asegurarProveedorSeleccionado() {
 function construirPayloadCompra() {
   const tipoCambioGeneralCalculado =
     tipoCambioPromedioPedido.value > 0
-      ? redondearMonto(tipoCambioPromedioPedido.value, 6)
+      ? redondearMonto(tipoCambioPromedioPedido.value)
       : 9;
 
   return {

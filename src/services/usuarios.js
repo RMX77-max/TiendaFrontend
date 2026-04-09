@@ -47,7 +47,15 @@ async function cambiarEstadoUsuario (idUsuario, activo) {
   })
 }
 
+async function actualizarSucursalUsuario (idUsuario, sucursal) {
+  return solicitarApi(`/usuarios/${idUsuario}/sucursal`, {
+    method: 'PATCH',
+    body: JSON.stringify({ sucursal })
+  })
+}
+
 export {
+  actualizarSucursalUsuario,
   cambiarEstadoUsuario,
   obtenerDatosModuloUsuarios,
   registrarUsuario

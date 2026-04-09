@@ -232,6 +232,7 @@
               flat
               round
               dense
+              class="boton-cerrar-modal-compras"
               icon="close"
               @click="dialogoDetalleAbierto = false"
             />
@@ -518,6 +519,7 @@
               flat
               round
               dense
+              class="boton-cerrar-modal-compras"
               icon="close"
               @click="dialogoPagosCreditoAbierto = false"
             />
@@ -724,7 +726,7 @@
                         outlined
                         type="number"
                         min="0.01"
-                        step="0.0001"
+                        step="0.01"
                         label="Tipo de cambio"
                         @update:model-value="recalcularPagoCredito(pago)"
                       />
@@ -733,7 +735,7 @@
                         outlined
                         type="number"
                         min="0"
-                        step="0.0001"
+                        step="0.01"
                         label="Pago USD"
                         @update:model-value="
                           actualizarMontoPagoCredito(pago, 'usd', $event)
@@ -744,7 +746,7 @@
                         outlined
                         type="number"
                         min="0"
-                        step="0.0001"
+                        step="0.01"
                         label="Pago Bs"
                         @update:model-value="
                           actualizarMontoPagoCredito(pago, 'bs', $event)
@@ -845,6 +847,7 @@
               flat
               round
               dense
+              class="boton-cerrar-modal-compras"
               icon="close"
               @click="dialogoGuiasAbierto = false"
             />
@@ -1090,6 +1093,7 @@
               flat
               round
               dense
+              class="boton-cerrar-modal-compras"
               icon="close"
               @click="dialogoRecepcionAbierto = false"
             />
@@ -1355,6 +1359,7 @@
               flat
               round
               dense
+              class="boton-cerrar-modal-compras"
               icon="close"
               @click="dialogoIngresoInventarioAbierto = false"
             />
@@ -1550,7 +1555,7 @@
                         outlined
                         type="number"
                         min="0.0001"
-                        step="0.0001"
+                        step="0.01"
                         disable
                         label="Tipo cambio de compra"
                       />
@@ -1559,7 +1564,7 @@
                         outlined
                         type="number"
                         min="0"
-                        step="0.0001"
+                        step="0.01"
                         label="Precio unitario USD"
                         @update:model-value="
                           actualizarMontoVentaIngreso(
@@ -1575,7 +1580,7 @@
                         outlined
                         type="number"
                         min="0"
-                        step="0.0001"
+                        step="0.01"
                         label="Precio unitario Bs"
                         @update:model-value="
                           actualizarMontoVentaIngreso(
@@ -1591,7 +1596,7 @@
                         outlined
                         type="number"
                         min="0"
-                        step="0.0001"
+                        step="0.01"
                         label="Precio mayorista USD"
                         @update:model-value="
                           actualizarMontoVentaIngreso(
@@ -1607,7 +1612,7 @@
                         outlined
                         type="number"
                         min="0"
-                        step="0.0001"
+                        step="0.01"
                         label="Precio mayorista Bs"
                         @update:model-value="
                           actualizarMontoVentaIngreso(
@@ -1784,13 +1789,14 @@
               Usa esta opcion solo si el proveedor ya no enviara lo pendiente.
             </p>
           </div>
-          <q-btn
-            flat
-            round
-            dense
-            icon="close"
-            @click="dialogoCerrarIncompletoAbierto = false"
-          />
+            <q-btn
+              flat
+              round
+              dense
+              class="boton-cerrar-modal-compras"
+              icon="close"
+              @click="dialogoCerrarIncompletoAbierto = false"
+            />
         </q-card-section>
 
         <q-separator />
@@ -2068,7 +2074,7 @@ const tipoCambioReferenciaCompra = computed(() => {
   const totalBs = Number(detalleCompraSeleccionada.value?.total_productos_bs || 0);
 
   if (totalUsd > 0 && totalBs > 0) {
-    return redondearMonto(totalBs / totalUsd, 6);
+    return redondearMonto(totalBs / totalUsd);
   }
 
   return redondearMonto(
@@ -2332,7 +2338,7 @@ function crearDetalleIngresoInventario(detalleRecepcion) {
   );
   const tipoCambioBase =
     Number(detalleCompra?.tipo_cambio_aplicado || 0) > 0
-      ? redondearMonto(Number(detalleCompra?.tipo_cambio_aplicado || 0), 6)
+      ? redondearMonto(Number(detalleCompra?.tipo_cambio_aplicado || 0))
       : Number(detalleCompra?.precio_unitario_usd || 0) > 0
         ? redondearMonto(
             Number(detalleCompra?.precio_unitario_bs || 0) /
@@ -2345,6 +2351,7 @@ function crearDetalleIngresoInventario(detalleRecepcion) {
   const productoExistente = productoId
     ? productosInventario.value.find((producto) => producto.id === productoId)
     : null;
+  const sucursalesOrdenadas = ordenarSucursalesParaDistribucion(sucursales.value);
 
     return {
       recepcionDetalleId: detalleRecepcion.id,
@@ -2369,11 +2376,10 @@ function crearDetalleIngresoInventario(detalleRecepcion) {
     precioMayoristaUsd: 0,
     precioMayoristaBs: 0,
     registrarSeries: false,
-      distribucionSucursales: sucursales.value.map((sucursal, indice) => ({
+      distribucionSucursales: sucursalesOrdenadas.map((sucursal, indice) => ({
         sucursalId: sucursal.id,
         sucursal: sucursal.label,
-        cantidad:
-          indice === 0 ? Number(detalleRecepcion.cantidad_recibida || 0) : 0,
+        cantidad: 0,
         observaciones: "",
       })),
       series: [],
@@ -2385,8 +2391,26 @@ function normalizarNumero(valor) {
   return Number.isFinite(numero) ? numero : 0;
 }
 
-function redondearMonto(valor, precision = 4) {
+function redondearMonto(valor, precision = 2) {
   return Number(normalizarNumero(valor).toFixed(precision));
+}
+
+function limitarDosDecimales(valor) {
+  return redondearMonto(valor);
+}
+
+function ordenarSucursalesParaDistribucion(listaSucursales) {
+  return [...listaSucursales].sort((a, b) => {
+    const nombreA = String(a.label || a.nombre || "").toUpperCase();
+    const nombreB = String(b.label || b.nombre || "").toUpperCase();
+    const esRmaA = nombreA.includes("RMA");
+    const esRmaB = nombreB.includes("RMA");
+
+    if (esRmaA && !esRmaB) return -1;
+    if (!esRmaA && esRmaB) return 1;
+
+    return nombreA.localeCompare(nombreB);
+  });
 }
 
 function mostrarNotificacion(tipo, mensaje) {
@@ -2508,50 +2532,37 @@ function sincronizarSeriesIngreso(detalle) {
   detalle.series = nuevasSeries;
 }
 
-  function actualizarDistribucionIngreso(detalle, sucursalId, valor) {
-    const fila = detalle.distribucionSucursales.find(
-      (item) => item.sucursalId === sucursalId
-    );
-    if (!fila) {
-      return;
-    }
-
-    const cantidadSolicitada = Math.max(0, Math.trunc(normalizarNumero(valor)));
-    const cantidadActual = Number(fila.cantidad || 0);
-    const delta = cantidadSolicitada - cantidadActual;
-
-    if (delta > 0) {
-      let restantePorMover = delta;
-
-      const filasOrigen = detalle.distribucionSucursales.filter(
-        (item) => item.sucursalId !== sucursalId && Number(item.cantidad || 0) > 0
-      );
-
-      for (const origen of filasOrigen) {
-        if (restantePorMover <= 0) {
-          break;
-        }
-
-        const disponible = Number(origen.cantidad || 0);
-        const mover = Math.min(disponible, restantePorMover);
-        origen.cantidad = disponible - mover;
-        restantePorMover -= mover;
-      }
-
-      fila.cantidad = cantidadActual + (delta - restantePorMover);
-
-      if (restantePorMover > 0) {
-        mostrarNotificacion(
-          "warning",
-          `Solo se pudieron mover ${delta - restantePorMover} unidad(es) hacia "${fila.sucursal}" en "${detalle.detalleTexto}".`
-        );
-      }
-    } else {
-      fila.cantidad = cantidadSolicitada;
-    }
-
-    sincronizarSeriesIngreso(detalle);
+function actualizarDistribucionIngreso(detalle, sucursalId, valor) {
+  const fila = detalle.distribucionSucursales.find(
+    (item) => item.sucursalId === sucursalId
+  );
+  if (!fila) {
+    return;
   }
+
+  const cantidadSolicitada = Math.max(0, Math.trunc(normalizarNumero(valor)));
+  const totalOtrasSucursales = detalle.distribucionSucursales.reduce(
+    (total, item) =>
+      item.sucursalId === sucursalId ? total : total + Number(item.cantidad || 0),
+    0
+  );
+  const cantidadDisponible = Math.max(
+    0,
+    Number(detalle.cantidadRecibida || 0) - totalOtrasSucursales
+  );
+  const cantidadFinal = Math.min(cantidadSolicitada, cantidadDisponible);
+
+  fila.cantidad = cantidadFinal;
+
+  if (cantidadSolicitada > cantidadDisponible) {
+    mostrarNotificacion(
+      "warning",
+      `No puedes asignar mas de ${cantidadDisponible} unidad(es) a "${fila.sucursal}" en "${detalle.detalleTexto}".`
+    );
+  }
+
+  sincronizarSeriesIngreso(detalle);
+}
 
   function totalDistribuidoIngreso(detalle) {
     return detalle.distribucionSucursales.reduce(
@@ -2569,11 +2580,11 @@ function sincronizarSeriesIngreso(detalle) {
 
 function actualizarMontoVentaIngreso(detalle, prefijo, monedaOrigen, valor) {
   const tipoCambio = Math.max(
-    0.0001,
-    normalizarNumero(detalle.tipoCambioVenta)
-  );
+      0.01,
+      limitarDosDecimales(normalizarNumero(detalle.tipoCambioVenta))
+    );
   detalle.tipoCambioVenta = tipoCambio;
-  const monto = normalizarNumero(valor);
+  const monto = limitarDosDecimales(valor);
 
   if (monedaOrigen === "usd") {
     detalle[`${prefijo}Usd`] = monto;
@@ -2619,9 +2630,9 @@ function seleccionarProductoExistenteIngreso(detalle, productoId) {
 
 function recalcularPagoCredito(pago) {
   const tipoCambio = Math.max(
-    0.0001,
-    normalizarNumero(pago.tipoCambioAbono)
-  );
+      0.01,
+      limitarDosDecimales(normalizarNumero(pago.tipoCambioAbono))
+    );
   pago.tipoCambioAbono = tipoCambio;
 
   if (pago.monedaReferencia === "bs") {
@@ -2637,9 +2648,9 @@ function recalcularPagoCredito(pago) {
 function actualizarMontoPagoCredito(pago, monedaOrigen, valor) {
   pago.monedaReferencia = monedaOrigen;
   if (monedaOrigen === "usd") {
-    pago.abonoUsd = normalizarNumero(valor);
+    pago.abonoUsd = limitarDosDecimales(valor);
   } else {
-    pago.abonoBs = normalizarNumero(valor);
+    pago.abonoBs = limitarDosDecimales(valor);
   }
 
   recalcularPagoCredito(pago);

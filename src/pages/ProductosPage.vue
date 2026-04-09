@@ -493,9 +493,14 @@ function redondearMonto (valor) {
   return Number(normalizarNumero(valor).toFixed(2))
 }
 
+function limitarDosDecimales (valor) {
+  return redondearMonto(valor)
+}
+
 function actualizarMonto (prefijo, monedaOrigen, valor) {
-  const tipoCambio = normalizarNumero(formulario.tipoCambio)
-  const monto = normalizarNumero(valor)
+  const tipoCambio = Math.max(0.01, limitarDosDecimales(formulario.tipoCambio))
+  const monto = limitarDosDecimales(valor)
+  formulario.tipoCambio = tipoCambio
 
   if (monedaOrigen === 'usd') {
     formulario[`${prefijo}Usd`] = monto
@@ -508,6 +513,7 @@ function actualizarMonto (prefijo, monedaOrigen, valor) {
 }
 
 function recalcularMontosDesdeTipoCambio () {
+  formulario.tipoCambio = Math.max(0.01, limitarDosDecimales(formulario.tipoCambio))
   actualizarMonto('precioUnitario', 'usd', formulario.precioUnitarioUsd)
   actualizarMonto('precioMayorista', 'usd', formulario.precioMayoristaUsd)
   actualizarMonto('costo', 'usd', formulario.costoUsd)

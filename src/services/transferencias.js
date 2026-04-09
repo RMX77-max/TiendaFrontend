@@ -29,8 +29,22 @@ async function responderSolicitudTransferencia (idSolicitud, formulario) {
   })
 }
 
+async function registrarTransferenciaDirecta (formulario) {
+  return solicitarApi('/transferencias/directa', {
+    method: 'POST',
+    body: JSON.stringify({
+      producto_id: Number(formulario.productoId),
+      sucursal_origen_id: Number(formulario.sucursalOrigenId),
+      sucursal_destino_id: Number(formulario.sucursalDestinoId),
+      cantidad: Number(formulario.cantidadSolicitada || 0),
+      detalle: formulario.detalleSolicitud || null
+    })
+  })
+}
+
 export {
   listarSolicitudesTransferencia,
   registrarSolicitudTransferencia,
-  responderSolicitudTransferencia
+  responderSolicitudTransferencia,
+  registrarTransferenciaDirecta
 }

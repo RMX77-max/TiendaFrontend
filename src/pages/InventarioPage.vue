@@ -113,20 +113,20 @@
                   <q-tooltip>Eliminar</q-tooltip>
                 </q-btn>
 
-                <q-btn
-                  v-if="!puedeGestionarProductos"
-                  flat
-                  round
-                  dense
-                  icon="swap_horiz"
-                  color="grey-8"
-                  :disable="!puedeSolicitarProducto(propiedades.row)"
-                  @click="abrirDialogoSolicitud(propiedades.row)"
-                >
-                  <q-tooltip>
-                    {{ tooltipSolicitud(propiedades.row) }}
-                  </q-tooltip>
-                </q-btn>
+                  <q-btn
+                    v-if="puedeTransferirDirecto || !puedeGestionarProductos"
+                    flat
+                    round
+                    dense
+                    icon="swap_horiz"
+                    color="grey-8"
+                    :disable="!puedeAbrirTransferencia(propiedades.row)"
+                    @click="abrirDialogoSolicitud(propiedades.row)"
+                  >
+                    <q-tooltip>
+                      {{ tooltipTransferencia(propiedades.row) }}
+                    </q-tooltip>
+                  </q-btn>
 
                 <q-btn
                   flat
@@ -206,9 +206,19 @@
     <q-dialog v-model="dialogoSolicitudAbierto">
       <q-card class="tarjeta-dialogo-transferencia">
         <q-card-section class="q-pa-lg">
-          <div class="text-h6 text-weight-bold">Solicitar transferencia</div>
+          <div class="text-h6 text-weight-bold">
+            {{
+              puedeTransferirDirecto
+                ? "Transferencia directa"
+                : "Solicitar transferencia"
+            }}
+          </div>
           <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-            Registra una solicitud para pedir unidades a otra sucursal.
+            {{
+              puedeTransferirDirecto
+                ? "Mueve unidades directamente entre sucursales sin pasar por solicitud."
+                : "Registra una solicitud para pedir unidades a otra sucursal."
+            }}
           </p>
         </q-card-section>
 
@@ -231,26 +241,59 @@
               label="Producto"
             />
 
-            <q-input
-              :model-value="sucursalActual || 'Sin sucursal asignada'"
-              outlined
-              disable
-              label="Sucursal solicitante"
-            />
+              <q-input
+                :model-value="
+                  puedeTransferirDirecto
+                    ? 'Seleccion manual de sucursales'
+                    : sucursalActual || 'Sin sucursal asignada'
+                "
+                outlined
+                disable
+                :label="
+                  puedeTransferirDirecto
+                    ? 'Modo de transferencia'
+                    : 'Sucursal solicitante'
+                "
+              />
 
-            <q-select
-              v-model="formularioSolicitud.sucursalOrigenId"
-              outlined
-              emit-value
-              map-options
-              label="Sucursal proveedora"
-              :options="opcionesSucursalesDisponibles"
-              option-value="value"
-              option-label="label"
-            />
+              <q-select
+                v-model="formularioSolicitud.sucursalOrigenId"
+                outlined
+                emit-value
+                map-options
+                :label="
+                  puedeTransferirDirecto
+                    ? 'Sucursal origen'
+                    : 'Sucursal proveedora'
+                "
+                :options="
+                  puedeTransferirDirecto
+                    ? opcionesSucursalesOrigenDirectas
+                    : opcionesSucursalesDisponibles
+                "
+                option-value="value"
+                option-label="label"
+                @update:model-value="
+                  puedeTransferirDirecto &&
+                    (formularioSolicitud.sucursalDestinoId =
+                      opcionesSucursalesDestinoDirectas[0]?.value || null)
+                "
+              />
 
-            <q-input
-              :model-value="fechaSolicitudActual"
+              <q-select
+                v-if="puedeTransferirDirecto"
+                v-model="formularioSolicitud.sucursalDestinoId"
+                outlined
+                emit-value
+                map-options
+                label="Sucursal destino"
+                :options="opcionesSucursalesDestinoDirectas"
+                option-value="value"
+                option-label="label"
+              />
+
+              <q-input
+                :model-value="fechaSolicitudActual"
               outlined
               disable
               label="Fecha de registro"
@@ -264,12 +307,16 @@
               label="Cantidad de piezas"
             />
 
-            <q-input
-              :model-value="stockSucursalSeleccionada"
-              outlined
-              disable
-              label="Stock disponible en sucursal proveedora"
-            />
+              <q-input
+                :model-value="stockSucursalSeleccionada"
+                outlined
+                disable
+                :label="
+                  puedeTransferirDirecto
+                    ? 'Stock disponible en sucursal origen'
+                    : 'Stock disponible en sucursal proveedora'
+                "
+              />
 
             <q-input
               v-model="formularioSolicitud.detalle"
@@ -289,13 +336,17 @@
             label="Cancelar"
             @click="cerrarDialogoSolicitud"
           />
-          <q-btn
-            unelevated
-            color="dark"
-            text-color="white"
-            label="Registrar solicitud"
-            @click="registrarSolicitud"
-          />
+            <q-btn
+              unelevated
+              color="dark"
+              text-color="white"
+              :label="
+                puedeTransferirDirecto
+                  ? 'Registrar transferencia'
+                  : 'Registrar solicitud'
+              "
+              @click="registrarSolicitud"
+            />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -1165,6 +1216,7 @@ import {
 import {
   listarSolicitudesTransferencia,
   registrarSolicitudTransferencia,
+  registrarTransferenciaDirecta,
   responderSolicitudTransferencia,
 } from "src/services/transferencias";
 
@@ -1220,6 +1272,9 @@ const sucursalActual = computed(
 );
 const puedeSolicitarTransferencias = computed(() =>
   ROLES_QUE_SOLICITAN.includes(rolActual.value)
+);
+const puedeTransferirDirecto = computed(() =>
+  ["gerente", "auxiliar_administrativo"].includes(rolActual.value)
 );
 const puedeRevisarSolicitudes = computed(
   () => rolActual.value === "supervisor_sucursal"
@@ -1326,11 +1381,36 @@ const opcionesSucursalesDisponibles = computed(() => {
           normalizarTexto(sucursalActual.value) &&
         Number(sucursal.cantidad || 0) > 0
     )
+      .map((sucursal) => ({
+        label: `${sucursal.sucursal} (${sucursal.cantidad} disponibles)`,
+        value: sucursal.sucursal_id,
+      }));
+});
+
+const opcionesSucursalesOrigenDirectas = computed(() => {
+  if (!productoSolicitud.value) {
+    return [];
+  }
+
+  return (productoSolicitud.value.existencias_por_sucursal || [])
+    .filter((sucursal) => Number(sucursal.cantidad || 0) > 0)
     .map((sucursal) => ({
       label: `${sucursal.sucursal} (${sucursal.cantidad} disponibles)`,
       value: sucursal.sucursal_id,
     }));
 });
+
+const opcionesSucursalesDestinoDirectas = computed(() =>
+  sucursales.value
+    .filter(
+      (sucursal) =>
+        Number(sucursal.id) !== Number(formularioSolicitud.sucursalOrigenId)
+    )
+    .map((sucursal) => ({
+      label: sucursal.nombre,
+      value: sucursal.id,
+    }))
+);
 
 const stockSucursalSeleccionada = computed(() => {
   if (!productoSolicitud.value || !formularioSolicitud.sucursalOrigenId) {
@@ -1484,6 +1564,7 @@ const fechaSolicitudActual = computed(() => formatearFechaHora(new Date()));
 function crearFormularioSolicitudVacio() {
   return {
     sucursalOrigenId: null,
+    sucursalDestinoId: null,
     cantidadSolicitada: 1,
     detalle: "",
   };
@@ -1515,6 +1596,10 @@ function normalizarNumero(valor) {
 
 function redondearMonto(valor) {
   return Number(normalizarNumero(valor).toFixed(2));
+}
+
+function limitarDosDecimales(valor) {
+  return redondearMonto(valor);
 }
 
 function formatearFechaHora(valor) {
@@ -1592,6 +1677,34 @@ function tooltipSolicitud(producto) {
   }
 
   return "Solicitar transferencia";
+}
+
+function puedeTransferirDirectamenteProducto(producto) {
+  if (!puedeTransferirDirecto.value) {
+    return false;
+  }
+
+  return (producto.existencias_por_sucursal || []).some(
+    (sucursal) => Number(sucursal.cantidad || 0) > 0
+  );
+}
+
+function puedeAbrirTransferencia(producto) {
+  if (puedeTransferirDirecto.value) {
+    return puedeTransferirDirectamenteProducto(producto);
+  }
+
+  return puedeSolicitarProducto(producto);
+}
+
+function tooltipTransferencia(producto) {
+  if (puedeTransferirDirecto.value) {
+    return puedeTransferirDirectamenteProducto(producto)
+      ? "Transferir directamente"
+      : "No hay stock disponible para transferir";
+  }
+
+  return tooltipSolicitud(producto);
 }
 
 function puedeMostrarGestion(producto) {
@@ -1674,8 +1787,12 @@ function reiniciarFormularioEdicion() {
 }
 
 function actualizarMontoEdicion(prefijo, monedaOrigen, valor) {
-  const tipoCambio = normalizarNumero(formularioEdicion.tipoCambio);
-  const monto = normalizarNumero(valor);
+  const tipoCambio = Math.max(
+    0.01,
+    limitarDosDecimales(formularioEdicion.tipoCambio)
+  );
+  const monto = limitarDosDecimales(valor);
+  formularioEdicion.tipoCambio = tipoCambio;
 
   if (monedaOrigen === "usd") {
     formularioEdicion[`${prefijo}Usd`] = monto;
@@ -1689,6 +1806,10 @@ function actualizarMontoEdicion(prefijo, monedaOrigen, valor) {
 }
 
 function recalcularMontosEdicionDesdeTipoCambio() {
+  formularioEdicion.tipoCambio = Math.max(
+    0.01,
+    limitarDosDecimales(formularioEdicion.tipoCambio)
+  );
   actualizarMontoEdicion(
     "precioUnitario",
     "usd",
@@ -1734,14 +1855,21 @@ function marcarBandejaComoVista() {
 }
 
 function abrirDialogoSolicitud(producto) {
-  if (!puedeSolicitarProducto(producto)) {
+  if (!puedeAbrirTransferencia(producto)) {
     return;
   }
 
   productoSolicitud.value = producto;
   reiniciarFormularioSolicitud();
-  formularioSolicitud.sucursalOrigenId =
-    opcionesSucursalesDisponibles.value[0]?.value || null;
+  if (puedeTransferirDirecto.value) {
+    formularioSolicitud.sucursalOrigenId =
+      opcionesSucursalesOrigenDirectas.value[0]?.value || null;
+    formularioSolicitud.sucursalDestinoId =
+      opcionesSucursalesDestinoDirectas.value[0]?.value || null;
+  } else {
+    formularioSolicitud.sucursalOrigenId =
+      opcionesSucursalesDisponibles.value[0]?.value || null;
+  }
   dialogoSolicitudAbierto.value = true;
 }
 
@@ -1911,7 +2039,23 @@ async function registrarSolicitud() {
   }
 
   if (!formularioSolicitud.sucursalOrigenId) {
-    errorSolicitud.value = "Selecciona la sucursal proveedora.";
+    errorSolicitud.value = puedeTransferirDirecto.value
+      ? "Selecciona la sucursal origen."
+      : "Selecciona la sucursal proveedora.";
+    return;
+  }
+
+  if (puedeTransferirDirecto.value && !formularioSolicitud.sucursalDestinoId) {
+    errorSolicitud.value = "Selecciona la sucursal destino.";
+    return;
+  }
+
+  if (
+    puedeTransferirDirecto.value &&
+    Number(formularioSolicitud.sucursalOrigenId) ===
+      Number(formularioSolicitud.sucursalDestinoId)
+  ) {
+    errorSolicitud.value = "La sucursal origen y destino deben ser diferentes.";
     return;
   }
 
@@ -1925,22 +2069,37 @@ async function registrarSolicitud() {
   }
 
   try {
-    await registrarSolicitudTransferencia({
-      productoId: productoSolicitud.value.id,
-      sucursalOrigenId: formularioSolicitud.sucursalOrigenId,
-      cantidadSolicitada,
-      detalleSolicitud: formularioSolicitud.detalle.trim(),
-    });
-
-    await cargarSolicitudes();
+    if (puedeTransferirDirecto.value) {
+      await registrarTransferenciaDirecta({
+        productoId: productoSolicitud.value.id,
+        sucursalOrigenId: formularioSolicitud.sucursalOrigenId,
+        sucursalDestinoId: formularioSolicitud.sucursalDestinoId,
+        cantidadSolicitada,
+        detalleSolicitud: formularioSolicitud.detalle.trim(),
+      });
+      await cargarInventario();
+    } else {
+      await registrarSolicitudTransferencia({
+        productoId: productoSolicitud.value.id,
+        sucursalOrigenId: formularioSolicitud.sucursalOrigenId,
+        cantidadSolicitada,
+        detalleSolicitud: formularioSolicitud.detalle.trim(),
+      });
+      await cargarSolicitudes();
+    }
     cerrarDialogoSolicitud();
     $q.notify({
       type: "positive",
-      message: "Solicitud enviada correctamente.",
+      message: puedeTransferirDirecto.value
+        ? "Transferencia registrada correctamente."
+        : "Solicitud enviada correctamente.",
     });
   } catch (error) {
     errorSolicitud.value =
-      error.message || "No se pudo registrar la solicitud.";
+      error.message ||
+      (puedeTransferirDirecto.value
+        ? "No se pudo registrar la transferencia."
+        : "No se pudo registrar la solicitud.");
   }
 }
 
