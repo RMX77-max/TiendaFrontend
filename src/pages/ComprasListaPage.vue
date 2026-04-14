@@ -1537,18 +1537,57 @@
                       disable
                       label="Costo USD"
                     />
-                    <q-input
-                      :model-value="detalle.costoBs"
-                      outlined
-                      disable
-                      label="Costo Bs"
-                    />
-                  </div>
+                      <q-input
+                        :model-value="detalle.costoBs"
+                        outlined
+                        disable
+                        label="Costo Bs"
+                      />
+                    </div>
 
-                  <div
-                    v-if="detalle.crearProducto"
-                    class="columna-compras q-mt-md"
-                  >
+                    <div
+                      v-if="!detalle.crearProducto && detalle.productoId"
+                      class="rejilla-resumen-ingreso rejilla-resumen-ingreso--costos q-mt-md"
+                    >
+                      <div class="tarjeta-resumen-ingreso tarjeta-resumen-ingreso--neutral">
+                        <div class="text-caption text-grey-7">Stock actual</div>
+                        <div class="text-h6 text-weight-bold">
+                          {{ detalle.stockActual }}
+                        </div>
+                      </div>
+                      <div class="tarjeta-resumen-ingreso tarjeta-resumen-ingreso--done">
+                        <div class="text-caption text-grey-7">Nuevo promedio estimado</div>
+                        <div class="text-h6 text-weight-bold">
+                          $ {{ formatearMonto(detalle.costoPromedioEstimadoUsd) }}
+                        </div>
+                        <div class="text-body2 text-grey-7">
+                          Bs. {{ formatearMonto(detalle.costoPromedioEstimadoBs) }}
+                        </div>
+                      </div>
+                      <div class="tarjeta-resumen-ingreso tarjeta-resumen-ingreso--neutral">
+                        <div class="text-caption text-grey-7">Costo promedio actual</div>
+                        <div class="text-h6 text-weight-bold">
+                          $ {{ formatearMonto(detalle.costoPromedioActualUsd) }}
+                        </div>
+                        <div class="text-body2 text-grey-7">
+                          Bs. {{ formatearMonto(detalle.costoPromedioActualBs) }}
+                        </div>
+                      </div>
+                      <div class="tarjeta-resumen-ingreso tarjeta-resumen-ingreso--warning">
+                        <div class="text-caption text-grey-7">Costo de esta compra</div>
+                        <div class="text-h6 text-weight-bold">
+                          $ {{ formatearMonto(detalle.costoUsd) }}
+                        </div>
+                        <div class="text-body2 text-grey-7">
+                          Bs. {{ formatearMonto(detalle.costoBs) }}
+                        </div>
+                      </div>
+                    </div>
+
+                      <div
+                        v-if="detalle.crearProducto"
+                      class="columna-compras q-mt-md"
+                    >
                     <div class="rejilla-compras-simple">
                       <q-input
                         v-model.number="detalle.tipoCambioVenta"
@@ -1626,7 +1665,7 @@
                     </div>
                   </div>
 
-                  <div class="rejilla-resumen-ingreso q-mt-md">
+                    <div class="rejilla-resumen-ingreso rejilla-resumen-ingreso--cantidades q-mt-md">
                     <div class="tarjeta-resumen-ingreso tarjeta-resumen-ingreso--neutral">
                       <div class="text-caption text-grey-7">Cantidad a ingresar</div>
                       <div class="text-h6 text-weight-bold">
@@ -1901,11 +1940,44 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <q-dialog v-model="dialogoAlertaCostoElevadoAbierto" persistent>
+      <q-card style="width: min(92vw, 520px)">
+        <q-card-section class="row items-center justify-between q-pb-none">
+          <div>
+            <div class="text-h6 text-weight-bold text-red-10">Costo mas elevado</div>
+          </div>
+          <q-btn
+            flat
+            round
+            dense
+            icon="close"
+            class="boton-cerrar-modal-compras"
+            @click="dialogoAlertaCostoElevadoAbierto = false"
+          />
+        </q-card-section>
+
+        <q-card-section>
+          <q-banner rounded class="bg-red-1 text-red-10 text-h6 text-weight-bold">
+            {{ alertaCostoElevadoMensaje }}
+          </q-banner>
+        </q-card-section>
+
+        <q-card-actions align="right" class="q-pa-md">
+          <q-btn
+            unelevated
+            color="primary"
+            label="Entendido"
+            @click="dialogoAlertaCostoElevadoAbierto = false"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
 <script setup>
-  import { computed, onMounted, reactive, ref } from "vue";
+  import { computed, nextTick, onMounted, reactive, ref } from "vue";
   import { useQuasar } from "quasar";
   import { useRouter } from "vue-router";
   import { resolverUrlArchivo } from "src/services/auth";
@@ -1958,6 +2030,8 @@ const dialogoCerrarIncompletoAbierto = ref(false);
 const dialogoIngresoInventarioAbierto = ref(false);
 const dialogoMarcaAbierto = ref(false);
 const dialogoCategoriaAbierto = ref(false);
+const dialogoAlertaCostoElevadoAbierto = ref(false);
+const alertaCostoElevadoMensaje = ref("");
 const detalleCompraSeleccionada = ref(null);
 const $q = useQuasar();
 const router = useRouter();
@@ -2349,15 +2423,17 @@ function crearDetalleIngresoInventario(detalleRecepcion) {
 
   const productoId = detalleCompra?.producto_id || null;
   const productoExistente = productoId
-    ? productosInventario.value.find((producto) => producto.id === productoId)
+    ? productosInventario.value.find(
+        (producto) => Number(producto.id) === Number(productoId)
+      )
     : null;
   const sucursalesOrdenadas = ordenarSucursalesParaDistribucion(sucursales.value);
 
-    return {
+    const detalle = {
       recepcionDetalleId: detalleRecepcion.id,
       compraDetalleId: detalleRecepcion.compra_detalle_id,
       cantidadRecibida: Number(detalleRecepcion.cantidad_recibida || 0),
-    detalleTexto: detalleRecepcion.detalle_texto,
+      detalleTexto: detalleRecepcion.detalle_texto,
     productoId,
     crearProducto: !productoId,
     modelo:
@@ -2368,11 +2444,21 @@ function crearDetalleIngresoInventario(detalleRecepcion) {
     marcaId: productoExistente?.marca_id || detalleCompra?.marca_id || null,
     categoriaId:
       productoExistente?.categoria_id || detalleCompra?.categoria_id || null,
-    costoUsd: Number(detalleCompra?.precio_unitario_usd || 0),
-    costoBs: Number(detalleCompra?.precio_unitario_bs || 0),
-    tipoCambioVenta: tipoCambioBase > 0 ? tipoCambioBase : 9,
-    precioUnitarioUsd: 0,
-    precioUnitarioBs: 0,
+      costoUsd: Number(detalleCompra?.precio_unitario_usd || 0),
+      costoBs: Number(detalleCompra?.precio_unitario_bs || 0),
+      stockActual: Number(
+        productoExistente?.existencias_totales ||
+          productoExistente?.existencias_disponibles ||
+          0
+      ),
+        costoPromedioActualUsd: Number(productoExistente?.costo_usd || 0),
+        costoPromedioActualBs: Number(productoExistente?.costo_bs || 0),
+        costoPromedioEstimadoUsd: 0,
+        costoPromedioEstimadoBs: 0,
+        alertaCostoElevadoMostrada: false,
+        tipoCambioVenta: tipoCambioBase > 0 ? tipoCambioBase : 9,
+        precioUnitarioUsd: 0,
+        precioUnitarioBs: 0,
     precioMayoristaUsd: 0,
     precioMayoristaBs: 0,
     registrarSeries: false,
@@ -2381,12 +2467,78 @@ function crearDetalleIngresoInventario(detalleRecepcion) {
         sucursal: sucursal.label,
         cantidad: 0,
         observaciones: "",
-      })),
-      series: [],
-    };
+        })),
+        series: [],
+      };
+
+    recalcularPromedioEstimadoIngreso(detalle);
+
+    return detalle;
   }
 
-function normalizarNumero(valor) {
+  function recalcularPromedioEstimadoIngreso(detalle) {
+    const stockActual = Number(detalle.stockActual || 0);
+    const cantidadEntrante = Number(detalle.cantidadRecibida || 0);
+    const costoActualUsd = Number(detalle.costoPromedioActualUsd || 0);
+    const costoActualBs = Number(detalle.costoPromedioActualBs || 0);
+    const costoCompraUsd = Number(detalle.costoUsd || 0);
+    const costoCompraBs = Number(detalle.costoBs || 0);
+
+    if (cantidadEntrante <= 0) {
+      detalle.costoPromedioEstimadoUsd = redondearMonto(costoActualUsd);
+      detalle.costoPromedioEstimadoBs = redondearMonto(costoActualBs);
+      return;
+    }
+
+    if (stockActual <= 0) {
+      detalle.costoPromedioEstimadoUsd = redondearMonto(costoCompraUsd);
+      detalle.costoPromedioEstimadoBs = redondearMonto(costoCompraBs);
+      return;
+    }
+
+    detalle.costoPromedioEstimadoUsd = redondearMonto(
+      ((stockActual * costoActualUsd) + (cantidadEntrante * costoCompraUsd)) /
+        (stockActual + cantidadEntrante)
+    );
+    detalle.costoPromedioEstimadoBs = redondearMonto(
+      ((stockActual * costoActualBs) + (cantidadEntrante * costoCompraBs)) /
+        (stockActual + cantidadEntrante)
+    );
+  }
+
+  function costoCompraElevado(detalle) {
+    const costoCompraUsd = Number(detalle?.costoUsd || 0);
+    const costoActualUsd = Number(detalle?.costoPromedioActualUsd || 0);
+
+    if (costoCompraUsd > 0 && costoActualUsd > 0) {
+      return costoCompraUsd > costoActualUsd;
+    }
+
+    const costoCompraBs = Number(detalle?.costoBs || 0);
+    const costoActualBs = Number(detalle?.costoPromedioActualBs || 0);
+
+    if (costoCompraBs > 0 && costoActualBs > 0) {
+      return costoCompraBs > costoActualBs;
+    }
+
+    return false;
+  }
+
+  function evaluarAlertaCostoElevado(detalle) {
+    if (!costoCompraElevado(detalle)) {
+      detalle.alertaCostoElevadoMostrada = false;
+      return;
+    }
+
+    if (detalle.alertaCostoElevadoMostrada) {
+      return;
+    }
+
+    detalle.alertaCostoElevadoMostrada = true;
+    mostrarAlertaCostoElevado(detalle);
+  }
+
+  function normalizarNumero(valor) {
   const numero = Number(valor || 0);
   return Number.isFinite(numero) ? numero : 0;
 }
@@ -2413,14 +2565,20 @@ function ordenarSucursalesParaDistribucion(listaSucursales) {
   });
 }
 
-function mostrarNotificacion(tipo, mensaje) {
-  if (typeof $q?.notify === "function") {
-    $q.notify({
-      type: tipo,
-      message: mensaje,
-    });
+  function mostrarNotificacion(tipo, mensaje) {
+    if (typeof $q?.notify === "function") {
+      $q.notify({
+        type: tipo,
+        message: mensaje,
+      });
+    }
   }
-}
+
+  function mostrarAlertaCostoElevado(detalle = null) {
+    alertaCostoElevadoMensaje.value =
+      "Solo se sugiere reajustar costos de venta.";
+    dialogoAlertaCostoElevadoAbierto.value = true;
+  }
 
 function reiniciarFormularioPagoCredito() {
   Object.assign(formularioPagoCredito, crearFormularioPagoCredito());
@@ -2611,22 +2769,34 @@ function sincronizarMontosVentaDesdeTipoCambio(detalle) {
   );
 }
 
-function seleccionarProductoExistenteIngreso(detalle, productoId) {
-  detalle.productoId = productoId;
-  const producto = productosInventario.value.find(
-    (item) => item.id === productoId
-  );
+  function seleccionarProductoExistenteIngreso(detalle, productoId) {
+    detalle.productoId = productoId;
+    const producto = productosInventario.value.find(
+      (item) => Number(item.id) === Number(productoId)
+    );
 
-  if (!producto) {
-    detalle.crearProducto = true;
-    return;
+    if (!producto) {
+      detalle.crearProducto = true;
+      detalle.stockActual = 0;
+      detalle.costoPromedioActualUsd = 0;
+      detalle.costoPromedioActualBs = 0;
+      detalle.costoPromedioEstimadoUsd = 0;
+      detalle.costoPromedioEstimadoBs = 0;
+      return;
+    }
+
+    detalle.crearProducto = false;
+    detalle.modelo = producto.modelo;
+    detalle.marcaId = producto.marca_id;
+    detalle.categoriaId = producto.categoria_id;
+    detalle.stockActual = Number(
+      producto.existencias_totales || producto.existencias_disponibles || 0
+    );
+    detalle.costoPromedioActualUsd = Number(producto.costo_usd || 0);
+    detalle.costoPromedioActualBs = Number(producto.costo_bs || 0);
+    recalcularPromedioEstimadoIngreso(detalle);
+    evaluarAlertaCostoElevado(detalle);
   }
-
-  detalle.crearProducto = false;
-  detalle.modelo = producto.modelo;
-  detalle.marcaId = producto.marca_id;
-  detalle.categoriaId = producto.categoria_id;
-}
 
 function recalcularPagoCredito(pago) {
   const tipoCambio = Math.max(
@@ -2853,8 +3023,8 @@ async function abrirRecepcion(idCompra) {
   }
 }
 
-async function abrirIngresoInventario(idCompra) {
-  dialogoIngresoInventarioAbierto.value = true;
+  async function abrirIngresoInventario(idCompra) {
+    dialogoIngresoInventarioAbierto.value = true;
   dialogoDetalleAbierto.value = false;
   dialogoPagosCreditoAbierto.value = false;
   dialogoGuiasAbierto.value = false;
@@ -2865,13 +3035,19 @@ async function abrirIngresoInventario(idCompra) {
   errorIngresoInventario.value = "";
   reiniciarFormularioIngresoInventario();
 
-  try {
-    const respuesta = await obtenerDetalleCompra(idCompra);
-    detalleCompraSeleccionada.value = respuesta.compra || null;
-    cargarFormularioIngresoInventarioDesdeCompra();
-  } catch (error) {
-    errorGeneral.value =
-      error.message ||
+    try {
+      await cargarFormularioBasico();
+      const respuesta = await obtenerDetalleCompra(idCompra);
+      detalleCompraSeleccionada.value = respuesta.compra || null;
+      cargarFormularioIngresoInventarioDesdeCompra();
+      await nextTick();
+      formularioIngresoInventario.detalles.forEach((detalle) => {
+        detalle.alertaCostoElevadoMostrada = false;
+        evaluarAlertaCostoElevado(detalle);
+      });
+    } catch (error) {
+      errorGeneral.value =
+        error.message ||
       "No se pudo cargar el ingreso a inventario de la compra.";
     dialogoIngresoInventarioAbierto.value = false;
   } finally {

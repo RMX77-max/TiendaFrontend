@@ -676,7 +676,15 @@ body {
 .rejilla-resumen-ingreso {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: 12px;
+}
+
+.rejilla-resumen-ingreso--costos {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.rejilla-resumen-ingreso--cantidades {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .tarjeta-resumen-pago {
@@ -686,7 +694,7 @@ body {
 }
 
 .tarjeta-resumen-ingreso {
-  padding: 16px 18px;
+  padding: 12px 14px;
   border-radius: 18px;
   border: 1px solid rgba(15, 23, 42, 0.08);
 }

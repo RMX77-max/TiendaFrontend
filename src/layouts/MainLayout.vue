@@ -120,7 +120,7 @@ const enlacesMenu = [
   },
   {
     to: "/productos",
-    etiqueta: "Registar Productos",
+    etiqueta: "Anadir producto Rapido",
     icono: "category",
     roles: ["gerente", "auxiliar_administrativo"],
   },
