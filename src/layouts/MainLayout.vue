@@ -131,6 +131,24 @@ const enlacesMenu = [
     roles: ["gerente", "auxiliar_administrativo", "supervisor_sucursal"],
   },
   {
+    to: "/cajas",
+    etiqueta: "Cajas",
+    icono: "point_of_sale",
+    roles: ["gerente", "supervisor_sucursal"],
+  },
+  {
+    to: "/ventas",
+    etiqueta: "Ventas",
+    icono: "shopping_cart",
+    roles: ["vendedor", "supervisor_sucursal"],
+  },
+  {
+    to: "/movimientos",
+    etiqueta: "Movimientos",
+    icono: "receipt",
+    roles: ["vendedor", "supervisor_sucursal", "gerente"],
+  },
+  {
     to: "/usuarios",
     etiqueta: "Usuarios",
     icono: "manage_accounts",

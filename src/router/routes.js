@@ -46,6 +46,27 @@ const routes = [
         }
       },
       {
+        path: 'cajas',
+        component: () => import('pages/CajasPage.vue'),
+        meta: {
+          allowedRoles: ['gerente', 'supervisor_sucursal']
+        }
+      },
+      {
+        path: 'ventas',
+        component: () => import('pages/VentasPage.vue'),
+        meta: {
+          allowedRoles: ['vendedor', 'supervisor_sucursal']
+        }
+      },
+      {
+        path: 'movimientos',
+        component: () => import('pages/MovimientosCajaPage.vue'),
+        meta: {
+          allowedRoles: ['vendedor', 'supervisor_sucursal', 'gerente']
+        }
+      },
+      {
         path: 'inventario',
         component: () => import('pages/InventarioPage.vue')
       }

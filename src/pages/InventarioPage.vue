@@ -22,6 +22,25 @@
             </q-chip>
 
             <q-btn
+              v-if="puedeVender"
+              flat
+              round
+              color="grey-8"
+              icon="shopping_cart"
+              @click="irAVentas"
+            >
+              <q-badge
+                v-if="cantidadItemsCarrito > 0"
+                floating
+                rounded
+                color="primary"
+              >
+                {{ cantidadItemsCarrito }}
+              </q-badge>
+              <q-tooltip>Carrito de ventas</q-tooltip>
+            </q-btn>
+
+            <q-btn
               flat
               round
               color="grey-8"
@@ -89,6 +108,21 @@
 
             <template #body-cell-acciones="propiedades">
               <q-td :props="propiedades" class="celda-acciones-inventario">
+                <q-btn
+                  v-if="puedeVender"
+                  flat
+                  round
+                  dense
+                  icon="add_shopping_cart"
+                  color="primary"
+                  :disable="!puedeAgregarCarrito(propiedades.row)"
+                  @click="agregarProductoCarritoDesdeInventario(propiedades.row)"
+                >
+                  <q-tooltip>
+                    {{ tooltipCarrito(propiedades.row) }}
+                  </q-tooltip>
+                </q-btn>
+
                 <q-btn
                   v-if="puedeGestionarProductos"
                   flat
@@ -1204,8 +1238,13 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
-import { useQuasar } from "quasar";
+import { Notify, useQuasar } from "quasar";
+import { useRouter } from "vue-router";
 import { estadoAutenticacion } from "src/services/auth";
+import {
+  agregarProductoAlCarrito,
+  cantidadItemsCarrito,
+} from "src/composables/useCarritoVentas";
 import {
   actualizarProducto,
   eliminarProducto,
@@ -1265,6 +1304,24 @@ const formularioEdicion = reactive(crearFormularioEdicionVacio());
 const marcasEdicion = ref([]);
 const categoriasEdicion = ref([]);
 const $q = useQuasar();
+const router = useRouter();
+
+function mostrarNotificacion(tipo, message) {
+  if (typeof $q?.notify === "function") {
+    $q.notify({
+      type: tipo,
+      message,
+    });
+    return;
+  }
+
+  if (typeof Notify?.create === "function") {
+    Notify.create({
+      type: tipo,
+      message,
+    });
+  }
+}
 
 const rolActual = computed(() => estadoAutenticacion.usuario?.rol || "");
 const sucursalActual = computed(
@@ -1272,6 +1329,9 @@ const sucursalActual = computed(
 );
 const puedeSolicitarTransferencias = computed(() =>
   ROLES_QUE_SOLICITAN.includes(rolActual.value)
+);
+const puedeVender = computed(() =>
+  ["vendedor", "supervisor_sucursal"].includes(rolActual.value)
 );
 const puedeTransferirDirecto = computed(() =>
   ["gerente", "auxiliar_administrativo"].includes(rolActual.value)
@@ -1707,6 +1767,33 @@ function tooltipTransferencia(producto) {
   return tooltipSolicitud(producto);
 }
 
+function puedeAgregarCarrito(producto) {
+  if (!puedeVender.value || !sucursalActual.value) {
+    return false;
+  }
+
+  return Number(
+    (producto.existencias_por_sucursal || []).find(
+      (item) =>
+        normalizarTexto(item.sucursal) === normalizarTexto(sucursalActual.value)
+    )?.cantidad || 0
+  ) > 0;
+}
+
+function tooltipCarrito(producto) {
+  if (!puedeVender.value) {
+    return "Tu rol no puede vender";
+  }
+
+  if (!sucursalActual.value) {
+    return "Tu usuario no tiene una sucursal asignada";
+  }
+
+  return puedeAgregarCarrito(producto)
+    ? "Agregar al carrito"
+    : "No hay stock disponible en tu sucursal";
+}
+
 function puedeMostrarGestion(producto) {
   return puedeGestionarProductos.value || puedeSolicitarProducto(producto);
 }
@@ -1873,6 +1960,21 @@ function abrirDialogoSolicitud(producto) {
   dialogoSolicitudAbierto.value = true;
 }
 
+function agregarProductoCarritoDesdeInventario(producto) {
+  const agregado = agregarProductoAlCarrito(producto);
+
+  if (!agregado) {
+    mostrarNotificacion("warning", "No hay stock disponible en tu sucursal para este producto.");
+    return;
+  }
+
+  mostrarNotificacion("positive", "Producto agregado al carrito.");
+}
+
+function irAVentas() {
+  router.push("/ventas");
+}
+
 async function cargarCatalogosEdicion() {
   if (marcasEdicion.value.length && categoriasEdicion.value.length) {
     return;
@@ -1952,10 +2054,7 @@ async function guardarEdicionProducto() {
     await actualizarProducto(productoEdicion.value.id, formularioEdicion);
     await cargarInventario();
     cerrarDialogoEdicion();
-    $q.notify({
-      type: "positive",
-      message: "Producto actualizado correctamente.",
-    });
+    mostrarNotificacion("positive", "Producto actualizado correctamente.");
   } catch (error) {
     errorEdicion.value = error.message || "No se pudo actualizar el producto.";
   } finally {
@@ -1975,10 +2074,7 @@ async function confirmarEliminacionProducto() {
     await eliminarProducto(productoEliminacion.value.id);
     await cargarInventario();
     cerrarDialogoEliminacion();
-    $q.notify({
-      type: "positive",
-      message: "Producto eliminado correctamente.",
-    });
+    mostrarNotificacion("positive", "Producto eliminado correctamente.");
   } catch (error) {
     errorEliminacion.value =
       error.message || "No se pudo eliminar el producto.";
@@ -2088,12 +2184,12 @@ async function registrarSolicitud() {
       await cargarSolicitudes();
     }
     cerrarDialogoSolicitud();
-    $q.notify({
-      type: "positive",
-      message: puedeTransferirDirecto.value
+    mostrarNotificacion(
+      "positive",
+      puedeTransferirDirecto.value
         ? "Transferencia registrada correctamente."
-        : "Solicitud enviada correctamente.",
-    });
+        : "Solicitud enviada correctamente."
+    );
   } catch (error) {
     errorSolicitud.value =
       error.message ||
@@ -2134,10 +2230,7 @@ async function aprobarSolicitud(solicitud) {
     });
 
     await Promise.all([cargarSolicitudes(), cargarInventario()]);
-    $q.notify({
-      type: "positive",
-      message: "Solicitud atendida correctamente.",
-    });
+    mostrarNotificacion("positive", "Solicitud atendida correctamente.");
   } catch (error) {
     errorSolicitudes.value =
       error.message || "No se pudo responder la solicitud.";
@@ -2156,10 +2249,7 @@ async function rechazarSolicitud(solicitud) {
     });
 
     await cargarSolicitudes();
-    $q.notify({
-      type: "positive",
-      message: "Solicitud rechazada correctamente.",
-    });
+    mostrarNotificacion("positive", "Solicitud rechazada correctamente.");
   } catch (error) {
     errorSolicitudes.value =
       error.message || "No se pudo rechazar la solicitud.";
