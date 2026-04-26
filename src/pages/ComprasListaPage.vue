@@ -379,6 +379,7 @@
                   <thead>
                     <tr>
                       <th class="text-left">Sucursal</th>
+                      <th class="text-left">Caja</th>
                       <th class="text-left">Fecha</th>
                       <th class="text-left">Tipo cambio</th>
                       <th class="text-left">Pago USD</th>
@@ -390,7 +391,7 @@
                   </thead>
                   <tbody>
                     <tr v-if="!detalleCompraSeleccionada.abonos?.length">
-                      <td colspan="8" class="text-center text-grey-7">
+                      <td colspan="9" class="text-center text-grey-7">
                         Aun no hay pagos o abonos registrados.
                       </td>
                     </tr>
@@ -399,6 +400,7 @@
                       :key="abono.id"
                     >
                       <td>{{ abono.sucursal || "-" }}</td>
+                      <td>{{ abono.caja || "-" }}</td>
                       <td>{{ abono.fecha_abono || "-" }}</td>
                       <td>{{ formatearMonto(abono.tipo_cambio_abono) }}</td>
                       <td>{{ formatearMonto(abono.abono_usd) }}</td>
@@ -714,6 +716,17 @@
                         :options="sucursales"
                         option-value="value"
                         option-label="label"
+                        @update:model-value="pago.cajaId = null"
+                      />
+                      <q-select
+                        v-model="pago.cajaId"
+                        outlined
+                        emit-value
+                        map-options
+                        label="Caja"
+                        :options="opcionesCajasPagoCredito(pago.sucursalId)"
+                        option-value="value"
+                        option-label="label"
                       />
                       <q-input
                         v-model="pago.fechaAbono"
@@ -791,6 +804,7 @@
                 <thead>
                   <tr>
                     <th class="text-left">Sucursal</th>
+                    <th class="text-left">Caja</th>
                     <th class="text-left">Fecha</th>
                     <th class="text-left">Tipo cambio</th>
                     <th class="text-left">Pago USD</th>
@@ -802,7 +816,7 @@
                 </thead>
                 <tbody>
                   <tr v-if="!detalleCompraSeleccionada.abonos?.length">
-                    <td colspan="8" class="text-center text-grey-7">
+                    <td colspan="9" class="text-center text-grey-7">
                       Aun no hay pagos registrados para esta compra.
                     </td>
                   </tr>
@@ -811,6 +825,7 @@
                     :key="abono.id"
                   >
                     <td>{{ abono.sucursal }}</td>
+                    <td>{{ abono.caja || "-" }}</td>
                     <td>{{ abono.fecha_abono }}</td>
                     <td>{{ formatearMonto(abono.tipo_cambio_abono) }}</td>
                     <td>{{ formatearMonto(abono.abono_usd) }}</td>
@@ -1061,6 +1076,19 @@
                           :disable="guiaYaRecepcionada(guia)"
                           :label="guiaYaRecepcionada(guia) ? 'Bloqueada' : 'Editar'"
                           @click="editarGuia(guia)"
+                        >
+                          <q-tooltip v-if="guiaYaRecepcionada(guia)">
+                            Esta guia ya fue usada en una recepcion
+                          </q-tooltip>
+                        </q-btn>
+                        <q-btn
+                          flat
+                          dense
+                          color="negative"
+                          class="q-ml-sm"
+                          :disable="guiaYaRecepcionada(guia)"
+                          label="Eliminar"
+                          @click="eliminarGuia(guia)"
                         >
                           <q-tooltip v-if="guiaYaRecepcionada(guia)">
                             Esta guia ya fue usada en una recepcion
@@ -1984,6 +2012,7 @@
 import {
   actualizarGuiaCompra,
   cerrarCompraIncompleta,
+  eliminarGuiaCompra,
   ingresarRecepcionInventario,
   listarCompras,
   obtenerDetalleCompra,
@@ -2019,6 +2048,7 @@ const errorIngresoInventario = ref("");
 const compras = ref([]);
 const tiposCompra = ref([]);
 const sucursales = ref([]);
+const cajas = ref([]);
 const marcas = ref([]);
 const categorias = ref([]);
 const productosInventario = ref([]);
@@ -2363,6 +2393,7 @@ function crearFilaPagoCredito() {
   return {
     uid: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
     sucursalId: null,
+    cajaId: null,
     fechaAbono: new Date().toISOString().slice(0, 10),
     tipoCambioAbono: 9,
     monedaReferencia: "usd",
@@ -2563,6 +2594,19 @@ function ordenarSucursalesParaDistribucion(listaSucursales) {
 
     return nombreA.localeCompare(nombreB);
   });
+}
+
+function opcionesCajasPagoCredito(sucursalId) {
+  if (!sucursalId) {
+    return [];
+  }
+
+  return cajas.value
+    .filter((caja) => Number(caja.sucursal_id) === Number(sucursalId))
+    .map((caja) => ({
+      value: caja.id,
+      label: `${caja.nombre} | ${caja.metodo_base_label} | ${caja.tipo_moneda_label} | Saldo ${caja.tipo_moneda === "usd" ? "$" : "Bs."} ${formatearMonto(caja.saldo_actual)}`,
+    }));
 }
 
   function mostrarNotificacion(tipo, mensaje) {
@@ -2834,6 +2878,13 @@ function validarPagoCredito() {
     return "Selecciona la sucursal en cada abono.";
   }
 
+  const filaSinCaja = formularioPagoCredito.pagos.find(
+    (pago) => !pago.cajaId
+  );
+  if (filaSinCaja) {
+    return "Selecciona la caja en cada abono.";
+  }
+
   const filaSinFecha = formularioPagoCredito.pagos.find(
     (pago) => !pago.fechaAbono
   );
@@ -2925,6 +2976,7 @@ async function cargarFormularioBasico() {
 
   tiposCompra.value = datosCompras.tipos_compra || [];
   sucursales.value = datosCompras.sucursales || datosProductos.sucursales || [];
+  cajas.value = datosCompras.cajas || [];
   marcas.value = datosProductos.marcas || [];
   categorias.value = datosProductos.categorias || [];
   productosInventario.value = productos.productos || [];
@@ -3077,6 +3129,7 @@ async function guardarPagoCredito() {
     for (const pago of formularioPagoCredito.pagos) {
       respuesta = await registrarPagoCredito(detalleCompraSeleccionada.value.id, {
         sucursal_id: pago.sucursalId,
+        caja_id: pago.cajaId,
         fecha_abono: pago.fechaAbono,
         tipo_cambio_abono: Number(pago.tipoCambioAbono || 0),
         moneda_referencia: pago.monedaReferencia,
@@ -3167,6 +3220,47 @@ function editarGuia(guia) {
     observaciones: guia.observaciones || "",
     fotoGuia: null,
     fotoUrlActual: guia.foto_url || "",
+  });
+}
+
+function eliminarGuia(guia) {
+  if (guiaYaRecepcionada(guia)) {
+    mostrarNotificacion(
+      "warning",
+      "Esta guia ya fue usada en una recepcion y no se puede eliminar."
+    );
+    return;
+  }
+
+  $q.dialog({
+    title: "Eliminar guia",
+    message: "Esta accion eliminara la guia seleccionada. Deseas continuar?",
+    cancel: true,
+    persistent: true,
+    ok: {
+      color: "negative",
+      label: "Eliminar",
+      unelevated: true,
+    },
+    cancel: {
+      flat: true,
+      label: "Cancelar",
+    },
+  }).onOk(async () => {
+    try {
+      const respuesta = await eliminarGuiaCompra(guia.id);
+      detalleCompraSeleccionada.value = respuesta.compra || null;
+      await cargarCompras();
+      mostrarNotificacion(
+        "positive",
+        respuesta.message || "Guia eliminada correctamente."
+      );
+    } catch (error) {
+      mostrarNotificacion(
+        "negative",
+        error.message || "No se pudo eliminar la guia."
+      );
+    }
   });
 }
 

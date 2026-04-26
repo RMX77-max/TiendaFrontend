@@ -384,6 +384,7 @@
               <thead>
                 <tr>
                   <th class="text-left">Sucursal</th>
+                  <th class="text-left">Caja</th>
                   <th class="text-left">Fecha</th>
                   <th class="text-left">Tipo cambio</th>
                   <th class="text-left">Abono USD</th>
@@ -410,6 +411,21 @@
                       emit-value
                       map-options
                       :options="sucursales"
+                      option-value="value"
+                      option-label="label"
+                      @update:model-value="abono.cajaId = null"
+                    />
+                  </td>
+                  <td
+                    class="columna-tabla-simple columna-tabla-simple--producto"
+                  >
+                    <q-select
+                      v-model="abono.cajaId"
+                      dense
+                      outlined
+                      emit-value
+                      map-options
+                      :options="opcionesCajasPorSucursal(abono.sucursalId)"
                       option-value="value"
                       option-label="label"
                     />
@@ -582,6 +598,7 @@ const guardando = ref(false);
 const guardandoProveedor = ref(false);
 const proveedores = ref([]);
 const sucursales = ref([]);
+const cajas = ref([]);
 const productos = ref([]);
 const tiposCompra = ref([]);
 const compraEditandoId = ref(null);
@@ -737,6 +754,7 @@ function crearFilaAbono() {
   return {
     uid,
     sucursalId: null,
+    cajaId: null,
     fechaAbono: new Date().toISOString().slice(0, 10),
     tipoCambioAbono: 9,
     monedaReferencia: "usd",
@@ -810,6 +828,19 @@ function etiquetaDiferenciaAbono(abono) {
   }
 
   return "Sin diferencia";
+}
+
+function opcionesCajasPorSucursal(sucursalId) {
+  if (!sucursalId) {
+    return [];
+  }
+
+  return cajas.value
+    .filter((caja) => Number(caja.sucursal_id) === Number(sucursalId))
+    .map((caja) => ({
+      value: caja.id,
+      label: `${caja.nombre} | ${caja.metodo_base_label} | ${caja.tipo_moneda_label} | Saldo ${caja.tipo_moneda === "usd" ? "$" : "Bs."} ${formatearMonto(caja.saldo_actual)}`,
+    }));
 }
 
 function mostrarNotificacion(tipo, mensaje) {
@@ -1015,6 +1046,7 @@ function construirPayloadCompra() {
     abonos: mostrarAbonosDirectos.value
       ? formulario.abonos.map((abono) => ({
           sucursal_id: abono.sucursalId,
+          caja_id: abono.cajaId,
           fecha_abono: abono.fechaAbono || null,
           tipo_cambio_abono: Number(abono.tipoCambioAbono || 0),
           moneda_referencia: abono.monedaReferencia,
@@ -1054,6 +1086,14 @@ function validarFormularioAntesDeGuardar() {
       return "Cada abono debe tener una sucursal seleccionada.";
     }
 
+    const abonoSinCaja = formulario.abonos.find(
+      (abono) => !abono.cajaId
+    );
+
+    if (abonoSinCaja) {
+      return "Cada abono debe tener una caja seleccionada.";
+    }
+
     if (totalAbonosUsd.value > totalGeneralUsd.value + 0.0001) {
       return "La suma de abonos no puede superar el costo total del pedido.";
     }
@@ -1066,6 +1106,7 @@ async function cargarFormularioCompras() {
   const datos = await obtenerFormularioCompra();
   proveedores.value = datos.proveedores || [];
   sucursales.value = datos.sucursales || [];
+  cajas.value = datos.cajas || [];
   productos.value = datos.productos || [];
   tiposCompra.value = datos.tipos_compra || [];
 
@@ -1130,6 +1171,7 @@ function cargarCompraEnFormularioLocal(compra) {
         ? compra.abonos.map((abono) => ({
             uid: `${abono.id}-${Math.random().toString(16).slice(2)}`,
             sucursalId: abono.sucursal_id,
+            cajaId: abono.caja_id,
             fechaAbono:
               abono.fecha_abono || new Date().toISOString().slice(0, 10),
             tipoCambioAbono: Number(abono.tipo_cambio_abono || 9),

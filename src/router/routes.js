@@ -49,7 +49,7 @@ const routes = [
         path: 'cajas',
         component: () => import('pages/CajasPage.vue'),
         meta: {
-          allowedRoles: ['gerente', 'supervisor_sucursal']
+          allowedRoles: ['gerente', 'supervisor_sucursal', 'auxiliar_administrativo']
         }
       },
       {

@@ -35,6 +35,7 @@ function construirFormularioCompra (formulario, incluirMetodoPut = false) {
 
   ;(formulario.abonos || []).forEach((abono, indice) => {
     agregarCampoFormulario(formData, `abonos[${indice}][sucursal_id]`, abono.sucursal_id)
+    agregarCampoFormulario(formData, `abonos[${indice}][caja_id]`, abono.caja_id)
     agregarCampoFormulario(formData, `abonos[${indice}][fecha_abono]`, abono.fecha_abono)
     agregarCampoFormulario(formData, `abonos[${indice}][tipo_cambio_abono]`, abono.tipo_cambio_abono)
     agregarCampoFormulario(formData, `abonos[${indice}][moneda_referencia]`, abono.moneda_referencia)
@@ -165,10 +166,17 @@ async function actualizarGuiaCompra (idGuia, formulario) {
   })
 }
 
+async function eliminarGuiaCompra (idGuia) {
+  return solicitarApi(`/compras/guias/${idGuia}`, {
+    method: 'DELETE'
+  })
+}
+
 export {
   actualizarCompra,
   cerrarCompraIncompleta,
   actualizarGuiaCompra,
+  eliminarGuiaCompra,
   ingresarRecepcionInventario,
   listarCompras,
   obtenerDetalleCompra,

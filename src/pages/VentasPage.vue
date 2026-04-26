@@ -4,7 +4,7 @@
       <div class="text-caption text-weight-bold texto-resalte-panel">Ventas</div>
       <h1 class="text-h4 text-weight-bold q-mt-sm q-mb-sm">Carrito y registro de venta</h1>
       <p class="text-body1 text-grey-8 q-ma-none">
-        Completa los datos del cliente, revisa el detalle y registra la venta en la caja correcta.
+        Completa los datos del cliente, define si la venta sera al contado o a credito y usa la plantilla correcta para imprimir.
       </p>
     </div>
 
@@ -23,12 +23,13 @@
             <div>
               <div class="text-h6 text-weight-bold">Datos de la venta</div>
               <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                El carrito toma productos de la sucursal actual del usuario y te deja ajustar el
-                precio final de venta.
+                El carrito toma productos de la sucursal actual del usuario y te deja registrar cobros reales segun la caja elegida.
               </p>
             </div>
 
             <div class="row q-gutter-sm">
+              <q-btn flat color="grey-8" label="Cotizacion imprimible" @click="imprimirBorrador('cotizacion')" />
+              <q-btn flat color="grey-8" label="Nota imprimible" @click="imprimirBorrador('nota')" />
               <q-btn flat color="grey-8" label="Volver a inventario" to="/inventario" />
               <q-btn flat color="grey-8" label="Vaciar carrito" @click="limpiarCarritoCompleto" />
             </div>
@@ -51,10 +52,25 @@
               <div class="text-caption text-grey-7">Total Bs</div>
               <div class="text-h6 text-weight-bold">Bs. {{ formatearMonto(totalCarritoBs) }}</div>
             </div>
+            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--neutral">
+              <div class="text-caption text-grey-7">Estado de pago</div>
+              <div class="text-h6 text-weight-bold">{{ formulario.tipoVenta === 'credito' ? 'Credito' : 'Contado' }}</div>
+            </div>
           </div>
 
           <div class="rejilla-compras-simple q-mt-lg">
             <q-input :model-value="sucursalActual" outlined disable label="Sucursal actual" />
+
+            <q-select
+              v-model="formulario.tipoVenta"
+              outlined
+              emit-value
+              map-options
+              label="Tipo de venta"
+              :options="tiposVenta"
+              option-value="value"
+              option-label="label"
+            />
 
             <q-select
               v-model="formulario.tipoItem"
@@ -63,7 +79,7 @@
               fill-input
               hide-selected
               input-debounce="0"
-              label="Tipo de venta"
+              label="Tipo de item"
               :options="opcionesTipoItemFiltradas"
               @filter="filtrarTiposItem"
               @new-value="agregarTipoItem"
@@ -111,12 +127,82 @@
               option-label="label"
             />
 
+            <q-select
+              v-model="formulario.plantillaSucursalId"
+              outlined
+              emit-value
+              map-options
+              label="Plantilla de impresion"
+              :options="plantillas"
+              option-value="value"
+              option-label="label"
+              @update:model-value="sincronizarPlantillaSeleccionada"
+            />
+
             <q-input
               v-model="formulario.observaciones"
               outlined
               label="Observaciones"
               class="campo-formulario-usuarios--ancho-dos-columnas"
             />
+          </div>
+
+          <div
+            v-if="formulario.tipoVenta === 'credito'"
+            class="q-mt-lg"
+          >
+            <div class="text-subtitle1 text-weight-bold">Credito y abono inicial</div>
+            <p class="text-body2 text-grey-7 q-mt-sm q-mb-md">
+              Solo entrara a caja el monto que realmente se pague hoy. El resto quedara pendiente para pagos posteriores.
+            </p>
+
+            <div class="rejilla-compras-simple">
+              <q-input
+                v-model.number="formulario.abonoInicialUsd"
+                outlined
+                type="number"
+                min="0"
+                step="0.01"
+                label="Abono inicial USD"
+              />
+
+              <q-input
+                v-model.number="formulario.abonoInicialBs"
+                outlined
+                type="number"
+                min="0"
+                step="0.01"
+                label="Abono inicial Bs"
+              />
+
+              <q-file
+                v-model="formulario.comprobanteCredito"
+                outlined
+                clearable
+                accept=".jpg,.jpeg,.png,.webp,.pdf"
+                label="Comprobante opcional"
+              />
+
+              <q-input
+                v-model="formulario.observacionesAbonoInicial"
+                outlined
+                label="Observacion del abono"
+              />
+
+              <q-input
+                :model-value="formatearMonto(saldoPendienteUsd)"
+                outlined
+                disable
+                label="Saldo pendiente USD"
+              />
+
+              <q-input
+                :model-value="formatearMonto(saldoPendienteBs)"
+                outlined
+                disable
+                label="Saldo pendiente Bs"
+              />
+            </div>
           </div>
         </q-card-section>
 
@@ -185,9 +271,7 @@
                       type="number"
                       min="0"
                       step="0.01"
-                      @update:model-value="
-                        cambiarPrecio(item.productoId, 'usd', $event)
-                      "
+                      @update:model-value="cambiarPrecio(item.productoId, 'usd', $event)"
                     />
                   </td>
                   <td class="columna-tabla-simple">
@@ -198,9 +282,7 @@
                       type="number"
                       min="0"
                       step="0.01"
-                      @update:model-value="
-                        cambiarPrecio(item.productoId, 'bs', $event)
-                      "
+                      @update:model-value="cambiarPrecio(item.productoId, 'bs', $event)"
                     />
                   </td>
                   <td>{{ item.stockDisponible }}</td>
@@ -237,15 +319,38 @@
           </div>
         </q-card-section>
 
-        <q-card-actions align="right" class="q-pa-lg">
+        <q-card-actions align="right" class="q-pa-lg q-gutter-sm">
+          <q-btn
+            flat
+            color="grey-8"
+            label="Imprimir nota"
+            :disable="!carrito.items.length"
+            @click="imprimirBorrador('nota')"
+          />
+          <q-btn
+            flat
+            color="grey-8"
+            label="Imprimir cotizacion"
+            :disable="!carrito.items.length"
+            @click="imprimirBorrador('cotizacion')"
+          />
           <q-btn
             unelevated
             color="dark"
             text-color="white"
-            label="Confirmar venta"
+            label="Guardar venta"
             :disable="!carrito.items.length"
-            :loading="guardando"
-            @click="guardarVenta"
+            :loading="guardando && accionGuardado === 'guardar'"
+            @click="guardarVenta('guardar')"
+          />
+          <q-btn
+            unelevated
+            color="primary"
+            text-color="white"
+            label="Guardar e imprimir recibo"
+            :disable="!carrito.items.length"
+            :loading="guardando && accionGuardado === 'imprimir'"
+            @click="guardarVenta('imprimir')"
           />
         </q-card-actions>
       </q-card>
@@ -255,7 +360,7 @@
 
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
 import { estadoAutenticacion } from 'src/services/auth'
 import {
   actualizarCantidadCarrito,
@@ -269,17 +374,22 @@ import {
   vaciarCarrito
 } from 'src/composables/useCarritoVentas'
 import { obtenerDatosFormularioVenta, registrarVenta } from 'src/services/ventas'
+import { imprimirDocumentoVenta } from 'src/utils/documentosVentas'
 
 defineOptions({
   name: 'VentasPage'
 })
 
-const router = useRouter()
+const $q = useQuasar()
 const cargando = ref(false)
 const guardando = ref(false)
+const accionGuardado = ref('guardar')
 const mensajeExito = ref('')
 const errorGeneral = ref('')
 const cajas = ref([])
+const plantillas = ref([])
+const tiposVenta = ref([])
+const plantillaPredeterminadaId = ref(null)
 
 const opcionesMoneda = [
   { value: 'bs', label: 'Bolivianos' },
@@ -303,15 +413,34 @@ const tiposItemBase = [
 
 const opcionesTipoItemFiltradas = ref([...tiposItemBase])
 const sucursalActual = computed(() => estadoAutenticacion.usuario?.sucursal || '')
+const plantillaSeleccionada = computed(
+  () => plantillas.value.find((item) => Number(item.value) === Number(formulario.plantillaSucursalId)) || null
+)
+const saldoPendienteUsd = computed(() => {
+  if (formulario.tipoVenta !== 'credito') return 0
+  return Math.max(Number(totalCarritoUsd.value || 0) - Number(formulario.abonoInicialUsd || 0), 0)
+})
+const saldoPendienteBs = computed(() => {
+  if (formulario.tipoVenta !== 'credito') return 0
+  return Math.max(Number(totalCarritoBs.value || 0) - Number(formulario.abonoInicialBs || 0), 0)
+})
 
 const formulario = reactive({
   cajaId: null,
   moneda: 'bs',
+  tipoCambio: null,
+  tipoVenta: 'contado',
   tipoItem: 'Pieza suelta',
   clienteNombre: '',
   clienteTelefono: '',
   clienteFechaNacimiento: '',
-  observaciones: ''
+  observaciones: '',
+  plantillaSucursalId: null,
+  plantillaImpresion: 'clasica',
+  abonoInicialUsd: 0,
+  abonoInicialBs: 0,
+  observacionesAbonoInicial: '',
+  comprobanteCredito: null
 })
 
 function formatearMonto (valor) {
@@ -359,6 +488,11 @@ function sincronizarCajaSeleccionada () {
   formulario.moneda = caja.tipo_moneda || 'bs'
 }
 
+function sincronizarPlantillaSeleccionada () {
+  const plantilla = plantillaSeleccionada.value
+  formulario.plantillaImpresion = plantilla?.plantilla_impresion || 'clasica'
+}
+
 function cambiarCantidad (productoId, valor) {
   actualizarCantidadCarrito(productoId, valor)
 }
@@ -379,6 +513,24 @@ function limpiarCarritoCompleto () {
   vaciarCarrito()
 }
 
+function reiniciarFormularioVenta () {
+  formulario.tipoVenta = 'contado'
+  formulario.tipoItem = 'Pieza suelta'
+  formulario.clienteNombre = ''
+  formulario.clienteTelefono = ''
+  formulario.clienteFechaNacimiento = ''
+  formulario.observaciones = ''
+  formulario.abonoInicialUsd = 0
+  formulario.abonoInicialBs = 0
+  formulario.observacionesAbonoInicial = ''
+  formulario.comprobanteCredito = null
+  formulario.tipoCambio = null
+  formulario.cajaId = cajas.value[0]?.value || null
+  formulario.plantillaSucursalId = plantillaPredeterminadaId.value || plantillas.value[0]?.value || null
+  sincronizarCajaSeleccionada()
+  sincronizarPlantillaSeleccionada()
+}
+
 async function cargarFormulario () {
   cargando.value = true
   errorGeneral.value = ''
@@ -386,8 +538,16 @@ async function cargarFormulario () {
   try {
     const datos = await obtenerDatosFormularioVenta()
     cajas.value = datos.cajas || []
+    plantillas.value = datos.plantillas || []
+    tiposVenta.value = datos.tipos_venta || [
+      { value: 'contado', label: 'Contado' },
+      { value: 'credito', label: 'Credito' }
+    ]
+    plantillaPredeterminadaId.value = datos.plantilla_predeterminada_id || null
     formulario.cajaId = cajas.value[0]?.value || null
+    formulario.plantillaSucursalId = plantillaPredeterminadaId.value || plantillas.value[0]?.value || null
     sincronizarCajaSeleccionada()
+    sincronizarPlantillaSeleccionada()
   } catch (error) {
     errorGeneral.value = error.message || 'No se pudo cargar el formulario de ventas.'
   } finally {
@@ -395,32 +555,99 @@ async function cargarFormulario () {
   }
 }
 
-async function guardarVenta () {
-  errorGeneral.value = ''
-  mensajeExito.value = ''
+function construirBorradorDocumento () {
+  return {
+    nro_venta: 'BORRADOR',
+    sucursal: sucursalActual.value,
+    moneda: formulario.moneda,
+    cliente_nombre: formulario.clienteNombre,
+    cliente_telefono: formulario.clienteTelefono,
+    observaciones: formulario.observaciones,
+    fecha_venta: new Date().toLocaleString('es-BO'),
+    total_usd: Number(totalCarritoUsd.value || 0),
+    total_bs: Number(totalCarritoBs.value || 0),
+    detalles: carrito.items.map((item) => ({
+      modelo: item.modelo,
+      marca: item.marca,
+      categoria: item.categoria,
+      series: item.seriesSeleccionadas?.length ? item.seriesSeleccionadas.join(', ') : '-',
+      cantidad: item.cantidad,
+      precioVentaUsd: Number(item.precioVentaUsd || 0),
+      precioVentaBs: Number(item.precioVentaBs || 0),
+      subtotal_usd: Number(item.precioVentaUsd || 0) * Number(item.cantidad || 0),
+      subtotal_bs: Number(item.precioVentaBs || 0) * Number(item.cantidad || 0)
+    }))
+  }
+}
 
+function validarFormularioVenta () {
   if (!carrito.items.length) {
-    errorGeneral.value = 'Debes agregar productos al carrito antes de vender.'
-    return
+    return 'Debes agregar productos al carrito antes de vender.'
   }
 
   if (!formulario.clienteNombre.trim()) {
-    errorGeneral.value = 'Debes registrar el nombre del cliente.'
-    return
+    return 'Debes registrar el nombre del cliente.'
   }
 
   if (!formulario.clienteTelefono.trim()) {
-    errorGeneral.value = 'Debes registrar el telefono del cliente.'
-    return
+    return 'Debes registrar el telefono del cliente.'
   }
 
   if (!formulario.tipoItem.trim()) {
-    errorGeneral.value = 'Selecciona o escribe el tipo de venta.'
-    return
+    return 'Selecciona o escribe el tipo de item.'
   }
 
   if (!formulario.cajaId) {
-    errorGeneral.value = 'Selecciona una caja para registrar la venta.'
+    return 'Selecciona una caja para registrar la venta.'
+  }
+
+  if (!formulario.plantillaSucursalId) {
+    return 'Selecciona una plantilla de impresion.'
+  }
+
+  if (formulario.tipoVenta === 'credito') {
+    if (Number(formulario.abonoInicialUsd || 0) > Number(totalCarritoUsd.value || 0)) {
+      return 'El abono inicial USD no puede ser mayor al total de la venta.'
+    }
+
+    if (Number(formulario.abonoInicialBs || 0) > Number(totalCarritoBs.value || 0)) {
+      return 'El abono inicial Bs no puede ser mayor al total de la venta.'
+    }
+  }
+
+  return ''
+}
+
+function imprimirBorrador (tipoDocumento) {
+  try {
+    const error = validarFormularioVenta()
+
+    if (error && !carrito.items.length) {
+      errorGeneral.value = error
+      return
+    }
+
+    imprimirDocumentoVenta({
+      tipoDocumento,
+      borrador: construirBorradorDocumento(),
+      plantilla: plantillaSeleccionada.value
+    })
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: error.message || 'No se pudo abrir la impresion.'
+    })
+  }
+}
+
+async function guardarVenta (accion = 'guardar') {
+  errorGeneral.value = ''
+  mensajeExito.value = ''
+  accionGuardado.value = accion
+
+  const errorValidacion = validarFormularioVenta()
+  if (errorValidacion) {
+    errorGeneral.value = errorValidacion
     return
   }
 
@@ -430,17 +657,47 @@ async function guardarVenta () {
     const respuesta = await registrarVenta({
       cajaId: formulario.cajaId,
       moneda: formulario.moneda,
+      tipoCambio: formulario.tipoCambio,
+      tipoVenta: formulario.tipoVenta,
       tipoItem: formulario.tipoItem,
       clienteNombre: formulario.clienteNombre,
       clienteTelefono: formulario.clienteTelefono,
       clienteFechaNacimiento: formulario.clienteFechaNacimiento || null,
       observaciones: formulario.observaciones,
+      plantillaSucursalId: formulario.plantillaSucursalId,
+      plantillaImpresion: formulario.plantillaImpresion,
+      abonoInicialUsd: formulario.abonoInicialUsd,
+      abonoInicialBs: formulario.abonoInicialBs,
+      observacionesAbonoInicial: formulario.observacionesAbonoInicial,
+      comprobanteCredito: formulario.comprobanteCredito,
       detalles: carrito.items
     })
 
     vaciarCarrito()
     mensajeExito.value = respuesta.message || 'Venta registrada correctamente.'
-    await router.push('/inventario')
+    reiniciarFormularioVenta()
+
+    if (accion === 'imprimir' && respuesta.venta) {
+      try {
+        imprimirDocumentoVenta({
+          tipoDocumento: 'recibo',
+          venta: respuesta.venta,
+          plantilla: respuesta.venta.plantilla
+        })
+      } catch (errorImpresion) {
+        $q.notify({
+          type: 'warning',
+          message: errorImpresion.message || 'La venta se guardo, pero no se pudo abrir la impresion.'
+        })
+      }
+    }
+
+    $q.notify({
+      type: 'positive',
+      message: accion === 'imprimir'
+        ? 'Venta registrada e impresion preparada correctamente.'
+        : 'Venta registrada correctamente.'
+    })
   } catch (error) {
     errorGeneral.value = error.message || 'No se pudo registrar la venta.'
   } finally {

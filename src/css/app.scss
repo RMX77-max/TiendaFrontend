@@ -168,6 +168,53 @@ body {
   flex-wrap: wrap;
 }
 
+.dialogo-detalle-producto .cabecera-tarjeta-detalle--envolvente,
+.dialogo-solicitudes-transferencia .cabecera-tarjeta-detalle--envolvente {
+  position: relative;
+  padding-right: 72px;
+}
+
+.dialogo-detalle-producto .cabecera-tarjeta-detalle--envolvente > .row.items-center,
+.dialogo-solicitudes-transferencia
+  .cabecera-tarjeta-detalle--envolvente
+  > .row.items-center {
+  flex: 1 1 320px;
+  justify-content: flex-start;
+  gap: 16px;
+}
+
+.dialogo-detalle-producto
+  .cabecera-tarjeta-detalle--envolvente
+  > .row.items-center
+  > .q-btn:first-child,
+.dialogo-solicitudes-transferencia
+  .cabecera-tarjeta-detalle--envolvente
+  > .row.items-center
+  > .q-btn:first-child {
+  position: absolute;
+  top: 0;
+  right: 0;
+  order: initial;
+}
+
+.dialogo-detalle-producto
+  .cabecera-tarjeta-detalle--envolvente
+  > .row.items-center
+  > div:last-child,
+.dialogo-solicitudes-transferencia
+  .cabecera-tarjeta-detalle--envolvente
+  > .row.items-center
+  > div:last-child {
+  flex: 1 1 auto;
+}
+
+.dialogo-detalle-producto .cabecera-tarjeta-detalle--envolvente > .q-badge,
+.dialogo-solicitudes-transferencia
+  .cabecera-tarjeta-detalle--envolvente
+  > .q-badge {
+  display: none;
+}
+
 .rejilla-resumen-detalle-producto {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -616,7 +663,15 @@ body {
 
 .rejilla-pagos-simple {
   display: grid;
-  grid-template-columns: minmax(170px, 1fr) minmax(150px, 0.9fr) minmax(150px, 0.9fr) minmax(160px, 1fr) minmax(160px, 1fr) minmax(220px, 1.2fr) auto;
+  grid-template-columns:
+    minmax(170px, 1fr)
+    minmax(190px, 1.1fr)
+    minmax(150px, 0.9fr)
+    minmax(140px, 0.8fr)
+    minmax(160px, 1fr)
+    minmax(160px, 1fr)
+    minmax(220px, 1.2fr)
+    auto;
   gap: 16px;
   align-items: start;
 }

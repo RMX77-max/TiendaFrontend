@@ -1,25 +1,5 @@
 <template>
   <q-page class="pagina-usuarios q-pa-lg">
-    <div class="encabezado-usuarios">
-      <div>
-        <div class="text-caption text-weight-bold texto-resalte-panel">Cajas</div>
-        <h1 class="text-h4 text-weight-bold q-mt-sm q-mb-sm">Cajas y control de movimientos</h1>
-        <p class="text-body1 text-grey-8 q-ma-none">
-          Administra las cajas por sucursal y deja lista la base para registrar ingresos y egresos reales.
-        </p>
-      </div>
-
-      <q-card flat bordered class="tarjeta-resumen-usuarios">
-        <q-card-section>
-          <div class="text-caption text-grey-7">Cajas registradas</div>
-          <div class="text-h4 text-weight-bold q-mt-xs">{{ cajas.length }}</div>
-          <div class="text-body2 text-grey-7 q-mt-sm">
-            Activas: {{ totalActivas }} | Inactivas: {{ totalInactivas }}
-          </div>
-        </q-card-section>
-      </q-card>
-    </div>
-
     <div class="bloques-usuarios q-mt-lg">
       <q-card flat bordered class="tarjeta-listado-usuarios">
         <q-card-section class="q-pa-lg">
@@ -27,11 +7,29 @@
             <div>
               <div class="text-h6 text-weight-bold">Panel de cajas</div>
               <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                Aqui se ve rapido cuanto dinero hay en cada caja y se puede entrar al detalle de ingresos y egresos.
+                {{ descripcionPanel }}
               </p>
             </div>
 
             <div class="row q-gutter-sm">
+              <q-btn
+                v-if="puedeGestionar || esGerente"
+                unelevated
+                color="positive"
+                text-color="white"
+                icon="south_west"
+                label="Ingreso"
+                @click="abrirModalMovimiento('ingreso')"
+              />
+              <q-btn
+                v-if="puedeGestionar || esGerente"
+                unelevated
+                color="negative"
+                text-color="white"
+                icon="north_east"
+                label="Egreso"
+                @click="abrirModalMovimiento('egreso')"
+              />
               <q-btn
                 v-if="puedeGestionar"
                 unelevated
@@ -51,30 +49,42 @@
             </div>
           </div>
 
-          <q-banner v-if="mensajeExito" rounded class="bg-green-1 text-green-10 q-mt-md">
-            {{ mensajeExito }}
-          </q-banner>
+          <div class="rejilla-compras-simple q-mt-lg">
+            <q-select
+              v-model="filtros.sucursalId"
+              outlined
+              clearable
+              emit-value
+              map-options
+              label="Filtrar por sucursal"
+              :options="opcionesSucursalesFiltro"
+              option-value="value"
+              option-label="label"
+            />
+            <q-select
+              v-model="filtros.tipoCaja"
+              outlined
+              clearable
+              emit-value
+              map-options
+              label="Filtrar por tipo de caja"
+              :options="opcionesTiposCaja"
+              option-value="value"
+              option-label="label"
+            />
+          </div>
 
-          <q-banner v-if="errorGeneral" rounded class="bg-red-1 text-red-10 q-mt-md">
-            {{ errorGeneral }}
-          </q-banner>
-
-          <q-banner
-            v-if="!puedeGestionar"
-            rounded
-            class="bg-blue-1 text-blue-10 q-mt-md"
+          <div
+            v-if="!tarjetasVisibles.length && !cargando"
+            class="text-grey-7 q-mt-lg"
           >
-            En este perfil puedes revisar saldos y detalles. La creacion o edicion queda a cargo del supervisor.
-          </q-banner>
-
-          <div v-if="!cajas.length && !cargando" class="text-grey-7 q-mt-lg">
-            Aun no hay cajas registradas.
+            No hay resultados para los filtros seleccionados.
           </div>
 
           <div v-else class="rejilla-cajas-panel q-mt-lg">
             <q-card
-              v-for="caja in cajas"
-              :key="caja.id"
+              v-for="caja in tarjetasVisibles"
+              :key="caja.id || caja.clave"
               flat
               bordered
               class="tarjeta-caja-panel"
@@ -83,47 +93,66 @@
               <q-card-section class="q-pa-lg">
                 <div class="row items-start justify-between q-gutter-md">
                   <div>
-                    <div class="text-subtitle1 text-weight-bold">{{ caja.nombre }}</div>
+                    <div class="text-subtitle1 text-weight-bold">
+                      {{ esGerente ? caja.etiqueta : caja.nombre }}
+                    </div>
                     <div class="text-body2 text-grey-7 q-mt-xs">
-                      {{ caja.sucursal || 'Sin sucursal' }}
+                      {{
+                        esGerente
+                          ? `${caja.totalSucursales} sucursal(es) | ${caja.totalCajas} caja(s)`
+                          : caja.sucursal || "Sin sucursal"
+                      }}
                     </div>
                     <div class="text-caption text-grey-6 q-mt-xs">
-                      {{ caja.metodo_base_label }} | {{ caja.tipo_moneda_label }}
+                      {{
+                        esGerente
+                          ? caja.descripcion
+                          : `${caja.metodo_base_label} | ${caja.tipo_moneda_label}`
+                      }}
                     </div>
                   </div>
 
                   <q-badge :color="caja.activa ? 'positive' : 'grey-6'">
-                    {{ caja.activa ? 'Activa' : 'Inactiva' }}
+                    {{
+                      caja.activa ? "Activas disponibles" : "Sin cajas activas"
+                    }}
                   </q-badge>
                 </div>
 
                 <div class="text-caption text-grey-7 q-mt-lg">Saldo actual</div>
                 <div class="text-h3 text-weight-bold q-mt-sm">
-                  {{ etiquetaMoneda(caja.tipo_moneda) }}{{ formatearMonto(caja.saldo_actual) }}
+                  {{ etiquetaMoneda(caja.tipo_moneda)
+                  }}{{ formatearMonto(caja.saldo_actual) }}
                 </div>
 
                 <div class="rejilla-resumen-caja q-mt-lg">
                   <div class="item-resumen-caja item-resumen-caja--success">
                     <div class="text-caption text-grey-7">Ingresos</div>
                     <div class="text-subtitle1 text-weight-bold q-mt-xs">
-                      {{ etiquetaMoneda(caja.tipo_moneda) }}{{ formatearMonto(caja.total_ingresos) }}
+                      {{ etiquetaMoneda(caja.tipo_moneda)
+                      }}{{ formatearMonto(caja.total_ingresos) }}
                     </div>
                   </div>
                   <div class="item-resumen-caja item-resumen-caja--warning">
                     <div class="text-caption text-grey-7">Egresos</div>
                     <div class="text-subtitle1 text-weight-bold q-mt-xs">
-                      {{ etiquetaMoneda(caja.tipo_moneda) }}{{ formatearMonto(caja.total_egresos) }}
+                      {{ etiquetaMoneda(caja.tipo_moneda)
+                      }}{{ formatearMonto(caja.total_egresos) }}
                     </div>
                   </div>
                 </div>
 
                 <div class="row items-center justify-between q-mt-lg">
                   <div class="text-caption text-grey-7">
-                    {{ caja.codigo || 'Sin codigo interno' }}
+                    {{
+                      esGerente
+                        ? caja.resumenFiltros
+                        : caja.codigo || "Sin codigo interno"
+                    }}
                   </div>
                   <div class="row items-center q-gutter-xs">
                     <q-btn
-                      v-if="puedeGestionar"
+                      v-if="puedeGestionar && !esGerente"
                       flat
                       round
                       dense
@@ -151,6 +180,52 @@
         </q-card-section>
       </q-card>
 
+      <q-card flat bordered class="tarjeta-listado-usuarios">
+        <q-card-section class="q-pa-lg">
+          <div class="cabecera-listado-usuarios">
+            <div>
+              <div class="text-h6 text-weight-bold">Caja general</div>
+              <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
+                Aqui ves movimientos manuales y egresos por compras, sin mezclar ventas.
+              </p>
+            </div>
+
+            <q-btn
+              flat
+              icon="refresh"
+              label="Actualizar"
+              :loading="cargandoMovimientosListado"
+              @click="cargarHistorialMovimientos"
+            />
+          </div>
+
+          <div class="contenedor-tabla-simple q-mt-lg">
+            <q-table
+              flat
+              :rows="movimientosListado"
+              :columns="columnasMovimientosPanel"
+              row-key="id"
+              :loading="cargandoMovimientosListado"
+              no-data-label="Aun no hay movimientos de caja general."
+              :pagination="{ rowsPerPage: 8 }"
+            >
+              <template #body-cell-monto="propiedades">
+                <q-td :props="propiedades">
+                  {{ etiquetaMoneda(propiedades.row.moneda)
+                  }}{{ formatearMonto(propiedades.row.monto) }}
+                </q-td>
+              </template>
+
+              <template #body-cell-saldo_resultante="propiedades">
+                <q-td :props="propiedades">
+                  {{ etiquetaMoneda(propiedades.row.moneda)
+                  }}{{ formatearMonto(propiedades.row.saldo_resultante) }}
+                </q-td>
+              </template>
+            </q-table>
+          </div>
+        </q-card-section>
+      </q-card>
     </div>
 
     <q-dialog v-model="dialogoCajaAbierto">
@@ -159,7 +234,7 @@
           <div class="row items-center justify-between">
             <div>
               <div class="text-h6 text-weight-bold">
-                {{ cajaEditandoId ? 'Editar caja' : 'Registrar nueva caja' }}
+                {{ cajaEditandoId ? "Editar caja" : "Registrar nueva caja" }}
               </div>
               <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
                 Configura la caja con su moneda y metodo base.
@@ -231,7 +306,9 @@
               />
             </div>
 
-            <div class="campo-formulario-usuarios campo-formulario-usuarios--ancho-dos-columnas">
+            <div
+              class="campo-formulario-usuarios campo-formulario-usuarios--ancho-dos-columnas"
+            >
               <q-input
                 v-model="formulario.observaciones"
                 outlined
@@ -245,7 +322,12 @@
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-lg">
-          <q-btn flat color="grey-8" label="Cancelar" @click="cerrarModalCaja" />
+          <q-btn
+            flat
+            color="grey-8"
+            label="Cancelar"
+            @click="cerrarModalCaja"
+          />
           <q-btn
             unelevated
             color="dark"
@@ -259,10 +341,208 @@
       </q-card>
     </q-dialog>
 
+    <q-dialog v-model="dialogoMovimientoAbierto" maximized>
+      <q-card class="dialogo-detalle-producto">
+        <q-card-section class="q-pa-lg">
+          <div
+            class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
+          >
+            <div class="row items-center q-gutter-sm">
+              <q-btn
+                flat
+                round
+                dense
+                icon="close"
+                class="boton-cerrar-modal-compras"
+                @click="cerrarModalMovimiento"
+              />
+              <div>
+                <div class="text-caption text-weight-bold texto-resalte-panel">
+                  Cajas
+                </div>
+                <div class="text-h5 text-weight-bold q-mt-sm">
+                  {{
+                    formularioMovimiento.tipoMovimiento === "egreso"
+                      ? "Registrar egreso"
+                      : "Registrar ingreso"
+                  }}
+                </div>
+                <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
+                  Registra un movimiento amplio de caja con el mismo espacio de
+                  trabajo que usamos en los detalles del sistema.
+                </p>
+              </div>
+            </div>
+
+            <q-badge
+              color="blue-1"
+              text-color="primary"
+              rounded
+              class="q-px-md q-py-sm"
+            >
+              {{
+                formularioMovimiento.tipoMovimiento === "egreso"
+                  ? "Salida de dinero"
+                  : "Entrada de dinero"
+              }}
+            </q-badge>
+          </div>
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section class="q-pa-lg">
+          <div class="columna-detalle-producto">
+            <q-card flat bordered class="tarjeta-detalle-producto">
+              <q-card-section class="q-pa-lg">
+                <div
+                  class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
+                >
+                  <div>
+                    <div class="text-h5 text-weight-bold">
+                      {{
+                        formularioMovimiento.tipoMovimiento === "egreso"
+                          ? "Salida desde caja"
+                          : "Ingreso a caja"
+                      }}
+                    </div>
+                    <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
+                      Completa el concepto y el monto. La fecha se genera
+                      automaticamente con el momento del registro.
+                    </p>
+                  </div>
+
+                  <div class="text-right">
+                    <div class="text-caption text-grey-7">
+                      Fecha de registro
+                    </div>
+                    <div class="text-subtitle1 text-weight-bold q-mt-xs">
+                      {{ fechaMovimientoTexto }}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="rejilla-resumen-detalle-producto q-mt-lg">
+                  <div class="item-resumen-detalle-producto">
+                    <div class="text-caption text-grey-7">Tipo de caja</div>
+                    <div class="text-h6 text-weight-bold q-mt-xs">
+                      {{
+                        cajaMovimientoSeleccionada?.metodo_base_label ||
+                        "Pendiente"
+                      }}
+                    </div>
+                    <div class="text-body2 text-grey-7">
+                      {{
+                        cajaMovimientoSeleccionada?.nombre ||
+                        "Selecciona un tipo de caja"
+                      }}
+                    </div>
+                  </div>
+
+                  <div class="item-resumen-detalle-producto">
+                    <div class="text-caption text-grey-7">Moneda</div>
+                    <div class="text-h6 text-weight-bold q-mt-xs">
+                      {{
+                        cajaMovimientoSeleccionada?.tipo_moneda_label ||
+                        "Pendiente"
+                      }}
+                    </div>
+                    <div class="text-body2 text-grey-7">
+                      Caja general asociada
+                    </div>
+                  </div>
+                </div>
+
+                <div class="formulario-usuarios q-mt-lg">
+                  <div class="campo-formulario-usuarios">
+                    <q-select
+                      v-model="formularioMovimiento.tipoCaja"
+                      outlined
+                      emit-value
+                      map-options
+                      label="Tipo de caja"
+                      :options="opcionesTiposCajaGestionables"
+                      option-value="value"
+                      option-label="label"
+                      :rules="[reglaRequerida]"
+                    />
+                  </div>
+
+                  <div class="campo-formulario-usuarios">
+                    <q-input
+                      v-model="formularioMovimiento.monto"
+                      outlined
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      label="Monto"
+                      :rules="[reglaRequerida]"
+                    />
+                  </div>
+
+                  <div
+                    class="campo-formulario-usuarios campo-formulario-usuarios--ancho-dos-columnas"
+                  >
+                    <q-input
+                      v-model="formularioMovimiento.concepto"
+                      outlined
+                      maxlength="50"
+                      label="Concepto"
+                      :rules="[reglaRequerida]"
+                    />
+                  </div>
+
+                  <div
+                    class="campo-formulario-usuarios campo-formulario-usuarios--ancho-dos-columnas"
+                  >
+                    <q-input
+                      v-model="formularioMovimiento.detalle"
+                      outlined
+                      type="textarea"
+                      autogrow
+                      maxlength="255"
+                      label="Detalle"
+                    />
+                  </div>
+                </div>
+              </q-card-section>
+            </q-card>
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right" class="q-pa-lg">
+          <q-btn
+            flat
+            color="grey-8"
+            label="Cancelar"
+            @click="cerrarModalMovimiento"
+          />
+          <q-btn
+            unelevated
+            :color="
+              formularioMovimiento.tipoMovimiento === 'egreso'
+                ? 'negative'
+                : 'positive'
+            "
+            text-color="white"
+            :loading="guardandoMovimiento"
+            :label="
+              formularioMovimiento.tipoMovimiento === 'egreso'
+                ? 'Guardar egreso'
+                : 'Guardar ingreso'
+            "
+            @click="guardarMovimientoManual"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
     <q-dialog v-model="dialogoDetalleCajaAbierto" maximized>
       <q-card class="dialogo-detalle-producto">
         <q-card-section class="q-pa-lg">
-          <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
+          <div
+            class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
+          >
             <div class="row items-center q-gutter-sm">
               <q-btn
                 flat
@@ -273,35 +553,164 @@
                 @click="dialogoDetalleCajaAbierto = false"
               />
               <div>
-                <div class="text-caption text-weight-bold texto-resalte-panel">Cajas</div>
-                <div class="text-h5 text-weight-bold q-mt-sm">Detalle de caja</div>
+                <div class="text-caption text-weight-bold texto-resalte-panel">
+                  Cajas
+                </div>
+                <div class="text-h5 text-weight-bold q-mt-sm">
+                  Detalle de caja
+                </div>
                 <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                  Revisa el saldo, los totales y el historial real de movimientos de esta caja.
+                  Revisa el saldo, los totales y el historial real de
+                  movimientos de esta caja.
                 </p>
               </div>
             </div>
 
             <q-badge
-              v-if="cajaSeleccionada"
+              v-if="detalleActual"
               color="blue-1"
               text-color="primary"
               rounded
               class="q-px-md q-py-sm"
             >
-              {{ cajaSeleccionada.nombre }}
+              {{ detalleActualBadge }}
             </q-badge>
           </div>
         </q-card-section>
 
         <q-separator />
 
-        <q-card-section v-if="cajaSeleccionada" class="q-pa-lg">
+        <q-card-section v-if="detalleAgrupadoSeleccionado" class="q-pa-lg">
           <div class="rejilla-compras-simple">
-            <q-input :model-value="cajaSeleccionada.nombre" outlined disable label="Caja" />
-            <q-input :model-value="cajaSeleccionada.sucursal" outlined disable label="Sucursal" />
-            <q-input :model-value="cajaSeleccionada.codigo || 'Sin codigo'" outlined disable label="Codigo" />
-            <q-input :model-value="cajaSeleccionada.metodo_base_label" outlined disable label="Metodo base" />
-            <q-input :model-value="cajaSeleccionada.tipo_moneda_label" outlined disable label="Moneda" />
+            <q-input
+              :model-value="detalleAgrupadoSeleccionado.etiqueta"
+              outlined
+              disable
+              label="Tipo de caja"
+            />
+            <q-input
+              :model-value="detalleAgrupadoSeleccionado.descripcion"
+              outlined
+              disable
+              label="Configuracion"
+            />
+            <q-input
+              :model-value="detalleAgrupadoSeleccionado.totalSucursales"
+              outlined
+              disable
+              label="Sucursales"
+            />
+            <q-input
+              :model-value="detalleAgrupadoSeleccionado.totalCajas"
+              outlined
+              disable
+              label="Cajas incluidas"
+            />
+          </div>
+
+          <div class="rejilla-resumen-caja-amplio q-mt-lg">
+            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--neutral">
+              <div class="text-caption text-grey-7">Saldo actual</div>
+              <div class="text-h5 text-weight-bold q-mt-xs">
+                {{ etiquetaMoneda(detalleAgrupadoSeleccionado.tipo_moneda)
+                }}{{ formatearMonto(detalleAgrupadoSeleccionado.saldo_actual) }}
+              </div>
+            </div>
+            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--success">
+              <div class="text-caption text-grey-7">Ingresos</div>
+              <div class="text-h5 text-weight-bold q-mt-xs">
+                {{ etiquetaMoneda(detalleAgrupadoSeleccionado.tipo_moneda)
+                }}{{
+                  formatearMonto(detalleAgrupadoSeleccionado.total_ingresos)
+                }}
+              </div>
+            </div>
+            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--warning">
+              <div class="text-caption text-grey-7">Egresos</div>
+              <div class="text-h5 text-weight-bold q-mt-xs">
+                {{ etiquetaMoneda(detalleAgrupadoSeleccionado.tipo_moneda)
+                }}{{
+                  formatearMonto(detalleAgrupadoSeleccionado.total_egresos)
+                }}
+              </div>
+            </div>
+          </div>
+
+          <div class="q-mt-lg">
+            <div class="text-subtitle1 text-weight-bold">
+              Cajas incluidas en este total
+            </div>
+            <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
+              Aqui se desglosa cada caja de este tipo para ver que sucursales
+              aportan al total mostrado.
+            </p>
+
+            <div class="contenedor-tabla-simple q-mt-md">
+              <q-table
+                flat
+                :rows="detalleAgrupadoSeleccionado.cajas"
+                :columns="columnasDetalleAgrupado"
+                row-key="id"
+                no-data-label="No hay cajas para este grupo."
+                :pagination="{ rowsPerPage: 8 }"
+              >
+                <template #body-cell-total_ingresos="propiedades">
+                  <q-td :props="propiedades">
+                    {{ etiquetaMoneda(propiedades.row.tipo_moneda)
+                    }}{{ formatearMonto(propiedades.row.total_ingresos) }}
+                  </q-td>
+                </template>
+
+                <template #body-cell-total_egresos="propiedades">
+                  <q-td :props="propiedades">
+                    {{ etiquetaMoneda(propiedades.row.tipo_moneda)
+                    }}{{ formatearMonto(propiedades.row.total_egresos) }}
+                  </q-td>
+                </template>
+
+                <template #body-cell-saldo_actual="propiedades">
+                  <q-td :props="propiedades">
+                    {{ etiquetaMoneda(propiedades.row.tipo_moneda)
+                    }}{{ formatearMonto(propiedades.row.saldo_actual) }}
+                  </q-td>
+                </template>
+              </q-table>
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-card-section v-else-if="cajaSeleccionada" class="q-pa-lg">
+          <div class="rejilla-compras-simple">
+            <q-input
+              :model-value="cajaSeleccionada.nombre"
+              outlined
+              disable
+              label="Caja"
+            />
+            <q-input
+              :model-value="cajaSeleccionada.sucursal"
+              outlined
+              disable
+              label="Sucursal"
+            />
+            <q-input
+              :model-value="cajaSeleccionada.codigo || 'Sin codigo'"
+              outlined
+              disable
+              label="Codigo"
+            />
+            <q-input
+              :model-value="cajaSeleccionada.metodo_base_label"
+              outlined
+              disable
+              label="Metodo base"
+            />
+            <q-input
+              :model-value="cajaSeleccionada.tipo_moneda_label"
+              outlined
+              disable
+              label="Moneda"
+            />
             <q-input
               :model-value="cajaSeleccionada.activa ? 'Activa' : 'Inactiva'"
               outlined
@@ -314,27 +723,33 @@
             <div class="tarjeta-resumen-pago tarjeta-resumen-pago--neutral">
               <div class="text-caption text-grey-7">Saldo actual</div>
               <div class="text-h5 text-weight-bold q-mt-xs">
-                {{ etiquetaMoneda(cajaSeleccionada.tipo_moneda) }}{{ formatearMonto(cajaSeleccionada.saldo_actual) }}
+                {{ etiquetaMoneda(cajaSeleccionada.tipo_moneda)
+                }}{{ formatearMonto(cajaSeleccionada.saldo_actual) }}
               </div>
             </div>
             <div class="tarjeta-resumen-pago tarjeta-resumen-pago--success">
               <div class="text-caption text-grey-7">Ingresos</div>
               <div class="text-h5 text-weight-bold q-mt-xs">
-                {{ etiquetaMoneda(cajaSeleccionada.tipo_moneda) }}{{ formatearMonto(cajaSeleccionada.total_ingresos) }}
+                {{ etiquetaMoneda(cajaSeleccionada.tipo_moneda)
+                }}{{ formatearMonto(cajaSeleccionada.total_ingresos) }}
               </div>
             </div>
             <div class="tarjeta-resumen-pago tarjeta-resumen-pago--warning">
               <div class="text-caption text-grey-7">Egresos</div>
               <div class="text-h5 text-weight-bold q-mt-xs">
-                {{ etiquetaMoneda(cajaSeleccionada.tipo_moneda) }}{{ formatearMonto(cajaSeleccionada.total_egresos) }}
+                {{ etiquetaMoneda(cajaSeleccionada.tipo_moneda)
+                }}{{ formatearMonto(cajaSeleccionada.total_egresos) }}
               </div>
             </div>
           </div>
 
           <div class="q-mt-lg">
-            <div class="text-subtitle1 text-weight-bold">Movimientos de la caja</div>
+            <div class="text-subtitle1 text-weight-bold">
+              Movimientos de la caja
+            </div>
             <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-              Aqui se ve el historial real de ingresos y egresos registrados para esta caja.
+              Aqui se ve el historial de caja general y compras asociado a esta
+              caja.
             </p>
 
             <div class="contenedor-tabla-simple q-mt-md">
@@ -349,13 +764,15 @@
               >
                 <template #body-cell-monto="propiedades">
                   <q-td :props="propiedades">
-                    {{ etiquetaMoneda(propiedades.row.moneda) }}{{ formatearMonto(propiedades.row.monto) }}
+                    {{ etiquetaMoneda(propiedades.row.moneda)
+                    }}{{ formatearMonto(propiedades.row.monto) }}
                   </q-td>
                 </template>
 
                 <template #body-cell-saldo_resultante="propiedades">
                   <q-td :props="propiedades">
-                    {{ etiquetaMoneda(propiedades.row.moneda) }}{{ formatearMonto(propiedades.row.saldo_resultante) }}
+                    {{ etiquetaMoneda(propiedades.row.moneda)
+                    }}{{ formatearMonto(propiedades.row.saldo_resultante) }}
                   </q-td>
                 </template>
               </q-table>
@@ -364,7 +781,9 @@
 
           <q-input
             class="q-mt-lg"
-            :model-value="cajaSeleccionada.observaciones || 'Sin observaciones registradas.'"
+            :model-value="
+              cajaSeleccionada.observaciones || 'Sin observaciones registradas.'
+            "
             outlined
             disable
             type="textarea"
@@ -378,176 +797,692 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { useQuasar } from "quasar";
+import { computed, onMounted, reactive, ref } from "vue";
+import { estadoAutenticacion } from "src/services/auth";
 import {
   actualizarCaja,
   listarMovimientosCaja,
   obtenerDatosModuloCajas,
-  registrarCaja
-} from 'src/services/cajas'
+  registrarCaja,
+  registrarMovimientoCaja,
+} from "src/services/cajas";
 
 defineOptions({
-  name: 'CajasPage'
-})
+  name: "CajasPage",
+});
 
-const cargando = ref(false)
-const guardando = ref(false)
-const puedeGestionar = ref(false)
-const mensajeExito = ref('')
-const errorGeneral = ref('')
-const cajaEditandoId = ref(null)
-const dialogoCajaAbierto = ref(false)
-const dialogoDetalleCajaAbierto = ref(false)
-const cajaSeleccionada = ref(null)
-const cajas = ref([])
-const movimientosCajaSeleccionada = ref([])
-const cargandoMovimientosCaja = ref(false)
-const monedas = ref([])
-const metodos = ref([])
-const sucursales = ref([])
+const cargando = ref(false);
+const guardando = ref(false);
+const guardandoMovimiento = ref(false);
+const puedeGestionar = ref(false);
+const mensajeExito = ref("");
+const errorGeneral = ref("");
+const cajaEditandoId = ref(null);
+const dialogoCajaAbierto = ref(false);
+const dialogoDetalleCajaAbierto = ref(false);
+const dialogoMovimientoAbierto = ref(false);
+const cajaSeleccionada = ref(null);
+const detalleAgrupadoSeleccionado = ref(null);
+const cajas = ref([]);
+const movimientosCajaSeleccionada = ref([]);
+const movimientosListado = ref([]);
+const cargandoMovimientosCaja = ref(false);
+const cargandoMovimientosListado = ref(false);
+const monedas = ref([]);
+const metodos = ref([]);
+const sucursales = ref([]);
+const filtros = reactive({
+  sucursalId: null,
+  tipoCaja: null,
+});
 
-const formulario = reactive(crearFormularioVacio())
+const formulario = reactive(crearFormularioVacio());
+const formularioMovimiento = reactive(crearFormularioMovimientoVacio());
+const filtrosMovimientos = reactive({
+  tipoCaja: null,
+  cajaId: null,
+  tipoMovimiento: "",
+  concepto: "",
+  fechaDesde: "",
+  fechaHasta: "",
+});
 
-const columnasCajas = [
-  { name: 'sucursal', label: 'Sucursal', align: 'left', field: 'sucursal', sortable: true },
-  { name: 'nombre', label: 'Caja', align: 'left', field: 'nombre', sortable: true },
-  { name: 'moneda', label: 'Moneda', align: 'left', field: 'tipo_moneda_label', sortable: true },
-  { name: 'metodo', label: 'Metodo', align: 'left', field: 'metodo_base_label', sortable: true },
-  { name: 'saldo', label: 'Saldo actual', align: 'left', field: 'saldo_actual', sortable: true },
-  { name: 'estado', label: 'Estado', align: 'left', field: 'activa', sortable: true },
-  { name: 'acciones', label: 'Acciones', align: 'left', field: 'id' }
-]
+const rolActual = computed(() => estadoAutenticacion.usuario?.rol || "");
+const esGerente = computed(() => rolActual.value === "gerente");
+const $q = useQuasar();
 
-const totalActivas = computed(() => cajas.value.filter(item => item.activa).length)
-const totalInactivas = computed(() => cajas.value.filter(item => !item.activa).length)
+const descripcionPrincipal = computed(() =>
+  esGerente.value
+    ? "Consolida los ingresos de todas las sucursales por tipo de caja para tener una vista gerencial mas clara."
+    : "Administra las cajas de tu sucursal y deja lista la base para registrar ingresos y egresos reales."
+);
+
+const descripcionPanel = computed(() =>
+  esGerente.value
+    ? "Cada tarjeta agrupa todas las cajas del mismo tipo para que el gerente vea un total claro por sucursal y por metodo."
+    : "Aqui se ve rapido cuanto dinero hay en cada caja y se puede entrar al detalle de ingresos y egresos."
+);
+
+const totalActivas = computed(
+  () => cajasFiltradas.value.filter((item) => item.activa).length
+);
+const totalInactivas = computed(
+  () => cajasFiltradas.value.filter((item) => !item.activa).length
+);
+const totalSucursalesFiltradas = computed(
+  () =>
+    new Set(
+      cajasFiltradas.value.map((item) => item.sucursal_id).filter(Boolean)
+    ).size
+);
 
 const columnasMovimientosCaja = [
-  { name: 'fecha_movimiento', label: 'Fecha', align: 'left', field: 'fecha_movimiento', sortable: true },
-  { name: 'tipo_movimiento_label', label: 'Tipo', align: 'left', field: 'tipo_movimiento_label', sortable: true },
-  { name: 'concepto', label: 'Concepto', align: 'left', field: 'concepto', sortable: true },
-  { name: 'monto', label: 'Monto', align: 'left', field: 'monto', sortable: true },
-  { name: 'saldo_resultante', label: 'Saldo despues del movimiento', align: 'left', field: 'saldo_resultante', sortable: true },
-  { name: 'detalle', label: 'Detalle', align: 'left', field: 'detalle', sortable: false }
-]
+  {
+    name: "fecha_movimiento",
+    label: "Fecha",
+    align: "left",
+    field: "fecha_movimiento",
+    sortable: true,
+  },
+  {
+    name: "tipo_movimiento_label",
+    label: "Tipo",
+    align: "left",
+    field: "tipo_movimiento_label",
+    sortable: true,
+  },
+  {
+    name: "concepto",
+    label: "Concepto",
+    align: "left",
+    field: "concepto",
+    sortable: true,
+  },
+  {
+    name: "monto",
+    label: "Monto",
+    align: "left",
+    field: "monto",
+    sortable: true,
+  },
+  {
+    name: "saldo_resultante",
+    label: "Saldo despues del movimiento",
+    align: "left",
+    field: "saldo_resultante",
+    sortable: true,
+  },
+  {
+    name: "detalle",
+    label: "Detalle",
+    align: "left",
+    field: "detalle",
+    sortable: false,
+  },
+];
 
-function crearFormularioVacio () {
+const columnasDetalleAgrupado = [
+  {
+    name: "sucursal",
+    label: "Sucursal",
+    align: "left",
+    field: "sucursal",
+    sortable: true,
+  },
+  {
+    name: "nombre",
+    label: "Caja",
+    align: "left",
+    field: "nombre",
+    sortable: true,
+  },
+  {
+    name: "codigo",
+    label: "Codigo",
+    align: "left",
+    field: "codigo",
+    sortable: true,
+  },
+  {
+    name: "total_ingresos",
+    label: "Ingresos",
+    align: "left",
+    field: "total_ingresos",
+    sortable: true,
+  },
+  {
+    name: "total_egresos",
+    label: "Egresos",
+    align: "left",
+    field: "total_egresos",
+    sortable: true,
+  },
+  {
+    name: "saldo_actual",
+    label: "Saldo",
+    align: "left",
+    field: "saldo_actual",
+    sortable: true,
+  },
+];
+
+const columnasMovimientosPanel = [
+  {
+    name: "fecha_movimiento",
+    label: "Fecha",
+    align: "left",
+    field: "fecha_movimiento",
+    sortable: true,
+  },
+  {
+    name: "tipo_movimiento_label",
+    label: "Tipo",
+    align: "left",
+    field: "tipo_movimiento_label",
+    sortable: true,
+  },
+  {
+    name: "sucursal",
+    label: "Sucursal",
+    align: "left",
+    field: "sucursal",
+    sortable: true,
+  },
+  { name: "caja", label: "Caja", align: "left", field: "caja", sortable: true },
+  {
+    name: "concepto",
+    label: "Concepto",
+    align: "left",
+    field: "concepto",
+    sortable: true,
+  },
+  {
+    name: "detalle",
+    label: "Detalle",
+    align: "left",
+    field: "detalle",
+    sortable: false,
+  },
+  {
+    name: "usuario",
+    label: "Usuario",
+    align: "left",
+    field: "usuario",
+    sortable: true,
+  },
+  {
+    name: "monto",
+    label: "Monto",
+    align: "left",
+    field: "monto",
+    sortable: true,
+  },
+  {
+    name: "saldo_resultante",
+    label: "Saldo",
+    align: "left",
+    field: "saldo_resultante",
+    sortable: true,
+  },
+];
+
+function crearFormularioVacio() {
   return {
-    nombre: '',
-    codigo: '',
-    tipoMoneda: 'bs',
-    metodoBase: 'efectivo',
+    nombre: "",
+    codigo: "",
+    tipoMoneda: "bs",
+    metodoBase: "efectivo",
     activa: true,
-    observaciones: ''
+    observaciones: "",
+  };
+}
+
+function crearFormularioMovimientoVacio() {
+  return {
+    tipoCaja: null,
+    tipoMovimiento: "ingreso",
+    monto: "",
+    concepto: "",
+    detalle: "",
+  };
+}
+
+function reglaRequerida(valor) {
+  return !!valor || "Este campo es obligatorio.";
+}
+
+function formatearMonto(valor) {
+  return Number(valor || 0).toFixed(2);
+}
+
+function etiquetaMoneda(moneda) {
+  return moneda === "usd" ? "$ " : "Bs. ";
+}
+
+function obtenerFechaActualIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function obtenerClaveTipoCaja(caja) {
+  return `${caja.tipo_moneda || "bs"}:${caja.metodo_base || "efectivo"}`;
+}
+
+function obtenerEtiquetaTipoCaja(caja) {
+  if (caja.tipo_moneda === "usd") {
+    return "Dolares";
   }
+
+  return caja.metodo_base_label || caja.tipo_moneda_label || "Caja";
 }
 
-function reglaRequerida (valor) {
-  return !!valor || 'Este campo es obligatorio.'
+function obtenerDescripcionTipoCaja(caja) {
+  if (caja.tipo_moneda === "usd") {
+    return "Efectivo en dolares";
+  }
+
+  return `${caja.metodo_base_label} | ${caja.tipo_moneda_label}`;
 }
 
-function formatearMonto (valor) {
-  return Number(valor || 0).toFixed(2)
+const opcionesSucursalesFiltro = computed(() => sucursales.value);
+
+const opcionesTiposCaja = computed(() => {
+  const mapa = new Map();
+
+  cajas.value.forEach((caja) => {
+    const clave = obtenerClaveTipoCaja(caja);
+
+    if (!mapa.has(clave)) {
+      mapa.set(clave, {
+        value: clave,
+        label: obtenerEtiquetaTipoCaja(caja),
+      });
+    }
+  });
+
+  return Array.from(mapa.values()).sort((tipoA, tipoB) =>
+    tipoA.label.localeCompare(tipoB.label)
+  );
+});
+
+const opcionesTiposCajaGestionables = computed(() => {
+  const mapa = new Map();
+
+  cajas.value
+    .filter((caja) => caja.activa)
+    .forEach((caja) => {
+      const clave = obtenerClaveTipoCaja(caja);
+
+      if (!mapa.has(clave)) {
+        mapa.set(clave, {
+          value: clave,
+          label: obtenerEtiquetaTipoCaja(caja),
+        });
+      }
+    });
+
+  return Array.from(mapa.values()).sort((tipoA, tipoB) =>
+    tipoA.label.localeCompare(tipoB.label)
+  );
+});
+
+const opcionesCajasFiltroMovimientos = computed(() =>
+  cajas.value
+    .filter((caja) => {
+      if (!filtrosMovimientos.tipoCaja) {
+        return true;
+      }
+
+      return obtenerClaveTipoCaja(caja) === filtrosMovimientos.tipoCaja;
+    })
+    .map((caja) => ({
+      value: caja.id,
+      label: `${caja.nombre} - ${caja.sucursal || "Sin sucursal"}`,
+    }))
+);
+
+const cajasFiltradas = computed(() =>
+  cajas.value.filter((caja) => {
+    const coincideSucursal =
+      !filtros.sucursalId ||
+      Number(caja.sucursal_id) === Number(filtros.sucursalId);
+    const coincideTipo =
+      !filtros.tipoCaja || obtenerClaveTipoCaja(caja) === filtros.tipoCaja;
+
+    return coincideSucursal && coincideTipo;
+  })
+);
+
+const tarjetasAgrupadas = computed(() => {
+  const grupos = new Map();
+
+  cajasFiltradas.value.forEach((caja) => {
+    const clave = obtenerClaveTipoCaja(caja);
+    const grupoActual = grupos.get(clave);
+
+    if (!grupoActual) {
+      grupos.set(clave, {
+        clave,
+        etiqueta: obtenerEtiquetaTipoCaja(caja),
+        descripcion: obtenerDescripcionTipoCaja(caja),
+        tipo_moneda: caja.tipo_moneda,
+        metodo_base: caja.metodo_base,
+        activa: caja.activa === true,
+        total_ingresos: Number(caja.total_ingresos || 0),
+        total_egresos: Number(caja.total_egresos || 0),
+        saldo_actual: Number(caja.saldo_actual || 0),
+        totalCajas: 1,
+        totalSucursales: new Set(caja.sucursal_id ? [caja.sucursal_id] : []),
+        cajas: [caja],
+      });
+      return;
+    }
+
+    grupoActual.activa = grupoActual.activa || caja.activa === true;
+    grupoActual.total_ingresos += Number(caja.total_ingresos || 0);
+    grupoActual.total_egresos += Number(caja.total_egresos || 0);
+    grupoActual.saldo_actual += Number(caja.saldo_actual || 0);
+    grupoActual.totalCajas += 1;
+
+    if (caja.sucursal_id) {
+      grupoActual.totalSucursales.add(caja.sucursal_id);
+    }
+
+    grupoActual.cajas.push(caja);
+  });
+
+  return Array.from(grupos.values())
+    .map((grupo) => ({
+      ...grupo,
+      total_ingresos: roundMonto(grupo.total_ingresos),
+      total_egresos: roundMonto(grupo.total_egresos),
+      saldo_actual: roundMonto(grupo.saldo_actual),
+      totalSucursales: grupo.totalSucursales.size,
+      resumenFiltros: filtros.sucursalId
+        ? `Filtrado por 1 sucursal`
+        : `${grupo.totalSucursales.size} sucursal(es) incluidas`,
+      cajas: [...grupo.cajas].sort((cajaA, cajaB) => {
+        const sucursalA = cajaA.sucursal || "";
+        const sucursalB = cajaB.sucursal || "";
+        return (
+          sucursalA.localeCompare(sucursalB) ||
+          (cajaA.nombre || "").localeCompare(cajaB.nombre || "")
+        );
+      }),
+    }))
+    .sort((grupoA, grupoB) => grupoA.etiqueta.localeCompare(grupoB.etiqueta));
+});
+
+const tarjetasVisibles = computed(() =>
+  esGerente.value ? tarjetasAgrupadas.value : cajasFiltradas.value
+);
+
+const detalleActual = computed(
+  () => detalleAgrupadoSeleccionado.value || cajaSeleccionada.value
+);
+const detalleActualBadge = computed(
+  () =>
+    detalleAgrupadoSeleccionado.value?.etiqueta ||
+    cajaSeleccionada.value?.nombre ||
+    ""
+);
+
+const cajaMovimientoSeleccionada = computed(
+  () =>
+    cajas.value.find(
+      (item) =>
+        item.activa &&
+        obtenerClaveTipoCaja(item) === formularioMovimiento.tipoCaja
+    ) || null
+);
+
+const fechaMovimientoTexto = computed(() => {
+  const fecha = new Date();
+  return fecha.toLocaleString("es-BO", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+});
+
+function reiniciarFormulario() {
+  Object.assign(formulario, crearFormularioVacio());
+  cajaEditandoId.value = null;
+  mensajeExito.value = "";
+  errorGeneral.value = "";
 }
 
-function etiquetaMoneda (moneda) {
-  return moneda === 'usd' ? '$ ' : 'Bs. '
+function reiniciarFormularioMovimiento() {
+  Object.assign(formularioMovimiento, crearFormularioMovimientoVacio());
+  errorGeneral.value = "";
 }
 
-function reiniciarFormulario () {
-  Object.assign(formulario, crearFormularioVacio())
-  cajaEditandoId.value = null
-  mensajeExito.value = ''
-  errorGeneral.value = ''
+function roundMonto(valor) {
+  return Number(Number(valor || 0).toFixed(2));
 }
 
-function abrirModalCaja (caja = null) {
+function abrirModalCaja(caja = null) {
   if (caja) {
-    cajaEditandoId.value = caja.id
-    formulario.nombre = caja.nombre || ''
-    formulario.codigo = caja.codigo || ''
-    formulario.tipoMoneda = caja.tipo_moneda || 'bs'
-    formulario.metodoBase = caja.metodo_base || 'efectivo'
-    formulario.activa = caja.activa === true
-    formulario.observaciones = caja.observaciones || ''
+    cajaEditandoId.value = caja.id;
+    formulario.nombre = caja.nombre || "";
+    formulario.codigo = caja.codigo || "";
+    formulario.tipoMoneda = caja.tipo_moneda || "bs";
+    formulario.metodoBase = caja.metodo_base || "efectivo";
+    formulario.activa = caja.activa === true;
+    formulario.observaciones = caja.observaciones || "";
   } else {
-    reiniciarFormulario()
+    reiniciarFormulario();
   }
 
-  mensajeExito.value = ''
-  errorGeneral.value = ''
-  dialogoCajaAbierto.value = true
+  mensajeExito.value = "";
+  errorGeneral.value = "";
+  dialogoCajaAbierto.value = true;
 }
 
-function cerrarModalCaja () {
-  dialogoCajaAbierto.value = false
-  reiniciarFormulario()
+function cerrarModalCaja() {
+  dialogoCajaAbierto.value = false;
+  reiniciarFormulario();
 }
 
-function abrirDetalleCaja (caja) {
-  cajaSeleccionada.value = caja
-  dialogoDetalleCajaAbierto.value = true
-  cargarMovimientosCaja(caja.id)
+function abrirModalMovimiento(tipoMovimiento = "ingreso", caja = null) {
+  reiniciarFormularioMovimiento();
+  formularioMovimiento.tipoMovimiento = tipoMovimiento;
+  formularioMovimiento.tipoCaja = caja ? obtenerClaveTipoCaja(caja) : null;
+  dialogoMovimientoAbierto.value = true;
 }
 
-async function cargarMovimientosCaja (idCaja) {
-  cargandoMovimientosCaja.value = true
+function cerrarModalMovimiento() {
+  dialogoMovimientoAbierto.value = false;
+  reiniciarFormularioMovimiento();
+}
+
+function abrirDetalleCaja(caja) {
+  if (esGerente.value) {
+    detalleAgrupadoSeleccionado.value = caja;
+    cajaSeleccionada.value = null;
+    movimientosCajaSeleccionada.value = [];
+    dialogoDetalleCajaAbierto.value = true;
+    return;
+  }
+
+  detalleAgrupadoSeleccionado.value = null;
+  cajaSeleccionada.value = caja;
+  dialogoDetalleCajaAbierto.value = true;
+  cargarMovimientosCaja(caja.id);
+}
+
+async function cargarMovimientosCaja(idCaja) {
+  cargandoMovimientosCaja.value = true;
 
   try {
     const datos = await listarMovimientosCaja({
-      cajaId: idCaja
-    })
-    movimientosCajaSeleccionada.value = datos.movimientos || []
+      cajaId: idCaja,
+      referenciaTipos: ["caja_general", "compra_abono"],
+    });
+    movimientosCajaSeleccionada.value = datos.movimientos || [];
   } catch (error) {
-    movimientosCajaSeleccionada.value = []
-    errorGeneral.value = error.message || 'No se pudo cargar el detalle de movimientos de la caja.'
+    movimientosCajaSeleccionada.value = [];
+    errorGeneral.value =
+      error.message ||
+      "No se pudo cargar el detalle de movimientos de la caja.";
   } finally {
-    cargandoMovimientosCaja.value = false
+    cargandoMovimientosCaja.value = false;
   }
 }
 
-async function cargarModulo () {
-  cargando.value = true
-  errorGeneral.value = ''
+function obtenerFiltrosMovimientoApi() {
+  const [tipoMoneda, metodoBase] = String(
+    filtrosMovimientos.tipoCaja || ""
+  ).split(":");
+
+  return {
+    cajaId: filtrosMovimientos.cajaId,
+    fechaDesde: filtrosMovimientos.fechaDesde,
+    fechaHasta: filtrosMovimientos.fechaHasta,
+    concepto: filtrosMovimientos.concepto,
+    referenciaTipos: ["caja_general", "compra_abono"],
+    tipoMovimiento: filtrosMovimientos.tipoMovimiento,
+    metodoBase: metodoBase || "",
+    tipoMoneda: tipoMoneda || "",
+  };
+}
+
+async function cargarHistorialMovimientos() {
+  cargandoMovimientosListado.value = true;
 
   try {
-    const datos = await obtenerDatosModuloCajas()
-    monedas.value = datos.monedas
-    metodos.value = datos.metodos
-    sucursales.value = datos.sucursales
-    cajas.value = datos.cajas
-    puedeGestionar.value = datos.puedeGestionar === true
+    const datos = await listarMovimientosCaja(obtenerFiltrosMovimientoApi());
+    movimientosListado.value = datos.movimientos || [];
   } catch (error) {
-    errorGeneral.value = error.message || 'No se pudo cargar el modulo de cajas.'
+    movimientosListado.value = [];
+    errorGeneral.value =
+      error.message || "No se pudo cargar el historial de movimientos.";
   } finally {
-    cargando.value = false
+    cargandoMovimientosListado.value = false;
   }
 }
 
-async function guardarCaja () {
-  if (!puedeGestionar.value) {
-    return
+function limpiarFiltrosMovimientos() {
+  filtrosMovimientos.tipoCaja = null;
+  filtrosMovimientos.cajaId = null;
+  filtrosMovimientos.tipoMovimiento = "";
+  filtrosMovimientos.concepto = "";
+  filtrosMovimientos.fechaDesde = "";
+  filtrosMovimientos.fechaHasta = "";
+  cargarHistorialMovimientos();
+}
+
+function sincronizarDetalleSeleccionado() {
+  if (cajaSeleccionada.value) {
+    cajaSeleccionada.value =
+      cajas.value.find(
+        (item) => Number(item.id) === Number(cajaSeleccionada.value.id)
+      ) || null;
   }
 
-  guardando.value = true
-  mensajeExito.value = ''
-  errorGeneral.value = ''
+  if (detalleAgrupadoSeleccionado.value) {
+    detalleAgrupadoSeleccionado.value =
+      tarjetasAgrupadas.value.find(
+        (item) => item.clave === detalleAgrupadoSeleccionado.value.clave
+      ) || null;
+  }
+}
+
+async function cargarModulo() {
+  cargando.value = true;
+  errorGeneral.value = "";
+
+  try {
+    const datos = await obtenerDatosModuloCajas();
+    monedas.value = datos.monedas;
+    metodos.value = datos.metodos;
+    sucursales.value = datos.sucursales;
+    cajas.value = datos.cajas;
+    puedeGestionar.value = datos.puedeGestionar === true;
+    sincronizarDetalleSeleccionado();
+  } catch (error) {
+    errorGeneral.value =
+      error.message || "No se pudo cargar el modulo de cajas.";
+  } finally {
+    cargando.value = false;
+  }
+}
+
+async function guardarCaja() {
+  if (!puedeGestionar.value) {
+    return;
+  }
+
+  guardando.value = true;
+  mensajeExito.value = "";
+  errorGeneral.value = "";
 
   try {
     const respuesta = cajaEditandoId.value
       ? await actualizarCaja(cajaEditandoId.value, formulario)
-      : await registrarCaja(formulario)
+      : await registrarCaja(formulario);
 
-    await cargarModulo()
-    cerrarModalCaja()
-    mensajeExito.value = respuesta.message || 'Caja guardada correctamente.'
+    await cargarModulo();
+    cerrarModalCaja();
+    mensajeExito.value = respuesta.message || "Caja guardada correctamente.";
   } catch (error) {
-    errorGeneral.value = error.message || 'No se pudo guardar la caja.'
+    errorGeneral.value = error.message || "No se pudo guardar la caja.";
   } finally {
-    guardando.value = false
+    guardando.value = false;
+  }
+}
+
+async function guardarMovimientoManual() {
+  if (!puedeGestionar.value && !esGerente.value) {
+    return;
+  }
+
+  if (!cajaMovimientoSeleccionada.value) {
+    errorGeneral.value =
+      "Selecciona un tipo de caja valido para registrar el movimiento.";
+    return;
+  }
+
+  guardandoMovimiento.value = true;
+  mensajeExito.value = "";
+  errorGeneral.value = "";
+
+  try {
+    const tipoMovimientoRegistrado = formularioMovimiento.tipoMovimiento;
+    const respuesta = await registrarMovimientoCaja({
+      ...formularioMovimiento,
+      cajaId: cajaMovimientoSeleccionada.value.id,
+    });
+
+    await cargarModulo();
+    await cargarHistorialMovimientos();
+
+    if (cajaSeleccionada.value?.id) {
+      await cargarMovimientosCaja(cajaSeleccionada.value.id);
+    }
+
+    cerrarModalMovimiento();
+    mensajeExito.value =
+      respuesta.message || "Movimiento registrado correctamente.";
+    $q.notify({
+      type: "positive",
+      message:
+        tipoMovimientoRegistrado === "egreso"
+          ? "Egreso registrado correctamente."
+          : "Ingreso registrado correctamente.",
+      position: "top-right",
+    });
+  } catch (error) {
+    errorGeneral.value = error.message || "No se pudo registrar el movimiento.";
+  } finally {
+    guardandoMovimiento.value = false;
   }
 }
 
 onMounted(() => {
-  cargarModulo()
-})
+  cargarModulo();
+  cargarHistorialMovimientos();
+});
 </script>

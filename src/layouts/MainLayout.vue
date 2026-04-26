@@ -134,7 +134,7 @@ const enlacesMenu = [
     to: "/cajas",
     etiqueta: "Cajas",
     icono: "point_of_sale",
-    roles: ["gerente", "supervisor_sucursal"],
+    roles: ["gerente", "supervisor_sucursal", "auxiliar_administrativo"],
   },
   {
     to: "/ventas",
