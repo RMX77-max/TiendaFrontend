@@ -1,10 +1,10 @@
 <template>
   <q-page class="pagina-compras q-pa-lg">
-    <div>
+    <div class="encabezado-ventas">
       <div class="text-caption text-weight-bold texto-resalte-panel">
         Compras
       </div>
-      <h1 class="text-h4 text-weight-bold q-mt-sm q-mb-sm">
+      <h1 class="text-h4 text-weight-bold q-mt-sm q-mb-none">
         Registro de compras y pedidos
       </h1>
     </div>
@@ -22,33 +22,31 @@
     </q-banner>
 
     <div class="columna-compras q-mt-lg">
-      <q-card flat bordered class="tarjeta-compra-principal">
+      <q-card flat bordered class="tarjeta-compra-secundaria">
         <q-card-section class="q-pa-lg">
-          <div
-            class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
-          >
-            <div>
-              <div class="text-h6 text-weight-bold">
-                {{
-                  compraEditandoId
-                    ? `Editar compra #${compraEditandoId}`
-                    : "Nueva compra / pedido"
-                }}
-              </div>
-              <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                La compra se registra por cabecera, detalle y abonos cuando
-                corresponda.
-              </p>
+          <div class="cabecera-acciones-ventas">
+            <div class="row q-gutter-sm">
+              <q-btn
+                unelevated
+                color="grey-2"
+                text-color="grey-9"
+                icon="list_alt"
+                label="Ir a lista"
+                class="boton-accion-secundaria-ventas"
+                to="/compras"
+              />
+              <q-btn
+                unelevated
+                color="blue-1"
+                text-color="blue-10"
+                icon="add_shopping_cart"
+                label="Nueva compra"
+                class="boton-accion-secundaria-ventas"
+                @click="reiniciarFormularioCompleto"
+              />
             </div>
 
             <div class="row q-gutter-sm">
-              <q-btn flat color="grey-8" label="Ir a lista" to="/compras" />
-              <q-btn
-                flat
-                color="grey-8"
-                label="Nueva compra"
-                @click="reiniciarFormularioCompleto"
-              />
               <q-btn
                 unelevated
                 color="dark"
@@ -62,10 +60,56 @@
             </div>
           </div>
         </q-card-section>
+      </q-card>
+
+      <q-card flat bordered class="tarjeta-compra-principal">
+        <q-card-section class="q-pa-lg">
+          <div class="cabecera-tarjeta-detalle">
+            <div class="text-h6 text-weight-bold">
+              {{
+                compraEditandoId
+                  ? `Editar compra #${compraEditandoId}`
+                  : "Compra actual"
+              }}
+            </div>
+          </div>
+        </q-card-section>
 
         <q-separator />
 
         <q-card-section class="q-pa-lg">
+          <div class="rejilla-resumen-pagos-credito rejilla-resumen-pagos-credito--compras-page">
+            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--neutral tarjeta-resumen-pago--ventas-page">
+              <div class="text-caption text-grey-7">Tipo de compra</div>
+              <div class="text-h5 text-weight-bold">
+                {{ etiquetaTipoCompraActual }}
+              </div>
+            </div>
+            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--success tarjeta-resumen-pago--ventas-page">
+              <div class="text-caption text-grey-7">Total USD</div>
+              <div class="text-h5 text-weight-bold">
+                $ {{ formatearMonto(totalGeneralUsd) }}
+              </div>
+            </div>
+            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--warning tarjeta-resumen-pago--ventas-page">
+              <div class="text-caption text-grey-7">Total Bs</div>
+              <div class="text-h5 text-weight-bold">
+                Bs. {{ formatearMonto(totalGeneralBs) }}
+              </div>
+            </div>
+            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--neutral tarjeta-resumen-pago--ventas-page">
+              <div class="text-caption text-grey-7">Entrega</div>
+              <div class="text-h5 text-weight-bold">
+                {{ formulario.tiempoEntregaDias || 0 }} dia(s)
+              </div>
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section class="q-pa-lg">
+          <div class="text-subtitle1 text-weight-bold">Datos generales</div>
           <div class="rejilla-compras-simple">
             <q-select
               v-model="formulario.proveedorId"
@@ -140,12 +184,7 @@
           <div
             class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
           >
-            <div>
-              <div class="text-h6 text-weight-bold">Detalle de productos</div>
-              <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                Tabla simple para registrar cada producto del pedido.
-              </p>
-            </div>
+            <div class="text-subtitle1 text-weight-bold">Detalle de productos</div>
 
             <div class="row q-gutter-sm items-center">
               <q-chip square color="grey-2" text-color="dark">
@@ -311,12 +350,7 @@
           <div
             class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
           >
-            <div>
-              <div class="text-h6 text-weight-bold">Abonos de sucursales</div>
-              <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                Pagos directos para compras al contado o pedido.
-              </p>
-            </div>
+            <div class="text-subtitle1 text-weight-bold">Abonos de sucursales</div>
 
             <div class="row q-gutter-sm items-center">
               <q-chip square color="grey-2" text-color="dark">
@@ -632,6 +666,13 @@ const textoVisibleProveedor = computed(() => {
   );
 
   return proveedorSeleccionado?.label || textoProveedorBusqueda.value;
+});
+const etiquetaTipoCompraActual = computed(() => {
+  const tipoSeleccionado = tiposCompra.value.find(
+    (item) => String(item.value) === String(formulario.tipoCompra)
+  );
+
+  return tipoSeleccionado?.label || "Compra";
 });
 
 const productosPreparados = computed(() =>

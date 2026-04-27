@@ -1,52 +1,61 @@
 <template>
   <q-page class="pagina-usuarios q-pa-lg">
+    <div class="encabezado-ventas">
+      <div class="text-caption text-weight-bold texto-resalte-panel">Cajas</div>
+      <h1 class="text-h4 text-weight-bold q-mt-sm q-mb-none">Panel de cajas</h1>
+    </div>
+
     <div class="bloques-usuarios q-mt-lg">
       <q-card flat bordered class="tarjeta-listado-usuarios">
         <q-card-section class="q-pa-lg">
-          <div class="cabecera-listado-usuarios">
-            <div>
-              <div class="text-h6 text-weight-bold">Panel de cajas</div>
-              <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                {{ descripcionPanel }}
-              </p>
-            </div>
-
-            <div class="row q-gutter-sm">
+          <div class="cabecera-acciones-ventas">
+            <div class="text-h6 text-weight-bold">Acciones</div>
+            <div class="row items-center q-gutter-sm">
               <q-btn
                 v-if="puedeGestionar || esGerente"
-                unelevated
+                flat
                 color="positive"
-                text-color="white"
                 icon="south_west"
                 label="Ingreso"
+                class="boton-accion-secundaria-ventas"
                 @click="abrirModalMovimiento('ingreso')"
               />
               <q-btn
                 v-if="puedeGestionar || esGerente"
-                unelevated
+                flat
                 color="negative"
-                text-color="white"
                 icon="north_east"
                 label="Egreso"
+                class="boton-accion-secundaria-ventas"
                 @click="abrirModalMovimiento('egreso')"
               />
               <q-btn
                 v-if="puedeGestionar"
-                unelevated
+                flat
                 color="dark"
-                text-color="white"
                 icon="add"
-                label="Registrar nueva caja"
+                label="Nueva caja"
+                class="boton-accion-secundaria-ventas"
                 @click="abrirModalCaja()"
               />
               <q-btn
                 flat
+                color="grey-8"
                 icon="refresh"
                 label="Actualizar"
+                class="boton-accion-secundaria-ventas"
                 :loading="cargando"
                 @click="cargarModulo"
               />
             </div>
+          </div>
+        </q-card-section>
+      </q-card>
+
+      <q-card flat bordered class="tarjeta-listado-usuarios">
+        <q-card-section class="q-pa-lg">
+          <div class="cabecera-listado-usuarios">
+            <div class="text-h6 text-weight-bold">Cajas registradas</div>
           </div>
 
           <div class="rejilla-compras-simple q-mt-lg">
@@ -183,12 +192,7 @@
       <q-card flat bordered class="tarjeta-listado-usuarios">
         <q-card-section class="q-pa-lg">
           <div class="cabecera-listado-usuarios">
-            <div>
-              <div class="text-h6 text-weight-bold">Caja general</div>
-              <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                Aqui ves movimientos manuales y egresos por compras, sin mezclar ventas.
-              </p>
-            </div>
+            <div class="text-h6 text-weight-bold">Caja general</div>
 
             <q-btn
               flat
@@ -231,16 +235,11 @@
     <q-dialog v-model="dialogoCajaAbierto">
       <q-card class="tarjeta-dialogo-transferencia">
         <q-card-section class="q-pa-lg">
-          <div class="row items-center justify-between">
-            <div>
-              <div class="text-h6 text-weight-bold">
-                {{ cajaEditandoId ? "Editar caja" : "Registrar nueva caja" }}
-              </div>
-              <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                Configura la caja con su moneda y metodo base.
-              </p>
+          <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
+            <div class="text-h6 text-weight-bold">
+              {{ cajaEditandoId ? "Editar caja" : "Registrar nueva caja" }}
             </div>
-            <q-btn flat round dense icon="close" @click="cerrarModalCaja" />
+            <q-btn flat round dense class="boton-cerrar-modal-compras" icon="close" @click="cerrarModalCaja" />
           </div>
         </q-card-section>
 
@@ -367,25 +366,8 @@
                       : "Registrar ingreso"
                   }}
                 </div>
-                <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                  Registra un movimiento amplio de caja con el mismo espacio de
-                  trabajo que usamos en los detalles del sistema.
-                </p>
               </div>
             </div>
-
-            <q-badge
-              color="blue-1"
-              text-color="primary"
-              rounded
-              class="q-px-md q-py-sm"
-            >
-              {{
-                formularioMovimiento.tipoMovimiento === "egreso"
-                  ? "Salida de dinero"
-                  : "Entrada de dinero"
-              }}
-            </q-badge>
           </div>
         </q-card-section>
 
@@ -406,10 +388,6 @@
                           : "Ingreso a caja"
                       }}
                     </div>
-                    <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                      Completa el concepto y el monto. La fecha se genera
-                      automaticamente con el momento del registro.
-                    </p>
                   </div>
 
                   <div class="text-right">
@@ -559,22 +537,8 @@
                 <div class="text-h5 text-weight-bold q-mt-sm">
                   Detalle de caja
                 </div>
-                <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                  Revisa el saldo, los totales y el historial real de
-                  movimientos de esta caja.
-                </p>
               </div>
             </div>
-
-            <q-badge
-              v-if="detalleActual"
-              color="blue-1"
-              text-color="primary"
-              rounded
-              class="q-px-md q-py-sm"
-            >
-              {{ detalleActualBadge }}
-            </q-badge>
           </div>
         </q-card-section>
 
@@ -640,10 +604,6 @@
             <div class="text-subtitle1 text-weight-bold">
               Cajas incluidas en este total
             </div>
-            <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-              Aqui se desglosa cada caja de este tipo para ver que sucursales
-              aportan al total mostrado.
-            </p>
 
             <div class="contenedor-tabla-simple q-mt-md">
               <q-table
@@ -747,10 +707,6 @@
             <div class="text-subtitle1 text-weight-bold">
               Movimientos de la caja
             </div>
-            <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-              Aqui se ve el historial de caja general y compras asociado a esta
-              caja.
-            </p>
 
             <div class="contenedor-tabla-simple q-mt-md">
               <q-table
@@ -851,31 +807,6 @@ const filtrosMovimientos = reactive({
 const rolActual = computed(() => estadoAutenticacion.usuario?.rol || "");
 const esGerente = computed(() => rolActual.value === "gerente");
 const $q = useQuasar();
-
-const descripcionPrincipal = computed(() =>
-  esGerente.value
-    ? "Consolida los ingresos de todas las sucursales por tipo de caja para tener una vista gerencial mas clara."
-    : "Administra las cajas de tu sucursal y deja lista la base para registrar ingresos y egresos reales."
-);
-
-const descripcionPanel = computed(() =>
-  esGerente.value
-    ? "Cada tarjeta agrupa todas las cajas del mismo tipo para que el gerente vea un total claro por sucursal y por metodo."
-    : "Aqui se ve rapido cuanto dinero hay en cada caja y se puede entrar al detalle de ingresos y egresos."
-);
-
-const totalActivas = computed(
-  () => cajasFiltradas.value.filter((item) => item.activa).length
-);
-const totalInactivas = computed(
-  () => cajasFiltradas.value.filter((item) => !item.activa).length
-);
-const totalSucursalesFiltradas = computed(
-  () =>
-    new Set(
-      cajasFiltradas.value.map((item) => item.sucursal_id).filter(Boolean)
-    ).size
-);
 
 const columnasMovimientosCaja = [
   {
@@ -1215,16 +1146,6 @@ const tarjetasAgrupadas = computed(() => {
 
 const tarjetasVisibles = computed(() =>
   esGerente.value ? tarjetasAgrupadas.value : cajasFiltradas.value
-);
-
-const detalleActual = computed(
-  () => detalleAgrupadoSeleccionado.value || cajaSeleccionada.value
-);
-const detalleActualBadge = computed(
-  () =>
-    detalleAgrupadoSeleccionado.value?.etiqueta ||
-    cajaSeleccionada.value?.nombre ||
-    ""
 );
 
 const cajaMovimientoSeleccionada = computed(

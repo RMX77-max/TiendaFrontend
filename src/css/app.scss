@@ -593,6 +593,11 @@ body {
   align-items: stretch;
 }
 
+.encabezado-ventas {
+  display: grid;
+  gap: 8px;
+}
+
 .columna-compras {
   display: grid;
   gap: 24px;
@@ -728,6 +733,10 @@ body {
   gap: 16px;
 }
 
+.rejilla-resumen-pagos-credito--ventas-page {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .rejilla-resumen-ingreso {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -746,6 +755,38 @@ body {
   padding: 18px;
   border-radius: 18px;
   border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.tarjeta-resumen-pago--ventas-page {
+  min-height: 118px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.cabecera-acciones-ventas {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.boton-accion-secundaria-ventas {
+  min-height: 44px;
+  padding-inline: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.acciones-finales-ventas {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .tarjeta-resumen-ingreso {
@@ -803,6 +844,46 @@ body {
 
 .tarjeta-resumen-pago--danger {
   background: #fee2e2;
+}
+
+.cabecera-detalle-venta {
+  align-items: flex-start;
+}
+
+.acciones-detalle-venta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.rejilla-resumen-pagos-credito--ventas {
+  grid-template-columns: minmax(0, 1.15fr) repeat(3, minmax(0, 1fr));
+}
+
+.tarjeta-resumen-pago--cliente {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.rejilla-meta-venta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.tarjeta-meta-venta {
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.tarjeta-meta-venta--amplia {
+  grid-column: span 2;
 }
 
 .resumen-diferencia-fila {
@@ -1038,6 +1119,11 @@ body {
     padding: 36px 28px;
   }
 
+  .cabecera-acciones-ventas {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .cabecera-inventario,
   .cabecera-superior-inventario,
   .cabecera-listado-usuarios,
@@ -1052,6 +1138,9 @@ body {
   .rejilla-sucursales-detalle-producto,
   .rejilla-compras-superior,
   .rejilla-resumen-pagos-credito,
+  .rejilla-resumen-pagos-credito--ventas-page,
+  .rejilla-resumen-pagos-credito--ventas,
+  .rejilla-meta-venta,
   .rejilla-compras-simple,
     .rejilla-guias-simple,
     .rejilla-pagos-simple,
@@ -1072,7 +1161,8 @@ body {
   }
 
   .campo-formulario-usuarios--ancho-dos-columnas,
-  .campo-formulario-usuarios--ancho-tres-columnas {
+  .campo-formulario-usuarios--ancho-tres-columnas,
+  .tarjeta-meta-venta--amplia {
     grid-column: 1 / -1;
   }
 }
@@ -1091,6 +1181,9 @@ body {
   .rejilla-sucursales-detalle-producto,
   .rejilla-compras-superior,
   .rejilla-resumen-pagos-credito,
+  .rejilla-resumen-pagos-credito--ventas-page,
+  .rejilla-resumen-pagos-credito--ventas,
+  .rejilla-meta-venta,
   .rejilla-compras-simple,
     .rejilla-guias-simple,
     .rejilla-pagos-simple,
@@ -1108,6 +1201,11 @@ body {
 
     .rejilla-distribucion-sucursal-campos {
       grid-template-columns: 1fr;
+    }
+
+    .acciones-detalle-venta {
+      justify-content: flex-start;
+      padding-right: 56px;
     }
 }
 .columna-campo-archivo {

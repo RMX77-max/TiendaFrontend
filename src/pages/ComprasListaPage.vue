@@ -1,10 +1,10 @@
 <template>
   <q-page class="pagina-compras q-pa-lg">
-    <div>
+    <div class="encabezado-ventas">
       <div class="text-caption text-weight-bold texto-resalte-panel">
         Compras
       </div>
-      <h1 class="text-h4 text-weight-bold q-mt-sm q-mb-sm">
+      <h1 class="text-h4 text-weight-bold q-mt-sm q-mb-none">
         Lista de compras y pedidos
       </h1>
     </div>
@@ -14,35 +14,39 @@
     </q-banner>
 
     <div class="columna-compras q-mt-lg">
-      <q-card flat bordered class="tarjeta-compra-principal">
+      <q-card flat bordered class="tarjeta-compra-secundaria">
         <q-card-section class="q-pa-lg">
-          <div
-            class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
-          >
-            <div>
-              <div class="text-h6 text-weight-bold">Listado de compras</div>
-              <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                Busca una compra y usa las acciones sin tener que volver al
-                formulario.
-              </p>
+          <div class="cabecera-acciones-ventas">
+            <div class="row q-gutter-sm">
+              <q-btn
+                unelevated
+                color="grey-2"
+                text-color="grey-9"
+                icon="refresh"
+                label="Recargar"
+                class="boton-accion-secundaria-ventas"
+                @click="cargarCompras"
+              />
             </div>
 
             <div class="row q-gutter-sm">
               <q-btn
-                flat
-                color="grey-8"
-                icon="refresh"
-                label="Recargar"
-                @click="cargarCompras"
-              />
-              <q-btn
                 unelevated
                 color="dark"
                 text-color="white"
+                icon="add_shopping_cart"
                 label="Nueva compra"
                 to="/compras/nueva"
               />
             </div>
+          </div>
+        </q-card-section>
+      </q-card>
+
+      <q-card flat bordered class="tarjeta-compra-principal">
+        <q-card-section class="q-pa-lg">
+          <div class="cabecera-tarjeta-detalle">
+            <div class="text-h6 text-weight-bold">Compras registradas</div>
           </div>
         </q-card-section>
 
@@ -137,76 +141,88 @@
 
             <template #body-cell-acciones="propiedades">
               <q-td :props="propiedades">
-                <div class="row items-center q-gutter-xs">
+                <div class="row items-center q-gutter-sm no-wrap">
+                  <q-btn
+                    unelevated
+                    dense
+                    color="primary"
+                    text-color="white"
+                    label="Detalle"
+                    @click="abrirDetalle(propiedades.row.id)"
+                  />
+
                   <q-btn
                     flat
-                    round
                     dense
                     color="grey-8"
-                    icon="visibility"
-                    @click="abrirDetalle(propiedades.row.id)"
+                    icon="tune"
+                    label="Gestionar"
                   >
-                    <q-tooltip>Ver detalle</q-tooltip>
-                  </q-btn>
-                    <q-btn
-                      v-if="puedeEditarCompra(propiedades.row)"
-                      flat
-                      round
-                      dense
-                      color="primary"
-                      icon="edit"
-                    :to="`/compras/nueva?editar=${propiedades.row.id}`"
-                  >
-                    <q-tooltip>Editar</q-tooltip>
-                    </q-btn>
-                    <q-btn
-                      v-if="Number(propiedades.row.tiempo_entrega_dias || 0) > 0"
-                      flat
-                      round
-                    dense
-                    color="secondary"
-                    icon="local_shipping"
-                    @click="abrirGuias(propiedades.row.id)"
-                  >
-                    <q-tooltip>Guias</q-tooltip>
-                  </q-btn>
-                    <q-btn
-                      v-if="propiedades.row.tipo_compra === 'a_credito'"
-                      flat
-                      round
-                      dense
-                    color="dark"
-                    icon="payments"
-                    @click="abrirPagosCredito(propiedades.row.id)"
-                  >
-                    <q-tooltip>Pagos de credito</q-tooltip>
-                  </q-btn>
-                    <q-btn
-                      flat
-                      round
-                      dense
-                    color="positive"
-                    icon="inventory_2"
-                    @click="abrirRecepcion(propiedades.row.id)"
-                  >
-                    <q-tooltip>Recepcion</q-tooltip>
-                  </q-btn>
-                  <q-btn
-                    v-if="
-                      [
-                        'pendiente_ingreso_inventario',
-                        'parcial',
-                        'incompleto',
-                      ].includes(propiedades.row.estado)
-                    "
-                    flat
-                    round
-                    dense
-                    color="teal"
-                    icon="move_to_inbox"
-                    @click="abrirIngresoInventario(propiedades.row.id)"
-                  >
-                    <q-tooltip>Ingreso a inventario</q-tooltip>
+                    <q-menu anchor="bottom right" self="top right">
+                      <q-list dense style="min-width: 220px">
+                        <q-item clickable v-close-popup @click="abrirDetalle(propiedades.row.id)">
+                          <q-item-section avatar>
+                            <q-icon name="visibility" />
+                          </q-item-section>
+                          <q-item-section>Ver detalle</q-item-section>
+                        </q-item>
+
+                        <q-item
+                          v-if="puedeEditarCompra(propiedades.row)"
+                          clickable
+                          v-close-popup
+                          @click="editarCompra(propiedades.row)"
+                        >
+                          <q-item-section avatar>
+                            <q-icon name="edit" />
+                          </q-item-section>
+                          <q-item-section>Editar compra</q-item-section>
+                        </q-item>
+
+                        <q-item
+                          v-if="Number(propiedades.row.tiempo_entrega_dias || 0) > 0"
+                          clickable
+                          v-close-popup
+                          @click="abrirGuias(propiedades.row.id)"
+                        >
+                          <q-item-section avatar>
+                            <q-icon name="local_shipping" />
+                          </q-item-section>
+                          <q-item-section>Guias</q-item-section>
+                        </q-item>
+
+                        <q-item
+                          v-if="propiedades.row.tipo_compra === 'a_credito'"
+                          clickable
+                          v-close-popup
+                          @click="abrirPagosCredito(propiedades.row.id)"
+                        >
+                          <q-item-section avatar>
+                            <q-icon name="payments" />
+                          </q-item-section>
+                          <q-item-section>Pagos de credito</q-item-section>
+                        </q-item>
+
+                        <q-item clickable v-close-popup @click="abrirRecepcion(propiedades.row.id)">
+                          <q-item-section avatar>
+                            <q-icon name="inventory_2" />
+                          </q-item-section>
+                          <q-item-section>Recepcion</q-item-section>
+                        </q-item>
+
+                        <q-item
+                          v-if="puedeIngresarInventario(propiedades.row)"
+                          clickable
+                          v-close-popup
+                          @click="abrirIngresoInventario(propiedades.row.id)"
+                        >
+                          <q-item-section avatar>
+                            <q-icon name="move_to_inbox" />
+                          </q-item-section>
+                          <q-item-section>Ingreso a inventario</q-item-section>
+                        </q-item>
+                      </q-list>
+                    </q-menu>
                   </q-btn>
                 </div>
               </q-td>
@@ -222,12 +238,7 @@
           <div
             class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
           >
-            <div>
-              <div class="text-h6 text-weight-bold">Detalle de compra</div>
-              <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                Resumen rapido para revisar la compra sin salir de la lista.
-              </p>
-            </div>
+            <div class="text-h6 text-weight-bold">Detalle de compra</div>
             <q-btn
               flat
               round
@@ -511,12 +522,7 @@
           <div
             class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
           >
-            <div>
-              <div class="text-h6 text-weight-bold">Pagos de credito</div>
-              <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                Registra pagos por sucursal y revisa cuanto falta por cancelar.
-              </p>
-            </div>
+            <div class="text-h6 text-weight-bold">Pagos de credito</div>
             <q-btn
               flat
               round
@@ -666,14 +672,8 @@
                 <div
                   class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
                 >
-                  <div>
-                    <div class="text-subtitle1 text-weight-bold">
-                      Registrar pago
-                    </div>
-                    <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                      Cada sucursal puede ir abonando poco a poco hasta
-                      completar la compra.
-                    </p>
+                  <div class="text-subtitle1 text-weight-bold">
+                    Registrar pago
                   </div>
 
                     <div class="row q-gutter-sm">
@@ -851,13 +851,7 @@
           <div
             class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
           >
-            <div>
-              <div class="text-h6 text-weight-bold">Control de guias</div>
-              <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                Registra las guias de traslado de esta compra y revisa su
-                historial.
-              </p>
-            </div>
+            <div class="text-h6 text-weight-bold">Control de guias</div>
             <q-btn
               flat
               round
@@ -921,14 +915,8 @@
                 <div
                   class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
                 >
-                  <div>
-                    <div class="text-subtitle1 text-weight-bold">
-                      {{ guiaEditandoId ? "Editar guia" : "Registrar guia" }}
-                    </div>
-                    <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                      Las guias se registran solo en bolivianos y pueden quedar
-                      en transito o recogidas.
-                    </p>
+                  <div class="text-subtitle1 text-weight-bold">
+                    {{ guiaEditandoId ? "Editar guia" : "Registrar guia" }}
                   </div>
 
                     <div class="row q-gutter-sm">
@@ -1110,13 +1098,7 @@
           <div
             class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
           >
-            <div>
-              <div class="text-h6 text-weight-bold">Recepcion de compra</div>
-              <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                Registra lo que llego hoy y el sistema lo acumulara sobre el
-                pedido.
-              </p>
-            </div>
+            <div class="text-h6 text-weight-bold">Recepcion de compra</div>
             <q-btn
               flat
               round
@@ -1188,14 +1170,8 @@
                 <div
                   class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
                 >
-                  <div>
-                    <div class="text-subtitle1 text-weight-bold">
-                      Registrar recepcion
-                    </div>
-                    <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                      Usa “Cantidad que llego hoy” para registrar esta tanda de
-                      entrega.
-                    </p>
+                  <div class="text-subtitle1 text-weight-bold">
+                    Registrar recepcion
                   </div>
 
                   <div class="row q-gutter-sm">
@@ -1376,13 +1352,7 @@
           <div
             class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
           >
-            <div>
-              <div class="text-h6 text-weight-bold">Ingreso a inventario</div>
-              <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                Ingresa al inventario lo que ya fue recepcionado, aunque la
-                compra siga incompleta.
-              </p>
-            </div>
+            <div class="text-h6 text-weight-bold">Ingreso a inventario</div>
             <q-btn
               flat
               round
@@ -1467,11 +1437,11 @@
                       <div class="text-subtitle1 text-weight-bold">
                         {{ detalle.detalleTexto }}
                       </div>
-                      <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
+                      <div class="text-caption text-grey-7 q-mt-xs">
                         Cantidad recepcionada: {{ detalle.cantidadRecibida }} |
                         Costo: $ {{ formatearMonto(detalle.costoUsd) }} / Bs.
                         {{ formatearMonto(detalle.costoBs) }}
-                      </p>
+                      </div>
                     </div>
                     <q-toggle
                       v-model="detalle.crearProducto"
@@ -1848,13 +1818,8 @@
     <q-dialog v-model="dialogoCerrarIncompletoAbierto">
       <q-card style="width: min(92vw, 560px)">
         <q-card-section class="row items-center justify-between">
-          <div>
-            <div class="text-h6 text-weight-bold">
-              Cerrar compra como incompleta
-            </div>
-            <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-              Usa esta opcion solo si el proveedor ya no enviara lo pendiente.
-            </p>
+          <div class="text-h6 text-weight-bold">
+            Cerrar compra como incompleta
           </div>
             <q-btn
               flat
@@ -2381,6 +2346,16 @@ function puedeEditarCompra(compra) {
   return ["registrado", "pendiente_ingreso_inventario"].includes(
     compra?.estado
   );
+}
+
+function puedeIngresarInventario(compra) {
+  return ["pendiente_ingreso_inventario", "parcial", "incompleto"].includes(
+    compra?.estado
+  );
+}
+
+function editarCompra(compra) {
+  router.push(`/compras/nueva?editar=${compra.id}`);
 }
 
 function crearFormularioPagoCredito() {

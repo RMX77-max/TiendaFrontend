@@ -1,11 +1,8 @@
 <template>
   <q-page class="pagina-compras q-pa-lg">
-    <div>
+    <div class="encabezado-ventas">
       <div class="text-caption text-weight-bold texto-resalte-panel">Ventas</div>
-      <h1 class="text-h4 text-weight-bold q-mt-sm q-mb-sm">Carrito y registro de venta</h1>
-      <p class="text-body1 text-grey-8 q-ma-none">
-        Completa los datos del cliente, define si la venta sera al contado o a credito y usa la plantilla correcta para imprimir.
-      </p>
+      <h1 class="text-h4 text-weight-bold q-mt-sm q-mb-none">Registro de venta</h1>
     </div>
 
     <q-banner v-if="mensajeExito" rounded class="bg-green-1 text-green-10 q-mt-lg">
@@ -17,21 +14,80 @@
     </q-banner>
 
     <div class="columna-compras q-mt-lg">
-      <q-card flat bordered class="tarjeta-compra-principal">
+      <q-card flat bordered class="tarjeta-compra-secundaria">
         <q-card-section class="q-pa-lg">
-          <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
-            <div>
-              <div class="text-h6 text-weight-bold">Datos de la venta</div>
-              <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                El carrito toma productos de la sucursal actual del usuario y te deja registrar cobros reales segun la caja elegida.
-              </p>
+          <div class="cabecera-acciones-ventas">
+            <div class="row q-gutter-sm">
+              <q-btn
+                unelevated
+                color="amber-1"
+                text-color="amber-10"
+                icon="description"
+                label="Cotizacion"
+                class="boton-accion-secundaria-ventas"
+                @click="imprimirBorrador('cotizacion')"
+              />
+              <q-btn
+                unelevated
+                color="blue-1"
+                text-color="blue-10"
+                icon="receipt_long"
+                label="Nota"
+                class="boton-accion-secundaria-ventas"
+                @click="imprimirBorrador('nota')"
+              />
             </div>
 
             <div class="row q-gutter-sm">
-              <q-btn flat color="grey-8" label="Cotizacion imprimible" @click="imprimirBorrador('cotizacion')" />
-              <q-btn flat color="grey-8" label="Nota imprimible" @click="imprimirBorrador('nota')" />
-              <q-btn flat color="grey-8" label="Volver a inventario" to="/inventario" />
-              <q-btn flat color="grey-8" label="Vaciar carrito" @click="limpiarCarritoCompleto" />
+              <q-btn
+                unelevated
+                color="grey-2"
+                text-color="grey-9"
+                icon="arrow_back"
+                label="Volver a inventario"
+                class="boton-accion-secundaria-ventas"
+                to="/inventario"
+              />
+              <q-btn
+                unelevated
+                color="red-1"
+                text-color="negative"
+                icon="delete_sweep"
+                label="Vaciar carrito"
+                class="boton-accion-secundaria-ventas"
+                @click="limpiarCarritoCompleto"
+              />
+            </div>
+          </div>
+        </q-card-section>
+      </q-card>
+
+      <q-card flat bordered class="tarjeta-compra-principal">
+        <q-card-section class="q-pa-lg">
+          <div class="cabecera-tarjeta-detalle">
+            <div class="text-h6 text-weight-bold">Venta actual</div>
+          </div>
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section class="q-pa-lg">
+          <div class="rejilla-resumen-pagos-credito rejilla-resumen-pagos-credito--ventas-page">
+            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--neutral tarjeta-resumen-pago--ventas-page">
+              <div class="text-caption text-grey-7">Items en carrito</div>
+              <div class="text-h5 text-weight-bold">{{ cantidadItemsCarrito }}</div>
+            </div>
+            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--success tarjeta-resumen-pago--ventas-page">
+              <div class="text-caption text-grey-7">Total USD</div>
+              <div class="text-h5 text-weight-bold">$ {{ formatearMonto(totalCarritoUsd) }}</div>
+            </div>
+            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--warning tarjeta-resumen-pago--ventas-page">
+              <div class="text-caption text-grey-7">Total Bs</div>
+              <div class="text-h5 text-weight-bold">Bs. {{ formatearMonto(totalCarritoBs) }}</div>
+            </div>
+            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--neutral tarjeta-resumen-pago--ventas-page">
+              <div class="text-caption text-grey-7">Tipo de venta</div>
+              <div class="text-h5 text-weight-bold">{{ formulario.tipoVenta === 'credito' ? 'Credito' : 'Contado' }}</div>
             </div>
           </div>
         </q-card-section>
@@ -39,26 +95,8 @@
         <q-separator />
 
         <q-card-section class="q-pa-lg">
-          <div class="rejilla-resumen-pagos-credito">
-            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--neutral">
-              <div class="text-caption text-grey-7">Items en carrito</div>
-              <div class="text-h6 text-weight-bold">{{ cantidadItemsCarrito }}</div>
-            </div>
-            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--success">
-              <div class="text-caption text-grey-7">Total USD</div>
-              <div class="text-h6 text-weight-bold">$ {{ formatearMonto(totalCarritoUsd) }}</div>
-            </div>
-            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--warning">
-              <div class="text-caption text-grey-7">Total Bs</div>
-              <div class="text-h6 text-weight-bold">Bs. {{ formatearMonto(totalCarritoBs) }}</div>
-            </div>
-            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--neutral">
-              <div class="text-caption text-grey-7">Estado de pago</div>
-              <div class="text-h6 text-weight-bold">{{ formulario.tipoVenta === 'credito' ? 'Credito' : 'Contado' }}</div>
-            </div>
-          </div>
-
-          <div class="rejilla-compras-simple q-mt-lg">
+          <div class="text-subtitle1 text-weight-bold">Datos generales</div>
+          <div class="rejilla-compras-simple q-mt-md">
             <q-input :model-value="sucursalActual" outlined disable label="Sucursal actual" />
 
             <q-select
@@ -146,17 +184,14 @@
               class="campo-formulario-usuarios--ancho-dos-columnas"
             />
           </div>
+        </q-card-section>
 
-          <div
-            v-if="formulario.tipoVenta === 'credito'"
-            class="q-mt-lg"
-          >
-            <div class="text-subtitle1 text-weight-bold">Credito y abono inicial</div>
-            <p class="text-body2 text-grey-7 q-mt-sm q-mb-md">
-              Solo entrara a caja el monto que realmente se pague hoy. El resto quedara pendiente para pagos posteriores.
-            </p>
+        <template v-if="formulario.tipoVenta === 'credito'">
+          <q-separator />
 
-            <div class="rejilla-compras-simple">
+          <q-card-section class="q-pa-lg">
+            <div class="text-subtitle1 text-weight-bold">Abono inicial</div>
+            <div class="rejilla-compras-simple q-mt-md">
               <q-input
                 v-model.number="formulario.abonoInicialUsd"
                 outlined
@@ -203,12 +238,19 @@
                 label="Saldo pendiente Bs"
               />
             </div>
-          </div>
-        </q-card-section>
+          </q-card-section>
+        </template>
 
         <q-separator />
 
         <q-card-section class="q-pa-lg">
+          <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
+            <div class="text-subtitle1 text-weight-bold">Carrito</div>
+            <q-chip square color="grey-2" text-color="dark">
+              {{ cantidadItemsCarrito }} item(s)
+            </q-chip>
+          </div>
+
           <div class="contenedor-tabla-simple">
             <q-markup-table flat bordered class="tabla-simple-compras">
               <thead>
@@ -319,39 +361,27 @@
           </div>
         </q-card-section>
 
-        <q-card-actions align="right" class="q-pa-lg q-gutter-sm">
-          <q-btn
-            flat
-            color="grey-8"
-            label="Imprimir nota"
-            :disable="!carrito.items.length"
-            @click="imprimirBorrador('nota')"
-          />
-          <q-btn
-            flat
-            color="grey-8"
-            label="Imprimir cotizacion"
-            :disable="!carrito.items.length"
-            @click="imprimirBorrador('cotizacion')"
-          />
-          <q-btn
-            unelevated
-            color="dark"
-            text-color="white"
-            label="Guardar venta"
-            :disable="!carrito.items.length"
-            :loading="guardando && accionGuardado === 'guardar'"
-            @click="guardarVenta('guardar')"
-          />
-          <q-btn
-            unelevated
-            color="primary"
-            text-color="white"
-            label="Guardar e imprimir recibo"
-            :disable="!carrito.items.length"
-            :loading="guardando && accionGuardado === 'imprimir'"
-            @click="guardarVenta('imprimir')"
-          />
+        <q-card-actions align="right" class="q-pa-lg">
+          <div class="acciones-finales-ventas">
+            <q-btn
+              unelevated
+              color="dark"
+              text-color="white"
+              label="Guardar venta"
+              :disable="!carrito.items.length"
+              :loading="guardando && accionGuardado === 'guardar'"
+              @click="guardarVenta('guardar')"
+            />
+            <q-btn
+              unelevated
+              color="primary"
+              text-color="white"
+              label="Guardar e imprimir"
+              :disable="!carrito.items.length"
+              :loading="guardando && accionGuardado === 'imprimir'"
+              @click="guardarVenta('imprimir')"
+            />
+          </div>
         </q-card-actions>
       </q-card>
     </div>
@@ -488,6 +518,20 @@ function sincronizarCajaSeleccionada () {
   formulario.moneda = caja.tipo_moneda || 'bs'
 }
 
+function obtenerCajaPredeterminada () {
+  const cajasDisponibles = cajas.value || []
+
+  return (
+    cajasDisponibles.find((item) =>
+      String(item.tipo_moneda || '').toLowerCase() === 'bs' &&
+      String(item.metodo_base || '').toLowerCase() === 'efectivo'
+    ) ||
+    cajasDisponibles.find((item) => String(item.tipo_moneda || '').toLowerCase() === 'bs') ||
+    cajasDisponibles[0] ||
+    null
+  )
+}
+
 function sincronizarPlantillaSeleccionada () {
   const plantilla = plantillaSeleccionada.value
   formulario.plantillaImpresion = plantilla?.plantilla_impresion || 'clasica'
@@ -525,7 +569,8 @@ function reiniciarFormularioVenta () {
   formulario.observacionesAbonoInicial = ''
   formulario.comprobanteCredito = null
   formulario.tipoCambio = null
-  formulario.cajaId = cajas.value[0]?.value || null
+  formulario.moneda = 'bs'
+  formulario.cajaId = obtenerCajaPredeterminada()?.value || null
   formulario.plantillaSucursalId = plantillaPredeterminadaId.value || plantillas.value[0]?.value || null
   sincronizarCajaSeleccionada()
   sincronizarPlantillaSeleccionada()
@@ -544,7 +589,8 @@ async function cargarFormulario () {
       { value: 'credito', label: 'Credito' }
     ]
     plantillaPredeterminadaId.value = datos.plantilla_predeterminada_id || null
-    formulario.cajaId = cajas.value[0]?.value || null
+    formulario.moneda = 'bs'
+    formulario.cajaId = obtenerCajaPredeterminada()?.value || null
     formulario.plantillaSucursalId = plantillaPredeterminadaId.value || plantillas.value[0]?.value || null
     sincronizarCajaSeleccionada()
     sincronizarPlantillaSeleccionada()

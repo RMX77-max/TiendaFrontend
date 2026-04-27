@@ -1,11 +1,8 @@
 <template>
   <q-page class="pagina-compras q-pa-lg">
-    <div>
+    <div class="encabezado-ventas">
       <div class="text-caption text-weight-bold texto-resalte-panel">Ventas</div>
-      <h1 class="text-h4 text-weight-bold q-mt-sm q-mb-sm">Historial de ventas</h1>
-      <p class="text-body1 text-grey-8 q-ma-none">
-        Revisa ventas registradas, pagos a credito y documentos imprimibles por sucursal.
-      </p>
+      <h1 class="text-h4 text-weight-bold q-mt-sm q-mb-none">Historial de ventas</h1>
     </div>
 
     <q-banner v-if="errorGeneral" rounded class="bg-red-1 text-red-10 q-mt-lg">
@@ -15,6 +12,33 @@
     <div class="columna-compras q-mt-lg">
       <q-card flat bordered class="tarjeta-compra-principal">
         <q-card-section class="q-pa-lg">
+          <div class="cabecera-acciones-ventas">
+            <div class="text-h6 text-weight-bold">Acciones</div>
+            <div class="row items-center q-gutter-sm">
+              <q-btn
+                flat
+                color="grey-8"
+                icon="refresh"
+                label="Actualizar"
+                class="boton-accion-secundaria-ventas"
+                @click="cargarModulo"
+              />
+              <q-btn
+                flat
+                color="grey-8"
+                icon="filter_alt_off"
+                label="Limpiar filtros"
+                class="boton-accion-secundaria-ventas"
+                @click="limpiarFiltros"
+              />
+            </div>
+          </div>
+        </q-card-section>
+      </q-card>
+
+      <q-card flat bordered class="tarjeta-compra-principal">
+        <q-card-section class="q-pa-lg">
+          <div class="text-h6 text-weight-bold q-mb-lg">Filtros</div>
           <div class="rejilla-compras-simple">
             <q-input
               v-model="filtros.nroVenta"
@@ -58,12 +82,7 @@
       <q-card flat bordered class="tarjeta-compra-principal">
         <q-card-section class="q-pa-lg">
           <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
-            <div>
-              <div class="text-h6 text-weight-bold">Ventas registradas</div>
-              <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                Desde aqui puedes revisar el detalle, reimprimir documentos y registrar pagos de ventas a credito.
-              </p>
-            </div>
+            <div class="text-h6 text-weight-bold">Ventas registradas</div>
 
             <q-btn flat icon="refresh" color="grey-8" label="Actualizar" @click="cargarModulo" />
           </div>
@@ -80,13 +99,21 @@
             >
               <template #body-cell-tipo="propiedades">
                 <q-td :props="propiedades">
-                  {{ propiedades.row.tipo_venta_label }}
+                  <q-badge rounded class="badge-estado badge-estado--neutro">
+                    {{ propiedades.row.tipo_venta_label }}
+                  </q-badge>
                 </q-td>
               </template>
 
               <template #body-cell-estado_pago="propiedades">
                 <q-td :props="propiedades">
-                  {{ propiedades.row.estado_pago_label }}
+                  <q-badge
+                    rounded
+                    class="badge-estado"
+                    :class="claseEstadoPago(propiedades.row.estado_pago)"
+                  >
+                    {{ propiedades.row.estado_pago_label }}
+                  </q-badge>
                 </q-td>
               </template>
 
@@ -136,23 +163,31 @@
     <q-dialog v-model="dialogoDetalleAbierto" maximized>
       <q-card class="dialogo-detalle-producto">
         <q-card-section class="q-pa-lg">
-          <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
-            <div>
-              <div class="text-h6 text-weight-bold">
-                Venta {{ ventaSeleccionada?.nro_venta || '' }}
-              </div>
-              <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                Revisa el detalle completo, los pagos registrados y los documentos imprimibles.
-              </p>
+          <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente cabecera-detalle-venta">
+            <div class="text-h6 text-weight-bold">
+              Venta {{ ventaSeleccionada?.nro_venta || '' }}
             </div>
 
-            <div class="row q-gutter-sm items-center">
-              <q-btn flat color="grey-8" label="Recibo" @click="imprimirVentaActual('recibo')" />
-              <q-btn flat color="grey-8" label="Nota" @click="imprimirVentaActual('nota')" />
+            <div class="acciones-detalle-venta">
+              <q-btn
+                flat
+                color="grey-8"
+                label="Nota"
+                class="boton-accion-secundaria-ventas"
+                @click="imprimirVentaActual('nota')"
+              />
+              <q-btn
+                flat
+                color="grey-8"
+                label="Recibo"
+                class="boton-accion-secundaria-ventas"
+                @click="imprimirVentaActual('recibo')"
+              />
               <q-btn
                 flat
                 color="positive"
                 label="Registrar pago"
+                class="boton-accion-secundaria-ventas"
                 :disable="!puedeRegistrarPago(ventaSeleccionada)"
                 @click="abrirDialogoPago(ventaSeleccionada)"
               />
@@ -167,10 +202,13 @@
           <div v-if="cargandoDetalle" class="text-grey-7">Cargando detalle...</div>
 
           <template v-else-if="ventaSeleccionada">
-            <div class="rejilla-resumen-pagos-credito">
-              <div class="tarjeta-resumen-pago tarjeta-resumen-pago--neutral">
+            <div class="rejilla-resumen-pagos-credito rejilla-resumen-pagos-credito--ventas">
+              <div class="tarjeta-resumen-pago tarjeta-resumen-pago--neutral tarjeta-resumen-pago--cliente">
                 <div class="text-caption text-grey-7">Cliente</div>
-                <div class="text-subtitle1 text-weight-bold">{{ ventaSeleccionada.cliente_nombre }}</div>
+                <div class="text-subtitle1 text-weight-bold">{{ ventaSeleccionada.cliente_nombre || 'Sin nombre registrado' }}</div>
+                <div class="text-caption text-grey-7 q-mt-sm">
+                  {{ ventaSeleccionada.cliente_telefono || 'Sin telefono registrado' }}
+                </div>
               </div>
               <div class="tarjeta-resumen-pago tarjeta-resumen-pago--success">
                 <div class="text-caption text-grey-7">Total USD</div>
@@ -186,23 +224,38 @@
               </div>
             </div>
 
-            <div class="rejilla-compras-simple q-mt-lg">
-              <q-input :model-value="ventaSeleccionada.sucursal" outlined disable label="Sucursal" />
-              <q-input :model-value="ventaSeleccionada.caja" outlined disable label="Caja base" />
-              <q-input :model-value="ventaSeleccionada.tipo_venta_label" outlined disable label="Tipo de venta" />
-              <q-input :model-value="ventaSeleccionada.estado_pago_label" outlined disable label="Estado de pago" />
-              <q-input :model-value="ventaSeleccionada.cliente_telefono || '-'" outlined disable label="Telefono" />
-              <q-input :model-value="ventaSeleccionada.fecha_venta" outlined disable label="Fecha" />
-              <q-input
-                :model-value="ventaSeleccionada.observaciones || '-'"
-                outlined
-                disable
-                label="Observaciones"
-                class="campo-formulario-usuarios--ancho-dos-columnas"
-              />
+            <div class="rejilla-meta-venta q-mt-lg">
+              <div class="tarjeta-meta-venta">
+                <div class="text-caption text-grey-7">Sucursal</div>
+                <div class="text-subtitle2 text-weight-medium">{{ ventaSeleccionada.sucursal || '-' }}</div>
+              </div>
+              <div class="tarjeta-meta-venta">
+                <div class="text-caption text-grey-7">Caja base</div>
+                <div class="text-subtitle2 text-weight-medium">{{ ventaSeleccionada.caja || '-' }}</div>
+              </div>
+              <div class="tarjeta-meta-venta">
+                <div class="text-caption text-grey-7">Tipo de venta</div>
+                <div class="text-subtitle2 text-weight-medium">{{ ventaSeleccionada.tipo_venta_label }}</div>
+              </div>
+              <div class="tarjeta-meta-venta">
+                <div class="text-caption text-grey-7">Estado de pago</div>
+                <div class="text-subtitle2 text-weight-medium">{{ ventaSeleccionada.estado_pago_label }}</div>
+              </div>
+              <div class="tarjeta-meta-venta">
+                <div class="text-caption text-grey-7">Fecha</div>
+                <div class="text-subtitle2 text-weight-medium">{{ ventaSeleccionada.fecha_venta }}</div>
+              </div>
+              <div class="tarjeta-meta-venta tarjeta-meta-venta--amplia">
+                <div class="text-caption text-grey-7">Observaciones</div>
+                <div class="text-subtitle2 text-weight-medium">{{ ventaSeleccionada.observaciones || 'Sin observaciones registradas' }}</div>
+              </div>
             </div>
 
-            <div class="contenedor-tabla-simple q-mt-lg">
+            <div class="q-mt-xl">
+              <div class="text-subtitle1 text-weight-bold">Productos vendidos</div>
+            </div>
+
+            <div class="contenedor-tabla-simple q-mt-md">
               <q-markup-table flat bordered class="tabla-simple-compras">
                 <thead>
                   <tr>
@@ -218,7 +271,7 @@
                 </thead>
                 <tbody>
                   <tr v-for="detalle in ventaSeleccionada.detalles" :key="`${ventaSeleccionada.id}-${detalle.modelo}-${detalle.series}`">
-                    <td>{{ detalle.modelo }}</td>
+                    <td>{{ detalle.modelo || detalle.producto || '-' }}</td>
                     <td>{{ detalle.marca || '-' }}</td>
                     <td>{{ detalle.categoria || '-' }}</td>
                     <td>{{ detalle.series || '-' }}</td>
@@ -285,12 +338,7 @@
       <q-card class="dialogo-detalle-producto">
         <q-card-section class="q-pa-lg">
           <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
-            <div>
-              <div class="text-h6 text-weight-bold">Registrar pago</div>
-              <p class="text-body2 text-grey-7 q-mt-sm q-mb-none">
-                Registra un abono real a caja para la venta {{ ventaSeleccionada?.nro_venta || '' }}.
-              </p>
-            </div>
+            <div class="text-h6 text-weight-bold">Registrar pago</div>
 
             <q-btn flat round dense class="boton-cerrar-modal-compras" icon="close" @click="dialogoPagoAbierto = false" />
           </div>
@@ -302,6 +350,25 @@
           <q-banner v-if="errorPago" rounded class="bg-red-1 text-red-10 q-mb-lg">
             {{ errorPago }}
           </q-banner>
+
+          <div v-if="ventaSeleccionada" class="rejilla-resumen-pagos-credito q-mb-lg">
+            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--neutral">
+              <div class="text-caption text-grey-7">Venta</div>
+              <div class="text-subtitle2 text-weight-bold">{{ ventaSeleccionada.nro_venta }}</div>
+            </div>
+            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--success">
+              <div class="text-caption text-grey-7">Total USD</div>
+              <div class="text-h6 text-weight-bold">$ {{ formatearMonto(ventaSeleccionada.total_usd) }}</div>
+            </div>
+            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--warning">
+              <div class="text-caption text-grey-7">Saldo pendiente USD</div>
+              <div class="text-h6 text-weight-bold">$ {{ formatearMonto(ventaSeleccionada.saldo_pendiente_usd) }}</div>
+            </div>
+            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--neutral">
+              <div class="text-caption text-grey-7">Saldo pendiente Bs</div>
+              <div class="text-h6 text-weight-bold">Bs. {{ formatearMonto(ventaSeleccionada.saldo_pendiente_bs) }}</div>
+            </div>
+          </div>
 
           <div class="rejilla-compras-simple">
             <q-select
@@ -452,6 +519,21 @@ function puedeRegistrarPago (venta) {
     venta.tipo_venta === 'credito' &&
     venta.estado_pago !== 'pagado'
   )
+}
+
+function claseEstadoPago (estado) {
+  if (estado === 'pagado') return 'badge-estado--pagado'
+  if (estado === 'parcial') return 'badge-estado--parcial'
+  if (estado === 'pendiente') return 'badge-estado--pendiente'
+  return 'badge-estado--neutro'
+}
+
+function limpiarFiltros () {
+  filtros.nroVenta = ''
+  filtros.cajaId = null
+  filtros.fechaDesde = ''
+  filtros.fechaHasta = ''
+  cargarModulo()
 }
 
 function reiniciarFormularioPago () {
