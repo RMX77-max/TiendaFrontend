@@ -1,8 +1,23 @@
 <template>
-  <q-page class="pagina-compras q-pa-lg">
-    <div class="encabezado-ventas">
-      <div class="text-caption text-weight-bold texto-resalte-panel">Ventas</div>
-      <h1 class="text-h4 text-weight-bold q-mt-sm q-mb-none">Registro de venta</h1>
+  <q-page class="pagina-ventas q-pa-lg">
+    <div class="encabezado-ventas encabezado-ventas--checkout">
+      <div>
+        <div class="text-caption text-weight-bold texto-resalte-panel">Ventas</div>
+        <h1 class="text-h4 text-weight-bold q-mt-sm q-mb-none">Registro de venta</h1>
+      </div>
+      <div class="resumen-estado-ventas">
+        <q-chip square color="grey-2" text-color="dark" icon="store">
+          {{ sucursalActual || 'Sin sucursal' }}
+        </q-chip>
+        <q-chip
+          square
+          :color="formulario.tipoVenta === 'credito' ? 'amber-2' : 'green-2'"
+          text-color="dark"
+          :icon="formulario.tipoVenta === 'credito' ? 'credit_card' : 'payments'"
+        >
+          {{ formulario.tipoVenta === 'credito' ? 'Credito' : 'Contado' }}
+        </q-chip>
+      </div>
     </div>
 
     <q-banner v-if="mensajeExito" rounded class="bg-green-1 text-green-10 q-mt-lg">
@@ -14,8 +29,8 @@
     </q-banner>
 
     <div class="columna-compras q-mt-lg">
-      <q-card flat bordered class="tarjeta-compra-secundaria">
-        <q-card-section class="q-pa-lg">
+      <q-card flat bordered class="tarjeta-ventas-secundaria">
+        <q-card-section class="q-pa-md">
           <div class="cabecera-acciones-ventas">
             <div class="row q-gutter-sm">
               <q-btn
@@ -62,10 +77,18 @@
         </q-card-section>
       </q-card>
 
-      <q-card flat bordered class="tarjeta-compra-principal">
+      <q-card flat bordered class="tarjeta-ventas-principal">
         <q-card-section class="q-pa-lg">
-          <div class="cabecera-tarjeta-detalle">
-            <div class="text-h6 text-weight-bold">Venta actual</div>
+          <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
+            <div>
+              <div class="text-h6 text-weight-bold">Venta actual</div>
+              <div class="text-body2 text-grey-7 q-mt-xs">
+                Revisa cliente, caja y carrito antes de guardar.
+              </div>
+            </div>
+            <q-chip square color="grey-2" text-color="dark" icon="shopping_cart">
+              {{ cantidadItemsCarrito }} item(s)
+            </q-chip>
           </div>
         </q-card-section>
 
@@ -77,11 +100,11 @@
               <div class="text-caption text-grey-7">Items en carrito</div>
               <div class="text-h5 text-weight-bold">{{ cantidadItemsCarrito }}</div>
             </div>
-            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--success tarjeta-resumen-pago--ventas-page">
+            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--success tarjeta-resumen-pago--ventas-page tarjeta-resumen-pago--total-ventas">
               <div class="text-caption text-grey-7">Total USD</div>
               <div class="text-h5 text-weight-bold">$ {{ formatearMonto(totalCarritoUsd) }}</div>
             </div>
-            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--warning tarjeta-resumen-pago--ventas-page">
+            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--warning tarjeta-resumen-pago--ventas-page tarjeta-resumen-pago--total-ventas">
               <div class="text-caption text-grey-7">Total Bs</div>
               <div class="text-h5 text-weight-bold">Bs. {{ formatearMonto(totalCarritoBs) }}</div>
             </div>
@@ -95,7 +118,12 @@
         <q-separator />
 
         <q-card-section class="q-pa-lg">
-          <div class="text-subtitle1 text-weight-bold">Datos generales</div>
+          <div class="cabecera-seccion-ventas">
+            <div>
+              <div class="text-subtitle1 text-weight-bold">Datos generales</div>
+              <div class="text-body2 text-grey-7 q-mt-xs">Cliente, caja y documento de impresion.</div>
+            </div>
+          </div>
           <div class="rejilla-compras-simple q-mt-md">
             <q-input :model-value="sucursalActual" outlined disable label="Sucursal actual" />
 
@@ -181,7 +209,7 @@
               v-model="formulario.observaciones"
               outlined
               label="Observaciones"
-              class="campo-formulario-usuarios--ancho-dos-columnas"
+              class="campo-formulario-usuarios--ancho-dos-columnas campo-ventas-observaciones"
             />
           </div>
         </q-card-section>
@@ -189,8 +217,16 @@
         <template v-if="formulario.tipoVenta === 'credito'">
           <q-separator />
 
-          <q-card-section class="q-pa-lg">
-            <div class="text-subtitle1 text-weight-bold">Abono inicial</div>
+          <q-card-section class="q-pa-lg seccion-credito-ventas">
+            <div class="cabecera-seccion-ventas">
+              <div>
+                <div class="text-subtitle1 text-weight-bold">Abono inicial</div>
+                <div class="text-body2 text-grey-7 q-mt-xs">Registra el primer pago y confirma el saldo pendiente.</div>
+              </div>
+              <q-chip square color="amber-2" text-color="dark" icon="credit_card">
+                Venta a credito
+              </q-chip>
+            </div>
             <div class="rejilla-compras-simple q-mt-md">
               <q-input
                 v-model.number="formulario.abonoInicialUsd"
@@ -246,13 +282,13 @@
         <q-card-section class="q-pa-lg">
           <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
             <div class="text-subtitle1 text-weight-bold">Carrito</div>
-            <q-chip square color="grey-2" text-color="dark">
+            <q-chip square color="grey-2" text-color="dark" icon="shopping_cart">
               {{ cantidadItemsCarrito }} item(s)
             </q-chip>
           </div>
 
           <div class="contenedor-tabla-simple">
-            <q-markup-table flat bordered class="tabla-simple-compras">
+            <q-markup-table flat bordered class="tabla-simple-compras tabla-carrito-ventas">
               <thead>
                 <tr>
                   <th class="text-left">Modelo</th>
@@ -327,7 +363,11 @@
                       @update:model-value="cambiarPrecio(item.productoId, 'bs', $event)"
                     />
                   </td>
-                  <td>{{ item.stockDisponible }}</td>
+                  <td>
+                    <q-badge color="blue-1" text-color="primary" rounded>
+                      {{ item.stockDisponible }}
+                    </q-badge>
+                  </td>
                   <td class="columna-tabla-simple">
                     <q-input
                       :model-value="item.cantidad"
@@ -353,7 +393,9 @@
                       icon="delete"
                       color="negative"
                       @click="eliminarItem(item.productoId)"
-                    />
+                    >
+                      <q-tooltip>Quitar del carrito</q-tooltip>
+                    </q-btn>
                   </td>
                 </tr>
               </tbody>
@@ -361,12 +403,19 @@
           </div>
         </q-card-section>
 
-        <q-card-actions align="right" class="q-pa-lg">
+        <q-card-actions align="right" class="barra-acciones-venta q-pa-lg">
+          <div class="total-acciones-venta">
+            <div class="text-caption text-grey-7">Total a cobrar</div>
+            <div class="text-subtitle1 text-weight-bold">
+              $ {{ formatearMonto(totalCarritoUsd) }} / Bs. {{ formatearMonto(totalCarritoBs) }}
+            </div>
+          </div>
           <div class="acciones-finales-ventas">
             <q-btn
               unelevated
               color="dark"
               text-color="white"
+              icon="save"
               label="Guardar venta"
               :disable="!carrito.items.length"
               :loading="guardando && accionGuardado === 'guardar'"
@@ -376,6 +425,7 @@
               unelevated
               color="primary"
               text-color="white"
+              icon="print"
               label="Guardar e imprimir"
               :disable="!carrito.items.length"
               :loading="guardando && accionGuardado === 'imprimir'"

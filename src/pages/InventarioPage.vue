@@ -59,6 +59,18 @@
             </q-btn>
           </div>
         </div>
+
+        <div class="filtros-rapidos-inventario q-mt-md">
+          <q-btn-toggle
+            v-model="filtroRapidoInventario"
+            unelevated
+            no-caps
+            toggle-color="dark"
+            color="grey-2"
+            text-color="grey-8"
+            :options="opcionesFiltroInventario"
+          />
+        </div>
       </q-card-section>
     </q-card>
 
@@ -73,9 +85,14 @@
             </div>
           </div>
 
-          <q-badge color="grey-9" rounded>
-            {{ filasInventario.length }} resultados
-          </q-badge>
+          <div class="indicadores-inventario">
+            <q-badge color="grey-9" rounded>
+              {{ filasInventario.length }} resultados
+            </q-badge>
+            <q-badge v-if="sucursalActual" color="blue-1" text-color="primary" rounded>
+              {{ productosConStockSucursal }} con stock en mi sucursal
+            </q-badge>
+          </div>
         </div>
 
         <div class="contenedor-tabla-inventario">
@@ -108,44 +125,48 @@
 
             <template #body-cell-acciones="propiedades">
               <q-td :props="propiedades" class="celda-acciones-inventario">
-                <q-btn
-                  v-if="puedeVender"
-                  flat
-                  round
-                  dense
-                  icon="add_shopping_cart"
-                  color="primary"
-                  :disable="!puedeAgregarCarrito(propiedades.row)"
-                  @click="agregarProductoCarritoDesdeInventario(propiedades.row)"
-                >
-                  <q-tooltip>
-                    {{ tooltipCarrito(propiedades.row) }}
-                  </q-tooltip>
-                </q-btn>
+                <div class="grupo-acciones-inventario">
+                  <q-btn
+                    v-if="puedeVender"
+                    flat
+                    round
+                    dense
+                    icon="add_shopping_cart"
+                    color="primary"
+                    class="boton-tabla-inventario boton-tabla-inventario--carrito"
+                    :disable="!puedeAgregarCarrito(propiedades.row)"
+                    @click="agregarProductoCarritoDesdeInventario(propiedades.row)"
+                  >
+                    <q-tooltip>
+                      {{ tooltipCarrito(propiedades.row) }}
+                    </q-tooltip>
+                  </q-btn>
 
-                <q-btn
-                  v-if="puedeGestionarProductos"
-                  flat
-                  round
-                  dense
-                  icon="edit"
-                  color="grey-8"
-                  @click="abrirDialogoEdicion(propiedades.row)"
-                >
-                  <q-tooltip>Editar</q-tooltip>
-                </q-btn>
+                  <q-btn
+                    v-if="puedeGestionarProductos"
+                    flat
+                    round
+                    dense
+                    icon="edit"
+                    color="grey-8"
+                    class="boton-tabla-inventario"
+                    @click="abrirDialogoEdicion(propiedades.row)"
+                  >
+                    <q-tooltip>Editar</q-tooltip>
+                  </q-btn>
 
-                <q-btn
-                  v-if="puedeGestionarProductos"
-                  flat
-                  round
-                  dense
-                  icon="delete"
-                  color="negative"
-                  @click="abrirDialogoEliminacion(propiedades.row)"
-                >
-                  <q-tooltip>Eliminar</q-tooltip>
-                </q-btn>
+                  <q-btn
+                    v-if="puedeGestionarProductos"
+                    flat
+                    round
+                    dense
+                    icon="delete"
+                    color="negative"
+                    class="boton-tabla-inventario"
+                    @click="abrirDialogoEliminacion(propiedades.row)"
+                  >
+                    <q-tooltip>Eliminar</q-tooltip>
+                  </q-btn>
 
                   <q-btn
                     v-if="puedeTransferirDirecto || !puedeGestionarProductos"
@@ -154,6 +175,7 @@
                     dense
                     icon="swap_horiz"
                     color="grey-8"
+                    class="boton-tabla-inventario"
                     :disable="!puedeAbrirTransferencia(propiedades.row)"
                     @click="abrirDialogoSolicitud(propiedades.row)"
                   >
@@ -162,16 +184,18 @@
                     </q-tooltip>
                   </q-btn>
 
-                <q-btn
+                  <q-btn
                   flat
                   round
                   dense
                   icon="info"
                   color="grey-8"
+                  class="boton-tabla-inventario"
                   @click="verDetalles(propiedades.row.id)"
                 >
                   <q-tooltip>Ver detalles</q-tooltip>
                 </q-btn>
+                </div>
               </q-td>
             </template>
 
@@ -1268,6 +1292,7 @@ const ESTADOS_RESPUESTA = ["aprobada", "rechazada", "aprobada_parcial"];
 
 const cargando = ref(false);
 const busqueda = ref("");
+const filtroRapidoInventario = ref("todos");
 const productos = ref([]);
 const sucursales = ref([]);
 const misSolicitudes = ref([]);
@@ -1305,6 +1330,11 @@ const marcasEdicion = ref([]);
 const categoriasEdicion = ref([]);
 const $q = useQuasar();
 const router = useRouter();
+const opcionesFiltroInventario = [
+  { label: "Todos", value: "todos" },
+  { label: "Con stock en mi sucursal", value: "stock_mi_sucursal" },
+  { label: "Sin stock en mi sucursal", value: "sin_stock_mi_sucursal" },
+];
 
 function mostrarNotificacion(tipo, message) {
   if (typeof $q?.notify === "function") {
@@ -1345,18 +1375,29 @@ const puedeGestionarProductos = computed(() =>
 
 const filasInventario = computed(() => {
   const termino = busqueda.value.trim().toLowerCase();
-
-  if (!termino) {
-    return productos.value;
-  }
-
-  return productos.value.filter((producto) => {
+  const productosPorBusqueda = !termino
+    ? productos.value
+    : productos.value.filter((producto) => {
     const texto = [producto.modelo, producto.marca, producto.categoria]
       .join(" ")
       .toLowerCase();
 
     return texto.includes(termino);
   });
+
+  if (filtroRapidoInventario.value === "stock_mi_sucursal") {
+    return productosPorBusqueda.filter((producto) => stockEnSucursalActual(producto) > 0);
+  }
+
+  if (filtroRapidoInventario.value === "sin_stock_mi_sucursal") {
+    return productosPorBusqueda.filter((producto) => stockEnSucursalActual(producto) <= 0);
+  }
+
+  return productosPorBusqueda;
+});
+
+const productosConStockSucursal = computed(() => {
+  return productos.value.filter((producto) => stockEnSucursalActual(producto) > 0).length;
 });
 
 const columnasInventario = computed(() => {
@@ -1690,6 +1731,19 @@ function obtenerCantidadSucursal(producto, idSucursal) {
   return (
     producto.existencias_por_sucursal.find(
       (item) => item.sucursal_id === idSucursal
+    )?.cantidad || 0
+  );
+}
+
+function stockEnSucursalActual(producto) {
+  if (!sucursalActual.value) {
+    return 0;
+  }
+
+  return Number(
+    (producto.existencias_por_sucursal || []).find(
+      (item) =>
+        normalizarTexto(item.sucursal) === normalizarTexto(sucursalActual.value)
     )?.cantidad || 0
   );
 }

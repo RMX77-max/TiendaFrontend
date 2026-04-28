@@ -1,5 +1,5 @@
 <template>
-  <q-page class="pagina-compras q-pa-lg">
+  <q-page class="pagina-historial-ventas q-pa-lg">
     <div class="encabezado-ventas">
       <div class="text-caption text-weight-bold texto-resalte-panel">Ventas</div>
       <h1 class="text-h4 text-weight-bold q-mt-sm q-mb-none">Historial de ventas</h1>
@@ -9,11 +9,16 @@
       {{ errorGeneral }}
     </q-banner>
 
-    <div class="columna-compras q-mt-lg">
-      <q-card flat bordered class="tarjeta-compra-principal">
-        <q-card-section class="q-pa-lg">
-          <div class="cabecera-acciones-ventas">
-            <div class="text-h6 text-weight-bold">Acciones</div>
+    <div class="columna-historial-ventas q-mt-lg">
+      <q-card flat bordered class="tarjeta-panel-historial-ventas">
+        <q-card-section class="q-pa-md">
+          <div class="cabecera-acciones-ventas cabecera-historial-ventas">
+            <div>
+              <div class="text-h6 text-weight-bold">Consulta de ventas</div>
+              <div class="text-body2 text-grey-7">
+                Revisa ventas registradas, pagos pendientes y recibos.
+              </div>
+            </div>
             <div class="row items-center q-gutter-sm">
               <q-btn
                 flat
@@ -36,61 +41,90 @@
         </q-card-section>
       </q-card>
 
-      <q-card flat bordered class="tarjeta-compra-principal">
+      <q-card flat bordered class="tarjeta-panel-historial-ventas">
         <q-card-section class="q-pa-lg">
-          <div class="text-h6 text-weight-bold q-mb-lg">Filtros</div>
-          <div class="rejilla-compras-simple">
-            <q-input
-              v-model="filtros.nroVenta"
-              outlined
-              label="Buscar por nro venta"
-              @update:model-value="cargarModulo"
-            />
-
-            <q-select
-              v-model="filtros.cajaId"
-              outlined
-              emit-value
-              map-options
-              clearable
-              label="Caja"
-              :options="cajas"
-              option-value="value"
-              option-label="label"
-              @update:model-value="cargarModulo"
-            />
-
-            <q-input
-              v-model="filtros.fechaDesde"
-              outlined
-              type="date"
-              label="Fecha desde"
-              @update:model-value="cargarModulo"
-            />
-
-            <q-input
-              v-model="filtros.fechaHasta"
-              outlined
-              type="date"
-              label="Fecha hasta"
-              @update:model-value="cargarModulo"
-            />
-          </div>
-        </q-card-section>
-      </q-card>
-
-      <q-card flat bordered class="tarjeta-compra-principal">
-        <q-card-section class="q-pa-lg">
-          <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
+          <div class="cabecera-panel-cajas cabecera-panel-cajas--con-filtros">
             <div class="text-h6 text-weight-bold">Ventas registradas</div>
 
-            <q-btn flat icon="refresh" color="grey-8" label="Actualizar" @click="cargarModulo" />
+            <div class="filtros-historial-ventas">
+              <q-input
+                v-model="filtros.nroVenta"
+                dense
+                outlined
+                label="Nro venta"
+                @update:model-value="cargarModulo"
+              />
+
+              <q-select
+                v-model="filtros.cajaId"
+                dense
+                outlined
+                emit-value
+                map-options
+                clearable
+                label="Caja"
+                :options="cajas"
+                option-value="value"
+                option-label="label"
+                @update:model-value="cargarModulo"
+              />
+
+              <q-input
+                v-model="filtros.fechaDesde"
+                dense
+                outlined
+                type="date"
+                label="Fecha desde"
+                @update:model-value="cargarModulo"
+              />
+
+              <q-input
+                v-model="filtros.fechaHasta"
+                dense
+                outlined
+                type="date"
+                label="Fecha hasta"
+                @update:model-value="cargarModulo"
+              />
+
+              <q-select
+                v-model="filtros.estadoPago"
+                dense
+                outlined
+                emit-value
+                map-options
+                clearable
+                label="Estado"
+                :options="opcionesEstadoPago"
+                option-value="value"
+                option-label="label"
+              />
+            </div>
+          </div>
+
+          <div class="resumen-historial-ventas q-mt-lg">
+            <div class="tarjeta-resumen-historial">
+              <div class="text-caption text-grey-7">Ventas</div>
+              <div class="text-h6 text-weight-bold">{{ ventasFiltradas.length }}</div>
+            </div>
+            <div class="tarjeta-resumen-historial tarjeta-resumen-historial--success">
+              <div class="text-caption text-grey-7">Total USD</div>
+              <div class="text-h6 text-weight-bold">$ {{ formatearMonto(totalVentasUsd) }}</div>
+            </div>
+            <div class="tarjeta-resumen-historial tarjeta-resumen-historial--warning">
+              <div class="text-caption text-grey-7">Saldo pendiente</div>
+              <div class="text-h6 text-weight-bold">$ {{ formatearMonto(saldoPendienteUsd) }}</div>
+            </div>
+            <div class="tarjeta-resumen-historial">
+              <div class="text-caption text-grey-7">Creditos activos</div>
+              <div class="text-h6 text-weight-bold">{{ ventasCreditoPendientes }}</div>
+            </div>
           </div>
 
           <div class="contenedor-tabla-simple q-mt-lg">
             <q-table
               flat
-              :rows="ventas"
+              :rows="ventasFiltradas"
               :columns="columnasVentas"
               row-key="id"
               :loading="cargando"
@@ -99,7 +133,11 @@
             >
               <template #body-cell-tipo="propiedades">
                 <q-td :props="propiedades">
-                  <q-badge rounded class="badge-estado badge-estado--neutro">
+                  <q-badge
+                    rounded
+                    class="badge-estado"
+                    :class="claseTipoVenta(propiedades.row.tipo_venta)"
+                  >
                     {{ propiedades.row.tipo_venta_label }}
                   </q-badge>
                 </q-td>
@@ -141,16 +179,28 @@
 
               <template #body-cell-acciones="propiedades">
                 <q-td :props="propiedades" class="text-right">
-                  <div class="row justify-end q-gutter-sm no-wrap">
-                    <q-btn flat dense color="primary" label="Detalle" @click="abrirDetalleVenta(propiedades.row)" />
+                  <div class="row justify-end q-gutter-xs no-wrap">
                     <q-btn
                       flat
+                      round
+                      dense
+                      color="primary"
+                      icon="visibility"
+                      @click="abrirDetalleVenta(propiedades.row)"
+                    >
+                      <q-tooltip>Ver detalle</q-tooltip>
+                    </q-btn>
+                    <q-btn
+                      flat
+                      round
                       dense
                       color="positive"
-                      label="Pago"
+                      icon="payments"
                       :disable="!puedeRegistrarPago(propiedades.row)"
                       @click="abrirDialogoPago(propiedades.row)"
-                    />
+                    >
+                      <q-tooltip>Registrar pago</q-tooltip>
+                    </q-btn>
                   </div>
                 </q-td>
               </template>
@@ -211,17 +261,32 @@
                 </div>
               </div>
               <div class="tarjeta-resumen-pago tarjeta-resumen-pago--success">
-                <div class="text-caption text-grey-7">Total USD</div>
+                <div class="text-caption text-grey-7">Total</div>
                 <div class="text-h6 text-weight-bold">$ {{ formatearMonto(ventaSeleccionada.total_usd) }}</div>
+                <div class="text-body2 text-grey-7">Bs. {{ formatearMonto(ventaSeleccionada.total_bs) }}</div>
               </div>
               <div class="tarjeta-resumen-pago tarjeta-resumen-pago--warning">
-                <div class="text-caption text-grey-7">Abonado Bs</div>
-                <div class="text-h6 text-weight-bold">Bs. {{ formatearMonto(ventaSeleccionada.total_abonos_bs) }}</div>
+                <div class="text-caption text-grey-7">Abonado</div>
+                <div class="text-h6 text-weight-bold">$ {{ formatearMonto(ventaSeleccionada.total_abonos_usd) }}</div>
+                <div class="text-body2 text-grey-7">Bs. {{ formatearMonto(ventaSeleccionada.total_abonos_bs) }}</div>
               </div>
               <div class="tarjeta-resumen-pago tarjeta-resumen-pago--neutral">
-                <div class="text-caption text-grey-7">Saldo pendiente Bs</div>
-                <div class="text-h6 text-weight-bold">Bs. {{ formatearMonto(ventaSeleccionada.saldo_pendiente_bs) }}</div>
+                <div class="text-caption text-grey-7">Saldo pendiente</div>
+                <div class="text-h6 text-weight-bold">$ {{ formatearMonto(ventaSeleccionada.saldo_pendiente_usd) }}</div>
+                <div class="text-body2 text-grey-7">Bs. {{ formatearMonto(ventaSeleccionada.saldo_pendiente_bs) }}</div>
               </div>
+            </div>
+
+            <div class="estado-detalle-venta q-mt-md">
+              <q-badge rounded class="badge-estado" :class="claseTipoVenta(ventaSeleccionada.tipo_venta)">
+                {{ ventaSeleccionada.tipo_venta_label }}
+              </q-badge>
+              <q-badge rounded class="badge-estado" :class="claseEstadoPago(ventaSeleccionada.estado_pago)">
+                {{ ventaSeleccionada.estado_pago_label }}
+              </q-badge>
+              <q-badge rounded class="badge-estado badge-estado--neutro">
+                TC {{ formatearMonto(obtenerTipoCambioVenta(ventaSeleccionada)) }}
+              </q-badge>
             </div>
 
             <div class="rejilla-meta-venta q-mt-lg">
@@ -334,13 +399,25 @@
       </q-card>
     </q-dialog>
 
-    <q-dialog v-model="dialogoPagoAbierto" maximized>
-      <q-card class="dialogo-detalle-producto">
+    <q-dialog v-model="dialogoPagoAbierto">
+      <q-card class="tarjeta-dialogo-pago-venta">
         <q-card-section class="q-pa-lg">
-          <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
-            <div class="text-h6 text-weight-bold">Registrar pago</div>
+          <div class="cabecera-dialogo-cajas">
+            <div>
+              <div class="text-caption text-weight-bold texto-resalte-panel">
+                Ventas
+              </div>
+              <div class="text-h6 text-weight-bold q-mt-xs">Registrar pago</div>
+            </div>
 
-            <q-btn flat round dense class="boton-cerrar-modal-compras" icon="close" @click="dialogoPagoAbierto = false" />
+            <q-btn
+              flat
+              round
+              dense
+              class="boton-cerrar-modal-compras"
+              icon="close"
+              @click="dialogoPagoAbierto = false"
+            />
           </div>
         </q-card-section>
 
@@ -351,26 +428,38 @@
             {{ errorPago }}
           </q-banner>
 
-          <div v-if="ventaSeleccionada" class="rejilla-resumen-pagos-credito q-mb-lg">
-            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--neutral">
+          <div v-if="ventaSeleccionada" class="resumen-pago-venta q-mb-lg">
+            <div class="item-resumen-pago-venta item-resumen-pago-venta--principal">
               <div class="text-caption text-grey-7">Venta</div>
               <div class="text-subtitle2 text-weight-bold">{{ ventaSeleccionada.nro_venta }}</div>
+              <div class="text-body2 text-grey-7">
+                {{ ventaSeleccionada.cliente_nombre || 'Sin cliente' }}
+              </div>
             </div>
-            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--success">
-              <div class="text-caption text-grey-7">Total USD</div>
-              <div class="text-h6 text-weight-bold">$ {{ formatearMonto(ventaSeleccionada.total_usd) }}</div>
+            <div class="item-resumen-pago-venta item-resumen-pago-venta--success">
+              <div class="text-caption text-grey-7">Total de deuda</div>
+              <div class="text-h6 text-weight-bold">{{ totalDeudaPago }}</div>
             </div>
-            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--warning">
+            <div class="item-resumen-pago-venta item-resumen-pago-venta--cambio">
+              <div class="text-caption text-grey-7">Tipo de cambio</div>
+              <div class="text-h6 text-weight-bold">{{ formatearMonto(tipoCambioPactadoVenta) }}</div>
+              <div class="text-body2 text-grey-7">Se mantiene fijo para esta venta.</div>
+            </div>
+            <div class="item-resumen-pago-venta item-resumen-pago-venta--saldo item-resumen-pago-venta--warning">
               <div class="text-caption text-grey-7">Saldo pendiente USD</div>
-              <div class="text-h6 text-weight-bold">$ {{ formatearMonto(ventaSeleccionada.saldo_pendiente_usd) }}</div>
+              <div class="text-h6 text-weight-bold">
+                $ {{ formatearMonto(ventaSeleccionada.saldo_pendiente_usd) }}
+              </div>
             </div>
-            <div class="tarjeta-resumen-pago tarjeta-resumen-pago--neutral">
+            <div class="item-resumen-pago-venta item-resumen-pago-venta--saldo">
               <div class="text-caption text-grey-7">Saldo pendiente Bs</div>
-              <div class="text-h6 text-weight-bold">Bs. {{ formatearMonto(ventaSeleccionada.saldo_pendiente_bs) }}</div>
+              <div class="text-h6 text-weight-bold">
+                Bs. {{ formatearMonto(ventaSeleccionada.saldo_pendiente_bs) }}
+              </div>
             </div>
           </div>
 
-          <div class="rejilla-compras-simple">
+          <div class="formulario-pago-venta">
             <q-select
               v-model="formularioPago.cajaId"
               outlined
@@ -391,21 +480,33 @@
             />
 
             <q-input
-              v-model.number="formularioPago.abonoUsd"
+              :model-value="formularioPago.tipoCambioAbono"
+              outlined
+              type="number"
+              min="0.01"
+              step="0.01"
+              label="Tipo de cambio"
+              disable
+            />
+
+            <q-input
+              :model-value="formularioPago.abonoUsd"
               outlined
               type="number"
               min="0"
               step="0.01"
               label="Pago USD"
+              @update:model-value="actualizarMontoPago('usd', $event)"
             />
 
             <q-input
-              v-model.number="formularioPago.abonoBs"
+              :model-value="formularioPago.abonoBs"
               outlined
               type="number"
               min="0"
               step="0.01"
               label="Pago Bs"
+              @update:model-value="actualizarMontoPago('bs', $event)"
             />
 
             <q-file
@@ -420,6 +521,7 @@
               v-model="formularioPago.observaciones"
               outlined
               label="Observaciones"
+              class="campo-pago-venta--ancho-completo"
             />
           </div>
         </q-card-section>
@@ -473,13 +575,15 @@ const filtros = reactive({
   nroVenta: '',
   cajaId: null,
   fechaDesde: '',
-  fechaHasta: ''
+  fechaHasta: '',
+  estadoPago: null
 })
 
 const formularioPago = reactive({
   cajaId: null,
   fechaAbono: new Date().toISOString().slice(0, 10),
   tipoCambioAbono: null,
+  monedaManual: '',
   abonoUsd: 0,
   abonoBs: 0,
   comprobanteFoto: null,
@@ -499,18 +603,107 @@ const columnasVentas = [
   { name: 'saldo', label: 'Saldo', align: 'left', field: 'saldo_pendiente_usd', sortable: true },
   { name: 'acciones', label: 'Acciones', align: 'right', field: 'id' }
 ]
+const opcionesEstadoPago = [
+  { value: 'pendiente', label: 'Pendiente' },
+  { value: 'parcial', label: 'Parcial' },
+  { value: 'pagado', label: 'Pagado' }
+]
 
 const cajasDisponiblesPago = computed(() => {
   const sucursal = ventaSeleccionada.value?.sucursal
 
   return (cajasVenta.value || []).filter((caja) => {
-    if (!sucursal) return true
-    return caja.sucursal === sucursal
+    return !sucursal || caja.sucursal === sucursal
   })
+})
+const monedaDeudaVenta = computed(() => ventaSeleccionada.value?.moneda || 'bs')
+const tipoCambioPactadoVenta = computed(() => obtenerTipoCambioVenta())
+const cajaPagoSeleccionada = computed(() =>
+  cajasVenta.value.find((item) => Number(item.value) === Number(formularioPago.cajaId)) || null
+)
+const totalDeudaPago = computed(() => {
+  if (!ventaSeleccionada.value) return '-'
+
+  return monedaDeudaVenta.value === 'usd'
+    ? `$ ${formatearMonto(ventaSeleccionada.value.total_usd)}`
+    : `Bs. ${formatearMonto(ventaSeleccionada.value.total_bs)}`
+})
+const totalVentasUsd = computed(() =>
+  ventasFiltradas.value.reduce((total, venta) => total + Number(venta.total_usd || 0), 0)
+)
+const saldoPendienteUsd = computed(() =>
+  ventasFiltradas.value.reduce((total, venta) => total + Number(venta.saldo_pendiente_usd || 0), 0)
+)
+const ventasCreditoPendientes = computed(() =>
+  ventasFiltradas.value.filter((venta) => puedeRegistrarPago(venta)).length
+)
+const ventasFiltradas = computed(() => {
+  if (!filtros.estadoPago) {
+    return ventas.value
+  }
+
+  return ventas.value.filter((venta) => venta.estado_pago === filtros.estadoPago)
 })
 
 function formatearMonto (valor) {
   return Number(valor || 0).toFixed(2)
+}
+
+function normalizarNumero (valor) {
+  const numero = Number(valor || 0)
+  return Number.isFinite(numero) ? numero : 0
+}
+
+function redondearMonto (valor) {
+  return Number(normalizarNumero(valor).toFixed(2))
+}
+
+function obtenerTipoCambioVenta (venta = ventaSeleccionada.value) {
+  const tipoCambioVenta = normalizarNumero(venta?.tipo_cambio)
+
+  if (tipoCambioVenta > 0) {
+    return redondearMonto(tipoCambioVenta)
+  }
+
+  const totalUsd = normalizarNumero(venta?.total_usd)
+  const totalBs = normalizarNumero(venta?.total_bs)
+
+  if (totalUsd > 0 && totalBs > 0) {
+    return redondearMonto(totalBs / totalUsd)
+  }
+
+  return 1
+}
+
+function obtenerTipoCambioPago () {
+  return Math.max(
+    0.01,
+    redondearMonto(tipoCambioPactadoVenta.value)
+  )
+}
+
+function actualizarMontoPago (monedaOrigen, valor) {
+  const tipoCambio = obtenerTipoCambioPago()
+  const monto = redondearMonto(valor)
+  formularioPago.tipoCambioAbono = tipoCambio
+  formularioPago.monedaManual = monedaOrigen
+
+  if (monedaOrigen === 'usd') {
+    formularioPago.abonoUsd = monto
+    formularioPago.abonoBs = redondearMonto(monto * tipoCambio)
+    return
+  }
+
+  formularioPago.abonoBs = monto
+  formularioPago.abonoUsd = redondearMonto(monto / tipoCambio)
+}
+
+function actualizarTipoCambioPago (valor) {
+  formularioPago.tipoCambioAbono = obtenerTipoCambioPago()
+  actualizarMontoPago(
+    formularioPago.monedaManual || 'bs',
+    formularioPago.monedaManual === 'usd' ? formularioPago.abonoUsd : formularioPago.abonoBs
+  )
 }
 
 function puedeRegistrarPago (venta) {
@@ -528,18 +721,26 @@ function claseEstadoPago (estado) {
   return 'badge-estado--neutro'
 }
 
+function claseTipoVenta (tipo) {
+  if (tipo === 'credito') return 'badge-estado--credito'
+  if (tipo === 'contado') return 'badge-estado--contado'
+  return 'badge-estado--neutro'
+}
+
 function limpiarFiltros () {
   filtros.nroVenta = ''
   filtros.cajaId = null
   filtros.fechaDesde = ''
   filtros.fechaHasta = ''
+  filtros.estadoPago = null
   cargarModulo()
 }
 
 function reiniciarFormularioPago () {
   formularioPago.cajaId = cajasDisponiblesPago.value[0]?.value || ventaSeleccionada.value?.caja_id || null
   formularioPago.fechaAbono = new Date().toISOString().slice(0, 10)
-  formularioPago.tipoCambioAbono = null
+  formularioPago.tipoCambioAbono = tipoCambioPactadoVenta.value
+  formularioPago.monedaManual = ''
   formularioPago.abonoUsd = 0
   formularioPago.abonoBs = 0
   formularioPago.comprobanteFoto = null
@@ -547,15 +748,11 @@ function reiniciarFormularioPago () {
 }
 
 function sincronizarCajaPago () {
-  const caja = cajasVenta.value.find((item) => Number(item.value) === Number(formularioPago.cajaId))
-
-  if (!caja) return
-
-  if (caja.tipo_moneda === 'usd') {
-    formularioPago.abonoBs = 0
-  } else {
-    formularioPago.abonoUsd = 0
-  }
+  const monedaOrigen = formularioPago.monedaManual || cajaPagoSeleccionada.value?.tipo_moneda || monedaDeudaVenta.value
+  actualizarMontoPago(
+    monedaOrigen,
+    monedaOrigen === 'usd' ? formularioPago.abonoUsd : formularioPago.abonoBs
+  )
 }
 
 async function cargarModulo () {
@@ -648,7 +845,12 @@ async function guardarPagoCredito () {
     return
   }
 
-  if (Number(formularioPago.abonoUsd || 0) <= 0 && Number(formularioPago.abonoBs || 0) <= 0) {
+  const monedaPago = cajaPagoSeleccionada.value?.tipo_moneda || monedaDeudaVenta.value
+  const montoPrincipal = monedaPago === 'usd'
+    ? Number(formularioPago.abonoUsd || 0)
+    : Number(formularioPago.abonoBs || 0)
+
+  if (montoPrincipal <= 0) {
     errorPago.value = 'Debes registrar un monto mayor a cero.'
     return
   }

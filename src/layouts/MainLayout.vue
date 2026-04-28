@@ -144,7 +144,7 @@ const enlacesMenu = [
   },
   {
     to: "/movimientos",
-    etiqueta: "Movimientos",
+    etiqueta: "Historial ventas",
     icono: "receipt",
     roles: ["vendedor", "supervisor_sucursal", "gerente"],
   },

@@ -59,7 +59,8 @@ body {
   min-height: 100vh;
 }
 
-.pagina-usuarios {
+.pagina-usuarios,
+.pagina-cajas {
   min-height: 100vh;
 }
 
@@ -72,6 +73,10 @@ body {
 }
 
 .pagina-detalle-producto {
+  min-height: 100vh;
+}
+
+.pagina-historial-ventas {
   min-height: 100vh;
 }
 
@@ -116,7 +121,8 @@ body {
   align-items: stretch;
 }
 
-.bloques-usuarios {
+.bloques-usuarios,
+.bloques-cajas {
   display: grid;
   grid-template-columns: 1fr;
   gap: 24px;
@@ -125,6 +131,7 @@ body {
 .tarjeta-resumen-usuarios,
 .tarjeta-formulario-usuarios,
 .tarjeta-listado-usuarios,
+.tarjeta-panel-cajas,
 .tarjeta-resumen-productos,
 .tarjeta-datos-producto,
 .tarjeta-costos-producto,
@@ -395,6 +402,27 @@ body {
   flex-wrap: wrap;
 }
 
+.filtros-rapidos-inventario {
+  display: flex;
+  justify-content: flex-start;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.filtros-rapidos-inventario .q-btn-group {
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+.indicadores-inventario {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .contenedor-tabla-inventario {
   overflow-x: auto;
 }
@@ -412,6 +440,21 @@ body {
 .celda-acciones-inventario {
   background: #fff6bf;
   min-width: 126px;
+}
+
+.grupo-acciones-inventario {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+
+.boton-tabla-inventario {
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.boton-tabla-inventario--carrito {
+  background: #dbeafe;
 }
 
 .celda-destacada-inventario {
@@ -513,6 +556,34 @@ body {
   background: #fffaf5;
 }
 
+.dialogo-detalle-producto {
+  min-height: 100%;
+}
+
+.dialogo-detalle-producto > .q-card__section:first-child {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  background: rgba(255, 250, 245, 0.96);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.dialogo-detalle-producto > .q-separator:first-of-type {
+  display: none;
+}
+
+.dialogo-detalle-producto .tarjeta-compra-principal,
+.dialogo-detalle-producto .tarjeta-panel-cajas {
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+}
+
+.dialogo-detalle-producto .contenedor-tabla-simple {
+  border-radius: 16px;
+  background: #ffffff;
+}
+
 .boton-cerrar-modal-compras {
   width: 44px;
   height: 44px;
@@ -598,17 +669,135 @@ body {
   gap: 8px;
 }
 
+.encabezado-ventas--checkout {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.resumen-estado-ventas {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .columna-compras {
   display: grid;
   gap: 24px;
 }
 
+.columna-historial-ventas {
+  display: grid;
+  gap: 18px;
+}
+
 .tarjeta-compra-principal,
 .tarjeta-compra-secundaria,
+.tarjeta-ventas-principal,
+.tarjeta-ventas-secundaria,
 .tarjeta-resumen-compras {
   border-radius: 24px;
   background: #ffffff;
   border-color: var(--pt-border);
+}
+
+.tarjeta-ventas-principal {
+  overflow: hidden;
+}
+
+.tarjeta-panel-historial-ventas {
+  border-radius: 18px;
+  background: #ffffff;
+  border-color: var(--pt-border);
+}
+
+.cabecera-historial-ventas {
+  align-items: flex-start;
+}
+
+.filtros-historial-ventas {
+  display: grid;
+  grid-template-columns:
+    minmax(150px, 180px)
+    minmax(180px, 260px)
+    minmax(140px, 170px)
+    minmax(140px, 170px)
+    minmax(140px, 170px);
+  gap: 12px;
+  justify-content: end;
+  flex: 1 1 880px;
+}
+
+.resumen-historial-ventas {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tarjeta-resumen-historial {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.tarjeta-resumen-historial--success {
+  background: #ecfdf5;
+}
+
+.tarjeta-resumen-historial--warning {
+  background: #fff7ed;
+}
+
+.tarjeta-dialogo-pago-venta {
+  width: min(96vw, 980px);
+  max-width: 980px;
+  border-radius: 20px;
+  background: #ffffff;
+}
+
+.resumen-pago-venta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.item-resumen-pago-venta {
+  min-height: 108px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.item-resumen-pago-venta--principal {
+  grid-column: span 2;
+}
+
+.item-resumen-pago-venta--success {
+  background: #ecfdf5;
+}
+
+.item-resumen-pago-venta--cambio {
+  background: #eff6ff;
+}
+
+.item-resumen-pago-venta--warning {
+  background: #fff7ed;
+}
+
+.formulario-pago-venta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.campo-pago-venta--ancho-completo {
+  grid-column: 1 / -1;
 }
 
 .rejilla-compras-superior {
@@ -764,6 +953,26 @@ body {
   justify-content: center;
 }
 
+.tarjeta-resumen-pago--total-ventas {
+  border-color: rgba(15, 23, 42, 0.12);
+}
+
+.cabecera-seccion-ventas {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.campo-ventas-observaciones {
+  min-width: 0;
+}
+
+.seccion-credito-ventas {
+  background: linear-gradient(180deg, #fffbeb 0%, #ffffff 72%);
+}
+
 .cabecera-acciones-ventas {
   display: flex;
   justify-content: space-between;
@@ -782,11 +991,35 @@ body {
 }
 
 .acciones-finales-ventas {
-  width: 100%;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   flex-wrap: wrap;
+}
+
+.barra-acciones-venta {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+}
+
+.total-acciones-venta {
+  min-width: 220px;
+}
+
+.tabla-carrito-ventas th {
+  white-space: nowrap;
+}
+
+.tabla-carrito-ventas tbody tr:hover {
+  background: rgba(37, 99, 235, 0.04);
 }
 
 .tarjeta-resumen-ingreso {
@@ -859,6 +1092,12 @@ body {
   width: 100%;
 }
 
+.estado-detalle-venta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .rejilla-resumen-pagos-credito--ventas {
   grid-template-columns: minmax(0, 1.15fr) repeat(3, minmax(0, 1fr));
 }
@@ -911,6 +1150,16 @@ body {
 .badge-estado--pendiente {
   background: #fee2e2;
   color: #b91c1c;
+}
+
+.badge-estado--credito {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-estado--contado {
+  background: #dcfce7;
+  color: #166534;
 }
 
 .badge-estado--inventario {
@@ -1021,23 +1270,86 @@ body {
   grid-column: span 3;
 }
 
-.rejilla-cajas-panel {
+.rejilla-tarjetas-cajas {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 18px;
 }
 
-.tarjeta-caja-panel {
-  border-radius: 24px;
+.tarjeta-panel-cajas--compacta {
+  border-radius: 18px;
+}
+
+.cabecera-panel-cajas--con-filtros {
+  align-items: flex-start;
+}
+
+.filtros-cajas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 240px));
+  gap: 12px;
+  justify-content: end;
+  flex: 1 1 420px;
+}
+
+.tarjeta-caja {
+  border-radius: 18px;
   background: #ffffff;
   border-color: var(--pt-border);
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.tarjeta-caja-panel:hover {
+.tarjeta-caja:hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+}
+
+.tarjeta-caja--inactiva {
+  background: #f8fafc;
+  opacity: 0.82;
+}
+
+.resumen-caja-general {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.item-resumen-caja-general {
+  min-height: 94px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.item-resumen-caja-general--success {
+  background: #ecfdf5;
+}
+
+.item-resumen-caja-general--warning {
+  background: #fff7ed;
+}
+
+.badge-origen-caja {
+  padding: 7px 10px;
+  font-weight: 700;
+}
+
+.badge-origen-caja--venta {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge-origen-caja--compra {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.badge-origen-caja--manual {
+  background: #e5e7eb;
+  color: #374151;
 }
 
 .rejilla-resumen-caja {
@@ -1069,6 +1381,106 @@ body {
   grid-column: span 2;
 }
 
+.formulario-cajas {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.campo-formulario-cajas {
+  min-width: 0;
+}
+
+.campo-formulario-cajas--ancho-dos-columnas {
+  grid-column: span 2;
+}
+
+.tarjeta-dialogo-caja,
+.tarjeta-dialogo-movimiento-caja {
+  width: min(94vw, 760px);
+  border-radius: 20px;
+  background: #ffffff;
+}
+
+.cabecera-dialogo-cajas {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.resumen-movimiento-caja {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.item-resumen-movimiento-caja {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.formulario-movimiento-caja {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.formulario-caja {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.formulario-caja .campo-formulario-cajas--ancho-dos-columnas {
+  grid-column: 1 / -1;
+}
+
+.formulario-movimiento-caja > .q-field:nth-child(n + 3) {
+  grid-column: 1 / -1;
+}
+
+.dialogo-detalle-caja {
+  min-height: 100vh;
+  background: #fffaf5;
+}
+
+.cabecera-detalle-caja {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fffaf5;
+}
+
+.rejilla-datos-detalle-caja {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dato-detalle-caja,
+.bloque-observaciones-caja,
+.panel-tabla-detalle-caja {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.dato-detalle-caja {
+  min-height: 82px;
+  padding: 14px 16px;
+}
+
+.panel-tabla-detalle-caja {
+  padding: 18px;
+}
+
+.bloque-observaciones-caja {
+  padding: 16px 18px;
+}
+
 .acciones-formulario-usuarios {
   grid-column: 1 / -1;
   display: flex;
@@ -1077,7 +1489,8 @@ body {
   flex-wrap: wrap;
 }
 
-.cabecera-listado-usuarios {
+.cabecera-listado-usuarios,
+.cabecera-panel-cajas {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1124,13 +1537,45 @@ body {
     align-items: stretch;
   }
 
+  .encabezado-ventas--checkout,
+  .barra-acciones-venta {
+    align-items: stretch;
+  }
+
+  .resumen-estado-ventas,
+  .acciones-finales-ventas {
+    justify-content: flex-start;
+  }
+
   .cabecera-inventario,
   .cabecera-superior-inventario,
   .cabecera-listado-usuarios,
+  .cabecera-panel-cajas,
   .cabecera-tarjeta-detalle,
   .cabecera-solicitud-transferencia {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .filtros-cajas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+  }
+
+  .filtros-historial-ventas,
+  .resumen-historial-ventas,
+  .resumen-pago-venta,
+  .resumen-caja-general {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+  }
+
+  .item-resumen-pago-venta--principal {
+    grid-column: span 2;
+  }
+
+  .rejilla-datos-detalle-caja {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .rejilla-datos-solicitud,
@@ -1151,6 +1596,7 @@ body {
     .rejilla-unidad-detalle,
   .rejilla-totales-operacion,
   .formulario-usuarios,
+  .formulario-cajas,
   .formulario-transferencia,
   .formulario-respuesta-transferencia {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1161,6 +1607,7 @@ body {
   }
 
   .campo-formulario-usuarios--ancho-dos-columnas,
+  .campo-formulario-cajas--ancho-dos-columnas,
   .campo-formulario-usuarios--ancho-tres-columnas,
   .tarjeta-meta-venta--amplia {
     grid-column: 1 / -1;
@@ -1194,6 +1641,7 @@ body {
     .rejilla-unidad-detalle,
     .rejilla-totales-operacion,
   .formulario-usuarios,
+  .formulario-cajas,
   .formulario-transferencia,
     .formulario-respuesta-transferencia {
       grid-template-columns: 1fr;
@@ -1203,9 +1651,44 @@ body {
       grid-template-columns: 1fr;
     }
 
+    .filtros-cajas {
+      grid-template-columns: 1fr;
+    }
+
+    .filtros-historial-ventas,
+    .resumen-historial-ventas,
+    .resumen-pago-venta,
+    .resumen-caja-general,
+    .formulario-pago-venta {
+      grid-template-columns: 1fr;
+    }
+
+    .item-resumen-pago-venta--principal {
+      grid-column: 1;
+    }
+
+    .resumen-movimiento-caja,
+    .formulario-caja,
+    .formulario-movimiento-caja {
+      grid-template-columns: 1fr;
+    }
+
+    .rejilla-datos-detalle-caja {
+      grid-template-columns: 1fr;
+    }
+
     .acciones-detalle-venta {
       justify-content: flex-start;
       padding-right: 56px;
+    }
+
+    .barra-acciones-venta {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .acciones-finales-ventas .q-btn {
+      flex: 1 1 100%;
     }
 }
 .columna-campo-archivo {

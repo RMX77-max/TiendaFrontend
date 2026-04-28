@@ -1,13 +1,13 @@
 <template>
-  <q-page class="pagina-usuarios q-pa-lg">
+  <q-page class="pagina-cajas q-pa-lg">
     <div class="encabezado-ventas">
       <div class="text-caption text-weight-bold texto-resalte-panel">Cajas</div>
       <h1 class="text-h4 text-weight-bold q-mt-sm q-mb-none">Panel de cajas</h1>
     </div>
 
-    <div class="bloques-usuarios q-mt-lg">
-      <q-card flat bordered class="tarjeta-listado-usuarios">
-        <q-card-section class="q-pa-lg">
+    <div class="bloques-cajas q-mt-lg">
+      <q-card flat bordered class="tarjeta-panel-cajas tarjeta-panel-cajas--compacta">
+        <q-card-section class="q-pa-md">
           <div class="cabecera-acciones-ventas">
             <div class="text-h6 text-weight-bold">Acciones</div>
             <div class="row items-center q-gutter-sm">
@@ -52,35 +52,37 @@
         </q-card-section>
       </q-card>
 
-      <q-card flat bordered class="tarjeta-listado-usuarios">
+      <q-card flat bordered class="tarjeta-panel-cajas">
         <q-card-section class="q-pa-lg">
-          <div class="cabecera-listado-usuarios">
+          <div class="cabecera-panel-cajas cabecera-panel-cajas--con-filtros">
             <div class="text-h6 text-weight-bold">Cajas registradas</div>
-          </div>
 
-          <div class="rejilla-compras-simple q-mt-lg">
-            <q-select
-              v-model="filtros.sucursalId"
-              outlined
-              clearable
-              emit-value
-              map-options
-              label="Filtrar por sucursal"
-              :options="opcionesSucursalesFiltro"
-              option-value="value"
-              option-label="label"
-            />
-            <q-select
-              v-model="filtros.tipoCaja"
-              outlined
-              clearable
-              emit-value
-              map-options
-              label="Filtrar por tipo de caja"
-              :options="opcionesTiposCaja"
-              option-value="value"
-              option-label="label"
-            />
+            <div class="filtros-cajas">
+              <q-select
+                v-model="filtros.sucursalId"
+                dense
+                outlined
+                clearable
+                emit-value
+                map-options
+                label="Sucursal"
+                :options="opcionesSucursalesFiltro"
+                option-value="value"
+                option-label="label"
+              />
+              <q-select
+                v-model="filtros.tipoCaja"
+                dense
+                outlined
+                clearable
+                emit-value
+                map-options
+                label="Tipo de caja"
+                :options="opcionesTiposCaja"
+                option-value="value"
+                option-label="label"
+              />
+            </div>
           </div>
 
           <div
@@ -90,16 +92,16 @@
             No hay resultados para los filtros seleccionados.
           </div>
 
-          <div v-else class="rejilla-cajas-panel q-mt-lg">
+          <div v-else class="rejilla-tarjetas-cajas q-mt-lg">
             <q-card
               v-for="caja in tarjetasVisibles"
               :key="caja.id || caja.clave"
               flat
               bordered
-              class="tarjeta-caja-panel"
+              :class="['tarjeta-caja', { 'tarjeta-caja--inactiva': !caja.activa }]"
               @click="abrirDetalleCaja(caja)"
             >
-              <q-card-section class="q-pa-lg">
+              <q-card-section class="q-pa-md">
                 <div class="row items-start justify-between q-gutter-md">
                   <div>
                     <div class="text-subtitle1 text-weight-bold">
@@ -129,12 +131,12 @@
                 </div>
 
                 <div class="text-caption text-grey-7 q-mt-lg">Saldo actual</div>
-                <div class="text-h3 text-weight-bold q-mt-sm">
+                <div class="text-h4 text-weight-bold q-mt-xs">
                   {{ etiquetaMoneda(caja.tipo_moneda)
                   }}{{ formatearMonto(caja.saldo_actual) }}
                 </div>
 
-                <div class="rejilla-resumen-caja q-mt-lg">
+                <div class="rejilla-resumen-caja q-mt-md">
                   <div class="item-resumen-caja item-resumen-caja--success">
                     <div class="text-caption text-grey-7">Ingresos</div>
                     <div class="text-subtitle1 text-weight-bold q-mt-xs">
@@ -151,7 +153,7 @@
                   </div>
                 </div>
 
-                <div class="row items-center justify-between q-mt-lg">
+                <div class="row items-center justify-between q-mt-md">
                   <div class="text-caption text-grey-7">
                     {{
                       esGerente
@@ -189,9 +191,9 @@
         </q-card-section>
       </q-card>
 
-      <q-card flat bordered class="tarjeta-listado-usuarios">
+      <q-card flat bordered class="tarjeta-panel-cajas">
         <q-card-section class="q-pa-lg">
-          <div class="cabecera-listado-usuarios">
+          <div class="cabecera-panel-cajas">
             <div class="text-h6 text-weight-bold">Caja general</div>
 
             <q-btn
@@ -201,6 +203,24 @@
               :loading="cargandoMovimientosListado"
               @click="cargarHistorialMovimientos"
             />
+          </div>
+
+          <div class="resumen-caja-general q-mt-lg">
+            <div class="item-resumen-caja-general item-resumen-caja-general--success">
+              <div class="text-caption text-grey-7">Ingresos registrados</div>
+              <div class="text-h6 text-weight-bold">{{ totalIngresosPanel }}</div>
+              <div class="text-body2 text-grey-7">{{ movimientosIngresoPanel }} movimiento(s)</div>
+            </div>
+            <div class="item-resumen-caja-general item-resumen-caja-general--warning">
+              <div class="text-caption text-grey-7">Egresos registrados</div>
+              <div class="text-h6 text-weight-bold">{{ totalEgresosPanel }}</div>
+              <div class="text-body2 text-grey-7">{{ movimientosEgresoPanel }} movimiento(s)</div>
+            </div>
+            <div class="item-resumen-caja-general">
+              <div class="text-caption text-grey-7">Ultimos movimientos</div>
+              <div class="text-h6 text-weight-bold">{{ movimientosListado.length }}</div>
+              <div class="text-body2 text-grey-7">Segun filtros actuales</div>
+            </div>
           </div>
 
           <div class="contenedor-tabla-simple q-mt-lg">
@@ -213,6 +233,30 @@
               no-data-label="Aun no hay movimientos de caja general."
               :pagination="{ rowsPerPage: 8 }"
             >
+              <template #body-cell-tipo_movimiento_label="propiedades">
+                <q-td :props="propiedades">
+                  <q-badge
+                    rounded
+                    class="badge-estado"
+                    :class="claseTipoMovimiento(propiedades.row)"
+                  >
+                    {{ propiedades.row.tipo_movimiento_label }}
+                  </q-badge>
+                </q-td>
+              </template>
+
+              <template #body-cell-referencia_tipo_label="propiedades">
+                <q-td :props="propiedades">
+                  <q-badge
+                    rounded
+                    class="badge-origen-caja"
+                    :class="claseOrigenMovimiento(propiedades.row)"
+                  >
+                    {{ propiedades.row.referencia_tipo_label || "Manual" }}
+                  </q-badge>
+                </q-td>
+              </template>
+
               <template #body-cell-monto="propiedades">
                 <q-td :props="propiedades">
                   {{ etiquetaMoneda(propiedades.row.moneda)
@@ -233,12 +277,18 @@
     </div>
 
     <q-dialog v-model="dialogoCajaAbierto">
-      <q-card class="tarjeta-dialogo-transferencia">
+      <q-card class="tarjeta-dialogo-caja">
         <q-card-section class="q-pa-lg">
-          <div class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente">
-            <div class="text-h6 text-weight-bold">
-              {{ cajaEditandoId ? "Editar caja" : "Registrar nueva caja" }}
+          <div class="cabecera-dialogo-cajas">
+            <div>
+              <div class="text-caption text-weight-bold texto-resalte-panel">
+                Cajas
+              </div>
+              <div class="text-h6 text-weight-bold q-mt-xs">
+                {{ cajaEditandoId ? "Editar caja" : "Registrar nueva caja" }}
+              </div>
             </div>
+
             <q-btn flat round dense class="boton-cerrar-modal-compras" icon="close" @click="cerrarModalCaja" />
           </div>
         </q-card-section>
@@ -246,8 +296,28 @@
         <q-separator />
 
         <q-card-section class="q-pa-lg">
-          <q-form class="formulario-usuarios" @submit="guardarCaja">
-            <div class="campo-formulario-usuarios">
+          <div class="resumen-movimiento-caja q-mb-lg">
+            <div class="item-resumen-movimiento-caja">
+              <div class="text-caption text-grey-7">Estado</div>
+              <div class="text-subtitle1 text-weight-bold q-mt-xs">
+                {{ formulario.activa ? "Activa" : "Inactiva" }}
+              </div>
+              <div class="text-body2 text-grey-7">Disponible para movimientos</div>
+            </div>
+
+            <div class="item-resumen-movimiento-caja">
+              <div class="text-caption text-grey-7">Configuracion</div>
+              <div class="text-subtitle1 text-weight-bold q-mt-xs">
+                {{ formulario.tipoMoneda === "usd" ? "Dolares" : "Bolivianos" }}
+              </div>
+              <div class="text-body2 text-grey-7">
+                {{ etiquetaMetodoFormulario }}
+              </div>
+            </div>
+          </div>
+
+          <q-form class="formulario-caja" @submit="guardarCaja">
+            <div class="campo-formulario-cajas">
               <q-input
                 v-model="formulario.nombre"
                 outlined
@@ -257,7 +327,7 @@
               />
             </div>
 
-            <div class="campo-formulario-usuarios">
+            <div class="campo-formulario-cajas">
               <q-input
                 v-model="formulario.codigo"
                 outlined
@@ -266,7 +336,7 @@
               />
             </div>
 
-            <div class="campo-formulario-usuarios">
+            <div class="campo-formulario-cajas">
               <q-select
                 v-model="formulario.tipoMoneda"
                 outlined
@@ -281,7 +351,7 @@
               />
             </div>
 
-            <div class="campo-formulario-usuarios">
+            <div class="campo-formulario-cajas">
               <q-select
                 v-model="formulario.metodoBase"
                 outlined
@@ -296,7 +366,7 @@
               />
             </div>
 
-            <div class="campo-formulario-usuarios">
+            <div class="campo-formulario-cajas">
               <q-toggle
                 v-model="formulario.activa"
                 color="primary"
@@ -306,7 +376,7 @@
             </div>
 
             <div
-              class="campo-formulario-usuarios campo-formulario-usuarios--ancho-dos-columnas"
+              class="campo-formulario-cajas campo-formulario-cajas--ancho-dos-columnas"
             >
               <q-input
                 v-model="formulario.observaciones"
@@ -340,151 +410,96 @@
       </q-card>
     </q-dialog>
 
-    <q-dialog v-model="dialogoMovimientoAbierto" maximized>
-      <q-card class="dialogo-detalle-producto">
+    <q-dialog v-model="dialogoMovimientoAbierto">
+      <q-card class="tarjeta-dialogo-movimiento-caja">
         <q-card-section class="q-pa-lg">
-          <div
-            class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
-          >
-            <div class="row items-center q-gutter-sm">
-              <q-btn
-                flat
-                round
-                dense
-                icon="close"
-                class="boton-cerrar-modal-compras"
-                @click="cerrarModalMovimiento"
-              />
-              <div>
-                <div class="text-caption text-weight-bold texto-resalte-panel">
-                  Cajas
-                </div>
-                <div class="text-h5 text-weight-bold q-mt-sm">
-                  {{
-                    formularioMovimiento.tipoMovimiento === "egreso"
-                      ? "Registrar egreso"
-                      : "Registrar ingreso"
-                  }}
-                </div>
+          <div class="cabecera-dialogo-cajas">
+            <div>
+              <div class="text-caption text-weight-bold texto-resalte-panel">
+                Cajas
+              </div>
+              <div class="text-h6 text-weight-bold q-mt-xs">
+                {{
+                  formularioMovimiento.tipoMovimiento === "egreso"
+                    ? "Registrar egreso"
+                    : "Registrar ingreso"
+                }}
               </div>
             </div>
+
+            <q-btn
+              flat
+              round
+              dense
+              icon="close"
+              class="boton-cerrar-modal-compras"
+              @click="cerrarModalMovimiento"
+            />
           </div>
         </q-card-section>
 
         <q-separator />
 
         <q-card-section class="q-pa-lg">
-          <div class="columna-detalle-producto">
-            <q-card flat bordered class="tarjeta-detalle-producto">
-              <q-card-section class="q-pa-lg">
-                <div
-                  class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
-                >
-                  <div>
-                    <div class="text-h5 text-weight-bold">
-                      {{
-                        formularioMovimiento.tipoMovimiento === "egreso"
-                          ? "Salida desde caja"
-                          : "Ingreso a caja"
-                      }}
-                    </div>
-                  </div>
+          <div class="resumen-movimiento-caja">
+            <div class="item-resumen-movimiento-caja">
+              <div class="text-caption text-grey-7">Tipo de caja</div>
+              <div class="text-subtitle1 text-weight-bold q-mt-xs">
+                {{ cajaMovimientoSeleccionada?.metodo_base_label || "Pendiente" }}
+              </div>
+              <div class="text-body2 text-grey-7">
+                {{ cajaMovimientoSeleccionada?.nombre || "Selecciona un tipo de caja" }}
+              </div>
+            </div>
 
-                  <div class="text-right">
-                    <div class="text-caption text-grey-7">
-                      Fecha de registro
-                    </div>
-                    <div class="text-subtitle1 text-weight-bold q-mt-xs">
-                      {{ fechaMovimientoTexto }}
-                    </div>
-                  </div>
-                </div>
+            <div class="item-resumen-movimiento-caja">
+              <div class="text-caption text-grey-7">Moneda</div>
+              <div class="text-subtitle1 text-weight-bold q-mt-xs">
+                {{ cajaMovimientoSeleccionada?.tipo_moneda_label || "Pendiente" }}
+              </div>
+              <div class="text-body2 text-grey-7">{{ fechaMovimientoTexto }}</div>
+            </div>
+          </div>
 
-                <div class="rejilla-resumen-detalle-producto q-mt-lg">
-                  <div class="item-resumen-detalle-producto">
-                    <div class="text-caption text-grey-7">Tipo de caja</div>
-                    <div class="text-h6 text-weight-bold q-mt-xs">
-                      {{
-                        cajaMovimientoSeleccionada?.metodo_base_label ||
-                        "Pendiente"
-                      }}
-                    </div>
-                    <div class="text-body2 text-grey-7">
-                      {{
-                        cajaMovimientoSeleccionada?.nombre ||
-                        "Selecciona un tipo de caja"
-                      }}
-                    </div>
-                  </div>
+          <div class="formulario-movimiento-caja q-mt-lg">
+            <q-select
+              v-model="formularioMovimiento.tipoCaja"
+              outlined
+              emit-value
+              map-options
+              label="Tipo de caja"
+              :options="opcionesTiposCajaGestionables"
+              option-value="value"
+              option-label="label"
+              :rules="[reglaRequerida]"
+            />
 
-                  <div class="item-resumen-detalle-producto">
-                    <div class="text-caption text-grey-7">Moneda</div>
-                    <div class="text-h6 text-weight-bold q-mt-xs">
-                      {{
-                        cajaMovimientoSeleccionada?.tipo_moneda_label ||
-                        "Pendiente"
-                      }}
-                    </div>
-                    <div class="text-body2 text-grey-7">
-                      Caja general asociada
-                    </div>
-                  </div>
-                </div>
+            <q-input
+              v-model="formularioMovimiento.monto"
+              outlined
+              type="number"
+              min="0"
+              step="0.01"
+              label="Monto"
+              :rules="[reglaRequerida]"
+            />
 
-                <div class="formulario-usuarios q-mt-lg">
-                  <div class="campo-formulario-usuarios">
-                    <q-select
-                      v-model="formularioMovimiento.tipoCaja"
-                      outlined
-                      emit-value
-                      map-options
-                      label="Tipo de caja"
-                      :options="opcionesTiposCajaGestionables"
-                      option-value="value"
-                      option-label="label"
-                      :rules="[reglaRequerida]"
-                    />
-                  </div>
+            <q-input
+              v-model="formularioMovimiento.concepto"
+              outlined
+              maxlength="50"
+              label="Concepto"
+              :rules="[reglaRequerida]"
+            />
 
-                  <div class="campo-formulario-usuarios">
-                    <q-input
-                      v-model="formularioMovimiento.monto"
-                      outlined
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      label="Monto"
-                      :rules="[reglaRequerida]"
-                    />
-                  </div>
-
-                  <div
-                    class="campo-formulario-usuarios campo-formulario-usuarios--ancho-dos-columnas"
-                  >
-                    <q-input
-                      v-model="formularioMovimiento.concepto"
-                      outlined
-                      maxlength="50"
-                      label="Concepto"
-                      :rules="[reglaRequerida]"
-                    />
-                  </div>
-
-                  <div
-                    class="campo-formulario-usuarios campo-formulario-usuarios--ancho-dos-columnas"
-                  >
-                    <q-input
-                      v-model="formularioMovimiento.detalle"
-                      outlined
-                      type="textarea"
-                      autogrow
-                      maxlength="255"
-                      label="Detalle"
-                    />
-                  </div>
-                </div>
-              </q-card-section>
-            </q-card>
+            <q-input
+              v-model="formularioMovimiento.detalle"
+              outlined
+              type="textarea"
+              autogrow
+              maxlength="255"
+              label="Detalle"
+            />
           </div>
         </q-card-section>
 
@@ -516,60 +531,60 @@
     </q-dialog>
 
     <q-dialog v-model="dialogoDetalleCajaAbierto" maximized>
-      <q-card class="dialogo-detalle-producto">
-        <q-card-section class="q-pa-lg">
-          <div
-            class="cabecera-tarjeta-detalle cabecera-tarjeta-detalle--envolvente"
-          >
-            <div class="row items-center q-gutter-sm">
-              <q-btn
-                flat
-                round
-                dense
-                icon="close"
-                class="boton-cerrar-modal-compras"
-                @click="dialogoDetalleCajaAbierto = false"
-              />
-              <div>
-                <div class="text-caption text-weight-bold texto-resalte-panel">
-                  Cajas
-                </div>
-                <div class="text-h5 text-weight-bold q-mt-sm">
-                  Detalle de caja
-                </div>
+      <q-card class="dialogo-detalle-caja">
+        <q-card-section class="cabecera-detalle-caja q-pa-lg">
+          <div class="cabecera-dialogo-cajas">
+            <div>
+              <div class="text-caption text-weight-bold texto-resalte-panel">
+                Cajas
+              </div>
+              <div class="text-h5 text-weight-bold q-mt-xs">
+                {{ tituloDetalleCaja }}
+              </div>
+              <div class="text-body2 text-grey-7 q-mt-xs">
+                {{ subtituloDetalleCaja }}
               </div>
             </div>
+
+            <q-btn
+              flat
+              round
+              dense
+              icon="close"
+              class="boton-cerrar-modal-compras"
+              @click="dialogoDetalleCajaAbierto = false"
+            />
           </div>
         </q-card-section>
 
         <q-separator />
 
         <q-card-section v-if="detalleAgrupadoSeleccionado" class="q-pa-lg">
-          <div class="rejilla-compras-simple">
-            <q-input
-              :model-value="detalleAgrupadoSeleccionado.etiqueta"
-              outlined
-              disable
-              label="Tipo de caja"
-            />
-            <q-input
-              :model-value="detalleAgrupadoSeleccionado.descripcion"
-              outlined
-              disable
-              label="Configuracion"
-            />
-            <q-input
-              :model-value="detalleAgrupadoSeleccionado.totalSucursales"
-              outlined
-              disable
-              label="Sucursales"
-            />
-            <q-input
-              :model-value="detalleAgrupadoSeleccionado.totalCajas"
-              outlined
-              disable
-              label="Cajas incluidas"
-            />
+          <div class="rejilla-datos-detalle-caja">
+            <div class="dato-detalle-caja">
+              <div class="text-caption text-grey-7">Tipo de caja</div>
+              <div class="text-subtitle1 text-weight-bold">
+                {{ detalleAgrupadoSeleccionado.etiqueta }}
+              </div>
+            </div>
+            <div class="dato-detalle-caja">
+              <div class="text-caption text-grey-7">Configuracion</div>
+              <div class="text-subtitle1 text-weight-bold">
+                {{ detalleAgrupadoSeleccionado.descripcion }}
+              </div>
+            </div>
+            <div class="dato-detalle-caja">
+              <div class="text-caption text-grey-7">Sucursales</div>
+              <div class="text-subtitle1 text-weight-bold">
+                {{ detalleAgrupadoSeleccionado.totalSucursales }}
+              </div>
+            </div>
+            <div class="dato-detalle-caja">
+              <div class="text-caption text-grey-7">Cajas incluidas</div>
+              <div class="text-subtitle1 text-weight-bold">
+                {{ detalleAgrupadoSeleccionado.totalCajas }}
+              </div>
+            </div>
           </div>
 
           <div class="rejilla-resumen-caja-amplio q-mt-lg">
@@ -600,9 +615,11 @@
             </div>
           </div>
 
-          <div class="q-mt-lg">
-            <div class="text-subtitle1 text-weight-bold">
-              Cajas incluidas en este total
+          <div class="panel-tabla-detalle-caja q-mt-lg">
+            <div class="cabecera-panel-cajas">
+              <div class="text-subtitle1 text-weight-bold">
+                Cajas incluidas en este total
+              </div>
             </div>
 
             <div class="contenedor-tabla-simple q-mt-md">
@@ -640,43 +657,43 @@
         </q-card-section>
 
         <q-card-section v-else-if="cajaSeleccionada" class="q-pa-lg">
-          <div class="rejilla-compras-simple">
-            <q-input
-              :model-value="cajaSeleccionada.nombre"
-              outlined
-              disable
-              label="Caja"
-            />
-            <q-input
-              :model-value="cajaSeleccionada.sucursal"
-              outlined
-              disable
-              label="Sucursal"
-            />
-            <q-input
-              :model-value="cajaSeleccionada.codigo || 'Sin codigo'"
-              outlined
-              disable
-              label="Codigo"
-            />
-            <q-input
-              :model-value="cajaSeleccionada.metodo_base_label"
-              outlined
-              disable
-              label="Metodo base"
-            />
-            <q-input
-              :model-value="cajaSeleccionada.tipo_moneda_label"
-              outlined
-              disable
-              label="Moneda"
-            />
-            <q-input
-              :model-value="cajaSeleccionada.activa ? 'Activa' : 'Inactiva'"
-              outlined
-              disable
-              label="Estado"
-            />
+          <div class="rejilla-datos-detalle-caja">
+            <div class="dato-detalle-caja">
+              <div class="text-caption text-grey-7">Caja</div>
+              <div class="text-subtitle1 text-weight-bold">
+                {{ cajaSeleccionada.nombre }}
+              </div>
+            </div>
+            <div class="dato-detalle-caja">
+              <div class="text-caption text-grey-7">Sucursal</div>
+              <div class="text-subtitle1 text-weight-bold">
+                {{ cajaSeleccionada.sucursal }}
+              </div>
+            </div>
+            <div class="dato-detalle-caja">
+              <div class="text-caption text-grey-7">Codigo</div>
+              <div class="text-subtitle1 text-weight-bold">
+                {{ cajaSeleccionada.codigo || "Sin codigo" }}
+              </div>
+            </div>
+            <div class="dato-detalle-caja">
+              <div class="text-caption text-grey-7">Metodo base</div>
+              <div class="text-subtitle1 text-weight-bold">
+                {{ cajaSeleccionada.metodo_base_label }}
+              </div>
+            </div>
+            <div class="dato-detalle-caja">
+              <div class="text-caption text-grey-7">Moneda</div>
+              <div class="text-subtitle1 text-weight-bold">
+                {{ cajaSeleccionada.tipo_moneda_label }}
+              </div>
+            </div>
+            <div class="dato-detalle-caja">
+              <div class="text-caption text-grey-7">Estado</div>
+              <q-badge :color="cajaSeleccionada.activa ? 'positive' : 'grey-6'">
+                {{ cajaSeleccionada.activa ? "Activa" : "Inactiva" }}
+              </q-badge>
+            </div>
           </div>
 
           <div class="rejilla-resumen-caja-amplio q-mt-lg">
@@ -703,9 +720,11 @@
             </div>
           </div>
 
-          <div class="q-mt-lg">
-            <div class="text-subtitle1 text-weight-bold">
-              Movimientos de la caja
+          <div class="panel-tabla-detalle-caja q-mt-lg">
+            <div class="cabecera-panel-cajas">
+              <div class="text-subtitle1 text-weight-bold">
+                Movimientos de la caja
+              </div>
             </div>
 
             <div class="contenedor-tabla-simple q-mt-md">
@@ -718,6 +737,30 @@
                 no-data-label="Aun no hay movimientos registrados para esta caja."
                 :pagination="{ rowsPerPage: 6 }"
               >
+                <template #body-cell-tipo_movimiento_label="propiedades">
+                  <q-td :props="propiedades">
+                    <q-badge
+                      rounded
+                      class="badge-estado"
+                      :class="claseTipoMovimiento(propiedades.row)"
+                    >
+                      {{ propiedades.row.tipo_movimiento_label }}
+                    </q-badge>
+                  </q-td>
+                </template>
+
+                <template #body-cell-referencia_tipo_label="propiedades">
+                  <q-td :props="propiedades">
+                    <q-badge
+                      rounded
+                      class="badge-origen-caja"
+                      :class="claseOrigenMovimiento(propiedades.row)"
+                    >
+                      {{ propiedades.row.referencia_tipo_label || "Manual" }}
+                    </q-badge>
+                  </q-td>
+                </template>
+
                 <template #body-cell-monto="propiedades">
                   <q-td :props="propiedades">
                     {{ etiquetaMoneda(propiedades.row.moneda)
@@ -735,17 +778,12 @@
             </div>
           </div>
 
-          <q-input
-            class="q-mt-lg"
-            :model-value="
-              cajaSeleccionada.observaciones || 'Sin observaciones registradas.'
-            "
-            outlined
-            disable
-            type="textarea"
-            autogrow
-            label="Observaciones"
-          />
+          <div class="bloque-observaciones-caja q-mt-lg">
+            <div class="text-caption text-grey-7">Observaciones</div>
+            <div class="text-body2 text-weight-medium q-mt-xs">
+              {{ cajaSeleccionada.observaciones || "Sin observaciones registradas." }}
+            </div>
+          </div>
         </q-card-section>
       </q-card>
     </q-dialog>
@@ -806,6 +844,25 @@ const filtrosMovimientos = reactive({
 
 const rolActual = computed(() => estadoAutenticacion.usuario?.rol || "");
 const esGerente = computed(() => rolActual.value === "gerente");
+const etiquetaMetodoFormulario = computed(
+  () =>
+    metodos.value.find((metodo) => metodo.value === formulario.metodoBase)
+      ?.label || "Metodo por definir"
+);
+const tituloDetalleCaja = computed(() => {
+  if (detalleAgrupadoSeleccionado.value) {
+    return detalleAgrupadoSeleccionado.value.etiqueta || "Detalle de caja";
+  }
+
+  return cajaSeleccionada.value?.nombre || "Detalle de caja";
+});
+const subtituloDetalleCaja = computed(() => {
+  if (detalleAgrupadoSeleccionado.value) {
+    return detalleAgrupadoSeleccionado.value.descripcion || "Resumen agrupado";
+  }
+
+  return cajaSeleccionada.value?.sucursal || "Resumen de movimientos";
+});
 const $q = useQuasar();
 
 const columnasMovimientosCaja = [
@@ -821,6 +878,13 @@ const columnasMovimientosCaja = [
     label: "Tipo",
     align: "left",
     field: "tipo_movimiento_label",
+    sortable: true,
+  },
+  {
+    name: "referencia_tipo_label",
+    label: "Origen",
+    align: "left",
+    field: "referencia_tipo_label",
     sortable: true,
   },
   {
@@ -914,6 +978,13 @@ const columnasMovimientosPanel = [
     sortable: true,
   },
   {
+    name: "referencia_tipo_label",
+    label: "Origen",
+    align: "left",
+    field: "referencia_tipo_label",
+    sortable: true,
+  },
+  {
     name: "sucursal",
     label: "Sucursal",
     align: "left",
@@ -989,6 +1060,72 @@ function formatearMonto(valor) {
 
 function etiquetaMoneda(moneda) {
   return moneda === "usd" ? "$ " : "Bs. ";
+}
+
+function esMovimientoTipo(movimiento, tipo) {
+  const valor = String(
+    movimiento?.tipo_movimiento || movimiento?.tipo_movimiento_label || ""
+  ).toLowerCase();
+
+  return valor.includes(tipo);
+}
+
+function formatearMontoMonedaMixta(movimientos) {
+  const totales = movimientos.reduce(
+    (acumulado, movimiento) => {
+      const moneda = movimiento.moneda === "usd" ? "usd" : "bs";
+      acumulado[moneda] += Number(movimiento.monto || 0);
+      return acumulado;
+    },
+    { usd: 0, bs: 0 }
+  );
+
+  const partes = [];
+
+  if (totales.usd > 0) {
+    partes.push(`$ ${formatearMonto(totales.usd)}`);
+  }
+
+  if (totales.bs > 0 || !partes.length) {
+    partes.push(`Bs. ${formatearMonto(totales.bs)}`);
+  }
+
+  return partes.join(" / ");
+}
+
+function claseTipoMovimiento(movimiento) {
+  if (esMovimientoTipo(movimiento, "ingreso")) {
+    return "badge-estado--pagado";
+  }
+
+  if (esMovimientoTipo(movimiento, "egreso")) {
+    return "badge-estado--pendiente";
+  }
+
+  return "badge-estado--neutro";
+}
+
+function claseOrigenMovimiento(movimiento) {
+  if (
+    [
+      "venta_abono",
+      "venta_contado",
+      "venta_abono_inicial",
+      "venta_pago_credito",
+    ].includes(movimiento?.referencia_tipo)
+  ) {
+    return "badge-origen-caja--venta";
+  }
+
+  if (movimiento?.referencia_tipo === "compra_abono") {
+    return "badge-origen-caja--compra";
+  }
+
+  if (movimiento?.referencia_tipo === "caja_general") {
+    return "badge-origen-caja--manual";
+  }
+
+  return "badge-origen-caja--manual";
 }
 
 function obtenerFechaActualIso() {
@@ -1147,6 +1284,30 @@ const tarjetasAgrupadas = computed(() => {
 const tarjetasVisibles = computed(() =>
   esGerente.value ? tarjetasAgrupadas.value : cajasFiltradas.value
 );
+const movimientosIngresoPanel = computed(() =>
+  movimientosListado.value.filter((movimiento) =>
+    esMovimientoTipo(movimiento, "ingreso")
+  ).length
+);
+const movimientosEgresoPanel = computed(() =>
+  movimientosListado.value.filter((movimiento) =>
+    esMovimientoTipo(movimiento, "egreso")
+  ).length
+);
+const totalIngresosPanel = computed(() =>
+  formatearMontoMonedaMixta(
+    movimientosListado.value.filter((movimiento) =>
+      esMovimientoTipo(movimiento, "ingreso")
+    )
+  )
+);
+const totalEgresosPanel = computed(() =>
+  formatearMontoMonedaMixta(
+    movimientosListado.value.filter((movimiento) =>
+      esMovimientoTipo(movimiento, "egreso")
+    )
+  )
+);
 
 const cajaMovimientoSeleccionada = computed(
   () =>
@@ -1240,7 +1401,14 @@ async function cargarMovimientosCaja(idCaja) {
   try {
     const datos = await listarMovimientosCaja({
       cajaId: idCaja,
-      referenciaTipos: ["caja_general", "compra_abono"],
+      referenciaTipos: [
+        "caja_general",
+        "compra_abono",
+        "venta_abono",
+        "venta_contado",
+        "venta_abono_inicial",
+        "venta_pago_credito",
+      ],
     });
     movimientosCajaSeleccionada.value = datos.movimientos || [];
   } catch (error) {
@@ -1263,7 +1431,14 @@ function obtenerFiltrosMovimientoApi() {
     fechaDesde: filtrosMovimientos.fechaDesde,
     fechaHasta: filtrosMovimientos.fechaHasta,
     concepto: filtrosMovimientos.concepto,
-    referenciaTipos: ["caja_general", "compra_abono"],
+    referenciaTipos: [
+      "caja_general",
+      "compra_abono",
+      "venta_abono",
+      "venta_contado",
+      "venta_abono_inicial",
+      "venta_pago_credito",
+    ],
     tipoMovimiento: filtrosMovimientos.tipoMovimiento,
     metodoBase: metodoBase || "",
     tipoMoneda: tipoMoneda || "",
